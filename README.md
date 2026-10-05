@@ -1,26 +1,63 @@
 # 🕊️ Love Dove - Where Hearts Connect 💕
 
-A beautiful platform for couples to create birthday websites, play games together, and track their journey. Built with Next.js 14, Supabase, and Tailwind CSS.
+> A premium couple platform for creating beautiful birthday websites, sending proposals, playing 26 online games together, and tracking your love story.
 
-## ✨ Features
+**Live GitHub Repo:** https://github.com/Rudar-teach/lovedove
+**Built for:** rudarsalaria12345@gmail.com
 
-- **Sign Up / Login** - Secure authentication
-- **Birthday Websites** - Create stunning birthday pages with photos, messages, and 6 beautiful themes
-- **Public Links** - Share birthday sites with anyone
-- **2-Player Couple Games**:
-  - ⭕❌ Tic-Tac-Toe
-  - 🎴 Memory Match
-  - 💡 Couple Quiz
-  - 🤔 Would You Rather
-  - 🔤 Word Chain
-- **Add Friends** - Connect with your partner
-- **Profile with Game History** - See time played per game
-- **Badges & Achievements** - Earn badges for milestones (10 hours, 50 hours, 100 hours)
+---
+
+## ✨ What's Inside
+
+### 💝 Birthday Websites
+- Sign up, login
+- Create unlimited birthday sites with photos, message, and 6 stunning themes
+- Public shareable links
+- View counter, hearts, comments
+
+### 💌 Proposal System (NEW!)
+- 12 proposal categories: Romantic Date, Marriage Proposal, Late Night Chat, Movie Night, Adventure Together, etc.
+- Send a proposal to any user by username
+- Receiver gets a notification + link to respond with **Yes** 💕 or **No** 💔
+- Sender gets a notification when responded
+- Beautiful response animation
+
+### 🎮 26 Couple Games (All 2-Player / Solo)
+- **Quick Play:** Tic-Tac-Toe, Rock-Paper-Scissors, Pong, Memory Match, Number Guess
+- **Word Games:** Hangman, Word Chain, Couple Scramble, Trivia Battle, Love Song Quiz
+- **Creative:** Drawing Challenge, Couple Pictionary, Love Trivia, Relationship Bingo
+- **Quiz:** Truth or Dare, Would You Rather, Compatibility Test, Compatibility Test
+- **Arcade:** Snake, Flappy Heart, 2048, Heart Catcher, Kissing Game, Cupids Arrow, Love Maze, Hearts
+- **Typing:** Typing Race, Emoji Story
+
+### 👫 Friends System
+- Add friends by username
+- Send / accept / reject friend requests
+- See friends list and online status
+- Friends can play games together
+
+### 🏆 Profile & Stats
+- Click your profile icon → see game history
+- Total time played per game
+- Recent activity
+- **Badges:** 1h, 10h, 50h, 100h milestones
+- Couple streaks and shared time
+
+### 🔔 Notifications
+- Proposal responses
+- Friend requests
+- Game invites
+- Mark as read / delete
+
+---
 
 ## 📋 Prerequisites
 
 - Node.js 18+ ([Download](https://nodejs.org/))
 - A Supabase account ([Sign up free](https://supabase.com/))
+- A GitHub account (already have: Rudar-teach)
+
+---
 
 ## 🚀 Step-by-Step Setup Guide (Beginner Friendly)
 
@@ -113,6 +150,74 @@ The website will open at **http://localhost:3000**
 3. Create an account with your name, username, email, and password
 4. You'll be taken to the Dashboard!
 5. Try creating a birthday site, playing games, and adding friends!
+6. Create a second account (in a different browser) to test friend requests and proposals
+
+---
+
+## 🔌 Connect Your GitHub to Claude (Auto-Sync)
+
+Want Claude to automatically read and update your project on GitHub?
+
+### Step 1: Install GitHub CLI (already done in your setup)
+
+```bash
+# Check if installed
+gh --version
+```
+
+### Step 2: Authenticate GitHub
+
+```bash
+gh auth login
+```
+
+Follow the prompts:
+1. Choose **GitHub.com**
+2. Choose **HTTPS**
+3. Choose **Login with a web browser**
+4. Copy the one-time code, press Enter, paste it in browser
+5. Sign in with `rudarsalaria12345@gmail.com`
+
+### Step 3: Verify the Connection
+
+```bash
+gh repo view Rudar-teach/lovedove
+```
+
+You should see your repo details. If yes — Claude can now read and push to it!
+
+### Step 4: Push Updates from Claude
+
+Every time you ask Claude to make changes, it will:
+
+```bash
+git add -A
+git commit -m "Your message here"
+git push origin main
+```
+
+You can verify anytime at: https://github.com/Rudar-teach/lovedove
+
+---
+
+## 🌐 Connect GitHub to Vercel (Deploy Online)
+
+When you're ready to share the website with the world:
+
+### Option A: Auto-Deploy via Vercel + GitHub
+
+1. Go to https://vercel.com and sign up with your **GitHub account** (use `rudarsalaria12345@gmail.com`)
+2. Click **Add New Project**
+3. Find your repo: `Rudar-teach/lovedove`
+4. Click **Import**
+5. Add environment variables (same as `.env.local`):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+6. Click **Deploy**
+
+**Every time you push to GitHub, Vercel auto-deploys!**
+
+---
 
 ## 📦 Project Structure
 
@@ -120,33 +225,39 @@ The website will open at **http://localhost:3000**
 lovedove/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
-│   │   ├── layout.tsx         # Root layout
+│   │   ├── layout.tsx         # Root layout (Toaster, fonts, providers)
 │   │   ├── page.tsx           # Landing page
-│   │   ├── auth/              # Login & Signup pages
+│   │   ├── auth/              # Login & Signup
 │   │   ├── dashboard/         # Main dashboard
-│   │   ├── games/             # Game pages
+│   │   ├── games/             # 26 game pages
 │   │   ├── friends/           # Friends management
-│   │   ├── profile/           # User profile
+│   │   ├── profile/           # User profile (game history, badges)
+│   │   ├── proposals/         # Proposal system (list, new, respond)
+│   │   ├── notifications/     # Notifications center
 │   │   └── birthday/          # Birthday sites
 │   ├── components/            # Reusable UI components
-│   ├── lib/                   # Supabase client & types
-│   └── stores/                # State management
-├── supabase-schema.sql        # Database schema
+│   │   ├── ui/               # Button, Input, Card, etc.
+│   │   └── 3d/               # 3D effects (TiltCard, etc.)
+│   ├── lib/                   # Supabase client, types, helpers
+│   └── stores/                # Zustand state (useAuthStore)
+├── supabase-schema.sql        # Database schema (run once)
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── .env.local                 # Your API keys (DO NOT commit!)
 ```
 
+---
+
 ## 🎮 How to Play Games
 
 1. Go to **Dashboard** → Click any game card
-2. The game opens with your turn (X)
-3. Play against the system (simulated partner)
-4. Your stats are tracked automatically
-5. Earn badges as you play more!
+2. The game opens — play immediately
+3. Your stats (games played, time, wins) are tracked
+4. Invite a friend by sharing the link
+5. Both of you play, and your combined time builds your **"X hours spent together"** badge!
 
-## 🎂 How to Create Birthday Site
+## 🎂 How to Create a Birthday Site
 
 1. Go to **Dashboard** → Click "Birthday Site"
 2. Enter the person's name
@@ -156,103 +267,70 @@ lovedove/
 6. Click "Create Birthday Site"
 7. Share the link with everyone!
 
-## 🔧 Deploy to Vercel (Make it Online)
+## 💌 How to Send a Proposal
 
-When you're ready to share the website with the world:
+1. Go to **Dashboard** → Click "Proposals" → "New Proposal"
+2. Choose a category (Romantic Date, Marriage Proposal, etc.)
+3. Fill in the title and message
+4. Enter the receiver's username
+5. Click **Send Proposal 💕**
+6. The receiver gets a notification and can respond Yes/No
+7. You get notified of their answer
 
-### Option A: Using GitHub + Vercel (Recommended)
+## 👫 How to Add Friends
 
-**Connecting GitHub to Claude/Vercel:**
-
-1. Go to https://vercel.com and sign up with your **GitHub account** (use `rudarsalaria12345@gmail.com`)
-2. Click **Add New Project**
-3. Select **Import Git Repository**
-4. Find your GitHub username: `Rudar-teach`
-5. If you don't see your repo, click **Configure GitHub App** and authorize Vercel
-
-**Upload the project to GitHub first:**
-
-```bash
-# In the lovedove folder
-git init
-git add .
-git commit -m "Initial commit: Love Dove website"
-git remote add origin https://github.com/Rudar-teach/lovedove.git
-git branch -M main
-git push -u origin main
-```
-
-6. In Vercel, after importing:
-   - Click **Environment Variables**
-   - Add:
-     - `NEXT_PUBLIC_SUPABASE_URL` = your Supabase URL
-     - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your Supabase anon key
-7. Click **Deploy**
-8. Wait ~2 minutes
-9. Your site is now live! 🎉
-
-### Option B: Manual Upload
-
-1. Create a new repository at https://github.com/new
-   - Repository name: `lovedove`
-   - Make it **Public**
-   - Click **Create repository**
-2. Follow the commands shown (git init, git add, git commit, git push)
-3. Go to Vercel and import from GitHub
-
-## 📝 How to Update Your Website
-
-After making changes to the code:
-
-```bash
-cd C:/Users/hp\ omen/Downloads/project/lovedove
-git add .
-git commit -m "Description of changes"
-git push
-```
-
-Vercel will automatically detect the changes and update your live site within minutes.
-
-## 🔒 Security
-
-- All user data is stored securely in Supabase
-- Row Level Security (RLS) ensures users can only access their own data
-- Password authentication via Supabase Auth
-- Environment variables are never exposed to the client (except public keys)
-
-## 🎯 Future Enhancements
-
-- Real-time multiplayer with WebSockets
-- Video/voice calling between couples
-- More game types (Chess, 4-in-a-Row)
-- Push notifications
-- Mobile app (React Native)
-- Dark mode support
-
-## 💡 Tips
-
-- You can customize colors in `tailwind.config.ts`
-- Add more games in `src/app/games/`
-- Modify the theme in `src/app/birthday/[slug]/page.tsx`
-
-## 🐛 Troubleshooting
-
-**"Module not found" errors?**
-→ Run `npm install` again
-
-**"Authentication failed"?**
-→ Check your `.env.local` file has correct Supabase keys
-
-**Photos not uploading?**
-→ Make sure the `photos` storage bucket is created and public
-
-**Database errors?**
-→ Re-run the SQL schema from `supabase-schema.sql`
-
-## 📞 Support
-
-If you have questions, feel free to open an issue on GitHub!
+1. Go to **Friends** (top nav)
+2. Search for a username
+3. Click **Add Friend** — they get a request
+4. Once accepted, you can play games together and see each other's profiles
 
 ---
 
-Made with 💕 by Rudar Salaria
+## 🏆 Badges Earned
+
+- **1 Hour Together** — Play games for 1 hour total
+- **10 Hours Together** — Play for 10 hours
+- **50 Hours Together** — Play for 50 hours
+- **100 Hours Together** — Play for 100 hours
+- **First Proposal** — Send your first proposal
+- **Soulmates** — Compatibility test 90%+
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js 14 (App Router), React 18, TypeScript
+- **Styling:** Tailwind CSS, Framer Motion, Lucide Icons
+- **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **3D Effects:** Custom 3D card tilt, glassmorphism
+- **State:** Zustand
+- **Deployment:** Vercel (auto-deploy from GitHub)
+
+---
+
+## 🆘 Troubleshooting
+
+**Server won't start?**
+- Delete `.next` folder, run `npm install` again, then `npm run dev`
+
+**Database errors?**
+- Make sure you ran `supabase-schema.sql` in Supabase SQL Editor
+- Check that `.env.local` has correct values
+
+**Photos not uploading?**
+- Check the `photos` storage bucket is set to **Public** in Supabase
+- Verify the storage policies allow authenticated uploads
+
+**Want to reset everything?**
+- In Supabase: Settings → Database → Reset database, then re-run the schema
+
+---
+
+## 📞 Support
+
+- **GitHub:** https://github.com/Rudar-teach/lovedove
+- **Email:** rudarsalaria12345@gmail.com
+
+---
+
+Made with 💕 for couples everywhere.
