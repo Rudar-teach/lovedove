@@ -8,7 +8,6 @@ import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { supabase } from '@/lib/supabase';
 
 interface CompatibilityResult {
   percentage: number;
@@ -66,28 +65,10 @@ export default function LoveCalculatorPage() {
   const [name2, setName2] = useState('');
   const [result, setResult] = useState<CompatibilityResult | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
 
-  const createSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const { data } = await supabase.from('game_sessions').insert({
-      game_type: 'lovecalculator',
-      players: [session.user.id],
-      game_state: { calculated: false },
-      status: 'active',
-      current_turn: session.user.id,
-    }).select('id').single();
-    if (data) setSessionId(data.id);
-  };
-
-  useEffect(() => {
-    createSession();
-  }, []);
-
   const copyInvite = () => {
-    const url = `${window.location.origin}/games/lovecalculator?session=${sessionId || 'demo'}`;
+    const url = `${window.location.origin}/games/lovecalculator`;
     navigator.clipboard.writeText(url);
     setInviteCopied(true);
     setTimeout(() => setInviteCopied(false), 2000);

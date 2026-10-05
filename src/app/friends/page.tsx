@@ -76,7 +76,7 @@ export default function FriendsPage() {
               { key: 'discover', label: 'Discover', icon: '🔍' },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key as any)} className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === tab.key ? 'bg-gradient-to-r from-primary-500 to-rose-500 text-white shadow-lg shadow-primary-500/25' : 'text-gray-600 hover:bg-pink-50'}`}>
-                {tab.label} {tab.count > 0 && activeTab === tab.key && `(${tab.count})`}
+                {tab.label} {(tab.count ?? 0) > 0 && activeTab === tab.key && `(${tab.count})`}
               </button>
             ))}
           </div>

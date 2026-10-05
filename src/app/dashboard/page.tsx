@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import PremiumBackground from '@/components/PremiumBackground';
+import Link from 'next/link';
 
 const GAME_INFO: Record<string, { name: string; icon: string; color: string }> = {
   tictactoe: { name: 'Tic-Tac-Toe', icon: '⭕❌', color: 'from-pink-400 to-rose-500' },

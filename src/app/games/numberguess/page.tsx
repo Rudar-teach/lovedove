@@ -32,6 +32,7 @@ export default function NumberGuessPage() {
   };
 
   const handleGuess1 = () => {
+    if (number1 === null) return;
     const g = parseInt(guess1);
     if (isNaN(g) || g < 1 || g > 100) return;
     if (g === number1) {
@@ -54,6 +55,7 @@ export default function NumberGuessPage() {
   };
 
   const handleGuess2 = () => {
+    if (number2 === null) return;
     const g = parseInt(guess2);
     if (isNaN(g) || g < 1 || g > 100) return;
     if (g === number2) {

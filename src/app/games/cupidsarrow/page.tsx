@@ -15,7 +15,7 @@ export default function CupidsArrowPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('cupidsArrowHighScore') || '0'));
+  const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [level, setLevel] = useState(1);
   const [combo, setCombo] = useState(0);
@@ -25,6 +25,20 @@ export default function CupidsArrowPage() {
   const spawnTimerRef = useRef(0);
   const gameOverRef = useRef(false);
   const levelRef = useRef(1);
+  const scoreRef = useRef(0);
+  const livesRef = useRef(3);
+  const comboRef = useRef(0);
+  const gameStartedRef = useRef(false);
+  const spawnIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const targetsRefAlt = useRef<Target[]>([]);
+
+  // Load high score from localStorage on mount (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = parseInt(localStorage.getItem('cupidsArrowHighScore') || '0');
+      if (!isNaN(stored)) setHighScore(stored);
+    }
+  }, []);
 
   const W = 400;
   const H = 500;
@@ -134,10 +148,8 @@ export default function CupidsArrowPage() {
               if (nl <= 0 && !gameOverRef.current) {
                 gameOverRef.current = true;
                 setGameOver(true);
-                const hs = parseInt(localStorage.getItem('cupidsArrowHighScore') || '0');
-                if (score > hs) {
-                  localStorage.setItem('cupidsArrowHighScore', String(score));
-                  setHighScore(score);
+                if (scoreRef.current > highScore) {
+                  setHighScore(scoreRef.current);
                 }
               }
               return Math.max(0, nl);
@@ -172,11 +184,10 @@ export default function CupidsArrowPage() {
             const pts = 10 + levelRef.current * 5 + combo * 2;
             setScore(s => {
               const ns = s + pts;
-              const hs = parseInt(localStorage.getItem('cupidsArrowHighScore') || '0');
-              if (ns > hs) {
-                localStorage.setItem('cupidsArrowHighScore', String(ns));
+              if (ns > highScore) {
                 setHighScore(ns);
               }
+              scoreRef.current = s + pts;
               return ns;
             });
             if ((combo + 1) % 5 === 0) {

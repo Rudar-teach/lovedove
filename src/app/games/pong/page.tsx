@@ -12,7 +12,7 @@ const CANVAS_W = 700;
 const CANVAS_H = 400;
 const PADDLE_W = 12;
 const PADDLE_H = 80;
-const PUCK_SIZE = 12;
+const BALL_R = 10;
 const WIN_SCORE = 10;
 
 export default function PongPage() {
@@ -24,44 +24,38 @@ export default function PongPage() {
   const keysRef = useRef<Set<string>>(new Set());
 
   const gameRef = useRef({
-    paddle1Y: CANVAS_H / 2 - PADDLE_H / 2,
-    paddle2Y: CANVAS_H / 2 - PADDLE_H / 2,
-    ballX: CANVAS_W / 2,
-    ballY: CANVAS_H / 2,
-    ballVX: 5,
-    ballVY: 3,
+    p1Y: CANVAS_H / 2 - PADDLE_H / 2,
+    p2Y: CANVAS_H / 2 - PADDLE_H / 2,
+    bx: CANVAS_W / 2,
+    by: CANVAS_H / 2,
+    bvx: 5,
+    bvy: 3,
     speed: 1,
   });
 
-  const inviteFriend = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setToast(true);
-    setTimeout(() => setToast(false), 2500);
+  const drawPaddle = (ctx: CanvasRenderingContext2D, x: number, y: number, grad: CanvasGradient) => {
+    ctx.save();
+    ctx.shadowColor = '#ec4899';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y);
+    ctx.lineTo(x + PADDLE_W - 2, y + 4);
+    ctx.lineTo(x + PADDLE_W - 2, y + PADDLE_H - 4);
+    ctx.lineTo(x + 4, y + PADDLE_H);
+    ctx.lineTo(x, y + PADDLE_H - 4);
+    ctx.lineTo(x, y + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   };
-
-  const resetGame = useCallback(() => {
-    gameRef.current = {
-      paddle1Y: CANVAS_H / 2 - PADDLE_H / 2,
-      paddle2Y: CANVAS_H / 2 - PADDLE_H / 2,
-      ballX: CANVAS_W / 2,
-      ballY: CANVAS_H / 2,
-      ballVX: 5 * (Math.random() > 0.5 ? 1 : -1),
-      ballVY: 3 * (Math.random() > 0.5 ? 1 : -1),
-      speed: 1,
-    };
-    setScores({ p1: 0, p2: 0 });
-    setStatus('ready');
-    setWinner('');
-  }, []);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     const g = gameRef.current;
-    const { paddle1Y, paddle2Y, ballX, ballY } = g;
 
     // Background
     ctx.fillStyle = '#0a0014';
@@ -77,112 +71,98 @@ export default function PongPage() {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Glow effect
-    ctx.shadowColor = '#ec4899';
-    ctx.shadowBlur = 15;
-
-    // Paddle 1 (left, pink)
-    const grad1 = ctx.createLinearGradient(0, paddle1Y, 0, paddle1Y + PADDLE_H);
+    // Paddle 1
+    const grad1 = ctx.createLinearGradient(0, g.p1Y, 0, g.p1Y + PADDLE_H);
     grad1.addColorStop(0, '#ec4899');
     grad1.addColorStop(1, '#be185d');
-    ctx.fillStyle = grad1;
-    ctx.beginPath();
-    ctx.roundRect(PADDLE_W, paddle1Y, PADDLE_W, PADDLE_H, 6);
-    ctx.fill();
+    drawPaddle(ctx, PADDLE_W, g.p1Y, grad1);
 
-    // Paddle 2 (right, rose)
-    const grad2 = ctx.createLinearGradient(0, paddle2Y, 0, paddle2Y + PADDLE_H);
+    // Paddle 2
+    const grad2 = ctx.createLinearGradient(0, g.p2Y, 0, g.p2Y + PADDLE_H);
     grad2.addColorStop(0, '#f43f5e');
     grad2.addColorStop(1, '#9f1239');
-    ctx.fillStyle = grad2;
-    ctx.beginPath();
-    ctx.roundRect(CANVAS_W - PADDLE_W * 2, paddle2Y, PADDLE_W, PADDLE_H, 6);
-    ctx.fill();
+    drawPaddle(ctx, CANVAS_W - PADDLE_W * 2, g.p2Y, grad2);
 
     // Ball
+    ctx.save();
     ctx.shadowColor = '#fce7f3';
     ctx.shadowBlur = 25;
     ctx.fillStyle = '#fce7f3';
     ctx.beginPath();
-    ctx.arc(ballX, ballY, PUCK_SIZE, 0, Math.PI * 2);
+    ctx.arc(g.bx, g.by, BALL_R, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
-    // Score text
-    ctx.shadowBlur = 0;
+    // Scores
+    ctx.save();
     ctx.fillStyle = 'rgba(236, 72, 153, 0.6)';
     ctx.font = 'bold 60px "Playfair Display", serif';
     ctx.textAlign = 'center';
     ctx.fillText(scores.p1.toString(), CANVAS_W / 4, 80);
     ctx.fillText(scores.p2.toString(), 3 * CANVAS_W / 4, 80);
-
-    // Labels
     ctx.font = '14px Inter, sans-serif';
     ctx.fillStyle = 'rgba(236, 72, 153, 0.4)';
     ctx.fillText('P1', CANVAS_W / 4, 105);
     ctx.fillText('P2', 3 * CANVAS_W / 4, 105);
+    ctx.restore();
   }, [scores]);
 
   const update = useCallback(() => {
     if (status !== 'playing') return;
-
     const g = gameRef.current;
     const keys = keysRef.current;
 
-    // P1 movement
-    if (keys.has('w') || keys.has('W')) g.paddle1Y = Math.max(0, g.paddle1Y - 7);
-    if (keys.has('s') || keys.has('S')) g.paddle1Y = Math.min(CANVAS_H - PADDLE_H, g.paddle1Y + 7);
+    if (keys.has('w') || keys.has('W')) g.p1Y = Math.max(0, g.p1Y - 7);
+    if (keys.has('s') || keys.has('S')) g.p1Y = Math.min(CANVAS_H - PADDLE_H, g.p1Y + 7);
+    if (keys.has('ArrowUp')) g.p2Y = Math.max(0, g.p2Y - 7);
+    if (keys.has('ArrowDown')) g.p2Y = Math.min(CANVAS_H - PADDLE_H, g.p2Y + 7);
 
-    // P2 movement
-    if (keys.has('ArrowUp')) g.paddle2Y = Math.max(0, g.paddle2Y - 7);
-    if (keys.has('ArrowDown')) g.paddle2Y = Math.min(CANVAS_H - PADDLE_H, g.paddle2Y + 7);
+    g.bx += g.bvx * g.speed;
+    g.by += g.bvy * g.speed;
 
-    // Ball
-    g.ballX += g.ballVX * g.speed;
-    g.ballY += g.ballVY * g.speed;
-
-    // Top/bottom walls
-    if (g.ballY <= PUCK_SIZE || g.ballY >= CANVAS_H - PUCK_SIZE) {
-      g.ballVY *= -1;
+    if (g.by <= BALL_R || g.by >= CANVAS_H - BALL_R) {
+      g.bvy *= -1;
       g.speed = Math.min(g.speed + 0.02, 2);
     }
 
-    // Paddle collision
-    const hitP1 = g.ballX - PUCK_SIZE <= PADDLE_W * 2 && g.ballX > 0 &&
-      g.ballY >= g.paddle1Y && g.ballY <= g.paddle1Y + PADDLE_H;
-    const hitP2 = g.ballX + PUCK_SIZE >= CANVAS_W - PADDLE_W * 2 && g.ballX < CANVAS_W &&
-      g.ballY >= g.paddle2Y && g.ballY <= g.paddle2Y + PADDLE_H;
+    const p1Left = PADDLE_W;
+    const p1Right = PADDLE_W + PADDLE_W;
+    const p2Left = CANVAS_W - PADDLE_W * 2;
+    const p2Right = CANVAS_W - PADDLE_W;
+
+    const hitP1 = g.bx - BALL_R <= p1Right && g.bx > p1Left && g.by >= g.p1Y && g.by <= g.p1Y + PADDLE_H;
+    const hitP2 = g.bx + BALL_R >= p2Left && g.bx < p2Right && g.by >= g.p2Y && g.by <= g.p2Y + PADDLE_H;
 
     if (hitP1) {
-      g.ballVX = Math.abs(g.ballVX);
-      const rel = (g.ballY - (g.paddle1Y + PADDLE_H / 2)) / (PADDLE_H / 2);
-      g.ballVY = rel * 6;
+      g.bvx = Math.abs(g.bvx);
+      const rel = (g.by - (g.p1Y + PADDLE_H / 2)) / (PADDLE_H / 2);
+      g.bvy = rel * 6;
       g.speed = Math.min(g.speed + 0.05, 2);
     }
     if (hitP2) {
-      g.ballVX = -Math.abs(g.ballVX);
-      const rel = (g.ballY - (g.paddle2Y + PADDLE_H / 2)) / (PADDLE_H / 2);
-      g.ballVY = rel * 6;
+      g.bvx = -Math.abs(g.bvx);
+      const rel = (g.by - (g.p2Y + PADDLE_H / 2)) / (PADDLE_H / 2);
+      g.bvy = rel * 6;
       g.speed = Math.min(g.speed + 0.05, 2);
     }
 
-    // Scoring
-    if (g.ballX < 0) {
+    if (g.bx < -BALL_R) {
       setScores(s => ({ ...s, p2: s.p2 + 1 }));
-      g.ballX = CANVAS_W / 2;
-      g.ballY = CANVAS_H / 2;
-      g.ballVX = 5;
-      g.ballVY = 3;
-      g.speed = 1;
+      resetBall(g, 1);
     }
-    if (g.ballX > CANVAS_W) {
+    if (g.bx > CANVAS_W + BALL_R) {
       setScores(s => ({ ...s, p1: s.p1 + 1 }));
-      g.ballX = CANVAS_W / 2;
-      g.ballY = CANVAS_H / 2;
-      g.ballVX = -5;
-      g.ballVY = 3;
-      g.speed = 1;
+      resetBall(g, -1);
     }
   }, [status]);
+
+  const resetBall = (g: typeof gameRef.current, dir: number) => {
+    g.bx = CANVAS_W / 2;
+    g.by = CANVAS_H / 2;
+    g.bvx = 5 * dir;
+    g.bvy = 3 * (Math.random() > 0.5 ? 1 : -1);
+    g.speed = 1;
+  };
 
   useEffect(() => {
     let animId: number;
@@ -196,7 +176,11 @@ export default function PongPage() {
   }, [update, draw]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => keysRef.current.add(e.key);
+    if (status !== 'playing') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keysRef.current.add(e.key);
+      if (['w','s','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
+    };
     const handleKeyUp = (e: KeyboardEvent) => keysRef.current.delete(e.key);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -204,17 +188,33 @@ export default function PongPage() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [status]);
 
   useEffect(() => {
-    if (scores.p1 >= WIN_SCORE) {
-      setStatus('gameover');
-      setWinner('Player 1');
-    } else if (scores.p2 >= WIN_SCORE) {
-      setStatus('gameover');
-      setWinner('Player 2');
-    }
+    if (scores.p1 >= WIN_SCORE) { setStatus('gameover'); setWinner('Player 1'); }
+    else if (scores.p2 >= WIN_SCORE) { setStatus('gameover'); setWinner('Player 2'); }
   }, [scores]);
+
+  const resetGame = () => {
+    gameRef.current = {
+      p1Y: CANVAS_H / 2 - PADDLE_H / 2,
+      p2Y: CANVAS_H / 2 - PADDLE_H / 2,
+      bx: CANVAS_W / 2,
+      by: CANVAS_H / 2,
+      bvx: 5 * (Math.random() > 0.5 ? 1 : -1),
+      bvy: 3 * (Math.random() > 0.5 ? 1 : -1),
+      speed: 1,
+    };
+    setScores({ p1: 0, p2: 0 });
+    setStatus('ready');
+    setWinner('');
+  };
+
+  const inviteFriend = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setToast(true);
+    setTimeout(() => setToast(false), 2500);
+  };
 
   return (
     <PremiumBackground>
@@ -259,42 +259,28 @@ export default function PongPage() {
                 className="w-full rounded-2xl"
                 style={{ maxWidth: CANVAS_W }}
               />
-
-              {/* Controls */}
               <div className="flex justify-center gap-3 mt-4">
                 {status === 'ready' && (
-                  <Button onClick={() => setStatus('playing')} variant="primary" size="lg">
-                    Start Game 🎮
-                  </Button>
+                  <Button onClick={() => setStatus('playing')} variant="primary" size="lg">Start Game</Button>
                 )}
                 {status === 'playing' && (
-                  <Button onClick={() => setStatus('paused')} variant="secondary">
-                    Pause ⏸️
-                  </Button>
+                  <Button onClick={() => setStatus('paused')} variant="secondary">Pause</Button>
                 )}
                 {status === 'paused' && (
-                  <Button onClick={() => setStatus('playing')} variant="primary">
-                    Resume ▶️
-                  </Button>
+                  <Button onClick={() => setStatus('playing')} variant="primary">Resume</Button>
                 )}
                 {(status === 'playing' || status === 'paused') && (
-                  <Button onClick={resetGame} variant="outline">
-                    Reset 🔄
-                  </Button>
+                  <Button onClick={resetGame} variant="outline">Reset</Button>
                 )}
               </div>
-
-              {/* Game Over Overlay */}
               <AnimatePresence>
                 {status === 'gameover' && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mt-4">
                     <p className="text-3xl font-bold text-primary-600 mb-3">🎉 {winner} Wins!</p>
-                    <Button onClick={resetGame} variant="primary" size="lg">Play Again 🔄</Button>
+                    <Button onClick={resetGame} variant="primary" size="lg">Play Again</Button>
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Pause overlay */}
               {status === 'paused' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mt-4">
                   <p className="text-xl font-bold text-gray-500">⏸️ Game Paused</p>
@@ -303,7 +289,6 @@ export default function PongPage() {
             </div>
           </TiltCard>
 
-          {/* Controls Info */}
           <div className="flex justify-center gap-8 mt-4 text-sm text-gray-500">
             <div className="text-center">
               <p className="font-semibold text-primary-500">Player 1</p>
