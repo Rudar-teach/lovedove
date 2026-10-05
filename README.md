@@ -1,6 +1,6 @@
 # 🕊️ Love Dove - Where Hearts Connect 💕
 
-> A premium couple platform for creating beautiful birthday websites, sending proposals, playing 26 online games together, and tracking your love story.
+> A premium couple platform for creating beautiful birthday websites, sending proposals, playing 36 online games together, and tracking your love story.
 
 **Live GitHub Repo:** https://github.com/Rudar-teach/lovedove
 **Built for:** rudarsalaria12345@gmail.com
@@ -21,14 +21,25 @@
 - Receiver gets a notification + link to respond with **Yes** 💕 or **No** 💔
 - Sender gets a notification when responded
 - Beautiful response animation
+- **Custom Proposals:** Create your own proposal with custom title, message, theme, emoji, and challenge question
+- **Proposal Templates:** 12 pre-made templates to pick from
+- **Email Notifications:** Real email sent to both users via Resend API (or dev-mode console log)
 
-### 🎮 26 Couple Games (All 2-Player / Solo)
-- **Quick Play:** Tic-Tac-Toe, Rock-Paper-Scissors, Pong, Memory Match, Number Guess
-- **Word Games:** Hangman, Word Chain, Couple Scramble, Trivia Battle, Love Song Quiz
-- **Creative:** Drawing Challenge, Couple Pictionary, Love Trivia, Relationship Bingo
-- **Quiz:** Truth or Dare, Would You Rather, Compatibility Test, Compatibility Test
+### 🎮 36 Couple Games (All 2-Player / Solo)
+- **Quick Play:** Tic-Tac-Toe, Rock-Paper-Scissors, Pong, Memory Match, Number Guess, Memory Palace
+- **Word Games:** Hangman, Word Chain, Couple Scramble, Trivia Battle, Love Song Quiz, Love Trivia
+- **Creative:** Drawing Challenge, Couple Pictionary, Love Letters, Emoji Story, Love Song Quiz 2
+- **Quiz:** Truth or Dare, Would You Rather, Compatibility Test, Photo Quiz, Speed Date
 - **Arcade:** Snake, Flappy Heart, 2048, Heart Catcher, Kissing Game, Cupids Arrow, Love Maze, Hearts
-- **Typing:** Typing Race, Emoji Story
+- **Puzzle & Skill:** Puzzle Love (sliding), Dance Challenge, Couple Golfs
+- **Typing:** Typing Race
+
+### 🤝 Share & Play Together (NEW!)
+Every game has a **"Share with Friend & Play Together"** button:
+- Generates a 6-character session code
+- Polls Supabase for friend joining
+- "Friend joined! 🎉" notification when they open the link
+- Both players see the same session code
 
 ### 👫 Friends System
 - Add friends by username
