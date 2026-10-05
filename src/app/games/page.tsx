@@ -45,6 +45,13 @@ const games = [
   { name: 'Love Letter', slug: 'loveletter', icon: '✉️', desc: 'Write a love letter game', gradient: 'from-rose-400 to-pink-500', category: 'Love' },
   { name: 'Promise Chain', slug: 'promisechain', icon: '⛓️', desc: 'Make promises together', gradient: 'from-amber-400 to-orange-500', category: 'Love' },
   { name: 'First Date Simulator', slug: 'firstdate', icon: '🌹', desc: 'Simulate your first date', gradient: 'from-pink-400 to-rose-500', category: 'Love' },
+  { name: 'Puzzle Love', slug: 'puzzlelove', icon: '🧩', desc: 'Heart-shaped sliding puzzle', gradient: 'from-rose-400 to-red-500', category: 'Love' },
+  { name: 'Photo Quiz', slug: 'photoquiz', icon: '📸', desc: 'Guess your partner', gradient: 'from-purple-400 to-pink-500', category: 'Quiz' },
+  { name: 'Love Letters', slug: 'loveletters', icon: '💌', desc: 'Write a love letter', gradient: 'from-rose-400 to-pink-500', category: 'Love' },
+  { name: 'Dance Challenge', slug: 'dancechallenge', icon: '💃', desc: 'Show your moves!', gradient: 'from-pink-400 to-fuchsia-500', category: 'Party' },
+  { name: 'Speed Date', slug: 'speeddate', icon: '💬', desc: '8 rapid-fire questions', gradient: 'from-red-400 to-pink-500', category: 'Quiz' },
+  { name: 'Memory Palace', slug: 'memorypalace', icon: '🏰', desc: 'Match love symbols', gradient: 'from-violet-400 to-pink-500', category: 'Classic' },
+  { name: 'Couple Golf', slug: 'couplegolfs', icon: '⛳', desc: '9 holes of love', gradient: 'from-green-400 to-emerald-500', category: 'Love' },
 ];
 
 const categories = ['All', ...new Set(games.map(g => g.category))];
