@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const OPTIONS = [
   "Kiss on the forehead 💋", "Hug for 10 seconds 🤗", "Say something sweet 💝",
@@ -234,6 +235,7 @@ export default function KissingGamePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="kissinggame" />
+      </PremiumBackground>
   );
 }

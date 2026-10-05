@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 import Input from '@/components/ui/Input';
 
 interface CompatibilityResult {
@@ -270,6 +271,7 @@ export default function LoveCalculatorPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="lovecalculator" />
+      </PremiumBackground>
   );
 }

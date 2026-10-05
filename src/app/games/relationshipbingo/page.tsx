@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const ALL_SQUARES = [
   "Had a silly fight", "Watched a sunset together", "Shared a romantic meal", "Said 'I love you'",
@@ -192,6 +193,7 @@ export default function RelationshipBingoPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="relationshipbingo" />
+      </PremiumBackground>
   );
 }

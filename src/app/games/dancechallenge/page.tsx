@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const MOVES = [
   { emoji: '💃', name: 'Spin Around', desc: 'Do a graceful spin! Twirl like you\'re on a dance floor!' },
@@ -275,6 +276,7 @@ export default function DanceChallengePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="dancechallenge" />
+      </PremiumBackground>
   );
 }

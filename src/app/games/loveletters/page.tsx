@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const PROMPTS = [
   'rainy days together',
@@ -209,6 +210,7 @@ export default function LoveLettersPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="loveletters" />
+      </PremiumBackground>
   );
 }

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 import Input from '@/components/ui/Input';
 
 const VALID_WORDS = ['love', 'angel', 'elegant', 'tasty', 'yes', 'star', 'rose', 'echo', 'orange', 'egg', 'gift'];
@@ -117,6 +118,7 @@ export default function WordChainPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="wordchain" />
+      </PremiumBackground>
   );
 }

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 interface Question {
   question: string;
@@ -89,6 +90,7 @@ export default function QuizPage() {
             </div>
           </motion.div>
         </div>
+        <GameSharePanel gameSlug="quiz" />
       </PremiumBackground>
     );
   }

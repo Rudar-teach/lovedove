@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const CANVAS_W = 700;
 const CANVAS_H = 400;
@@ -320,6 +321,7 @@ export default function PongPage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="pong" />
+      </PremiumBackground>
   );
 }

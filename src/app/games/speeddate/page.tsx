@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const QUESTIONS = [
   { q: 'Would you rather', opts: ['Travel the world', 'Build a home together'], type: 'would' },
@@ -269,6 +270,7 @@ export default function SpeedDatePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="speeddate" />
+      </PremiumBackground>
   );
 }

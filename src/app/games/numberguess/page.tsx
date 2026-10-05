@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 type Turn = 'pick1' | 'guess1' | 'pick2' | 'guess2' | 'result';
 
@@ -255,6 +256,7 @@ export default function NumberGuessPage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="numberguess" />
+      </PremiumBackground>
   );
 }

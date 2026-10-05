@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const EMOJI_SETS = [
   '💕 🌅 🐚', '💖 🍷 🕯️', '💘 🌹 💋', '❤️ 🎂 🕊️', '💝 🌸 💐',
@@ -265,6 +266,7 @@ export default function EmojiStoryPage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="emojistory" />
+      </PremiumBackground>
   );
 }

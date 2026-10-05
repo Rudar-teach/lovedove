@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 type Tile = { value: number; isEmpty: boolean };
 type Board = Tile[][];
@@ -231,6 +232,7 @@ export default function PuzzleLovePage() {
           )}
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="puzzlelove" />
+      </PremiumBackground>
   );
 }

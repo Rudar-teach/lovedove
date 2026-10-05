@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const PROMPTS = [
   "Draw your partner's face", "Draw a romantic dinner", "Draw a sunset kiss",
@@ -263,6 +264,7 @@ export default function DrawingChallengePage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="drawingchallenge" />
+      </PremiumBackground>
   );
 }

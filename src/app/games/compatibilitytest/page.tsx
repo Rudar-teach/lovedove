@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 interface Question {
   q: string;
@@ -260,6 +261,7 @@ export default function CompatibilityTestPage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="compatibilitytest" />
+      </PremiumBackground>
   );
 }

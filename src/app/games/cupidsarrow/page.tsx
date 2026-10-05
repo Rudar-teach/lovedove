@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 type Target = { x: number; y: number; vy: number; size: number; hit: boolean; id: number };
 type Arrow = { x: number; y: number; vy: number };
@@ -309,6 +310,7 @@ export default function CupidsArrowPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="cupidsarrow" />
+      </PremiumBackground>
   );
 }

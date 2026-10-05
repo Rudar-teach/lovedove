@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const WORDS = [
   "Heart", "Rose", "Couple", "Kiss", "Ring", "Wedding dress", "Chocolate", "Candle", "Love letter",
@@ -262,6 +263,7 @@ export default function CouplePictionaryPage() {
             </div>
           </div>
         </div>
+        <GameSharePanel gameSlug="couplepictionary" />
       </PremiumBackground>
     );
   }

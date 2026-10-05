@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 interface Question {
   q: string;
@@ -192,6 +193,7 @@ export default function LoveTriviaPage() {
             </div>
           </div>
         </div>
+        <GameSharePanel gameSlug="lovetrivia" />
       </PremiumBackground>
     );
   }

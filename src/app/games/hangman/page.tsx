@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 import { supabase } from '@/lib/supabase';
 
 const WORDS: string[] = [
@@ -267,6 +268,7 @@ export default function HangmanPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="hangman" />
+      </PremiumBackground>
   );
 }

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const ICONS = ['💖', '💍', '🌹', '🕊️', '🎁', '💘', '💝', '💐', '❤️', '💗', '⭐', '🔥'];
 const ICON_NAMES: Record<string, string> = {
@@ -268,6 +269,7 @@ export default function MemoryPalacePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="memorypalace" />
+      </PremiumBackground>
   );
 }

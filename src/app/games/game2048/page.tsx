@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 import { supabase } from '@/lib/supabase';
 
 type Cell = number;
@@ -315,6 +316,7 @@ export default function Game2048Page() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="game2048" />
+      </PremiumBackground>
   );
 }

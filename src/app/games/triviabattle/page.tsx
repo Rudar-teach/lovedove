@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const QUESTIONS = [
   { q: "What's your partner's favorite love song?", options: ["I have no idea", "I know one or two", "I know their top 3", "I could sing it perfectly"], correct: 3 },
@@ -252,6 +253,7 @@ export default function TriviaBattlePage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="triviabattle" />
+      </PremiumBackground>
   );
 }

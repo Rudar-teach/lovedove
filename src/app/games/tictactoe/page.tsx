@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 import { supabase } from '@/lib/supabase';
 
 type CellValue = 'X' | 'O' | null;
@@ -220,6 +221,7 @@ export default function TicTacToePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="tictactoe" />
+      </PremiumBackground>
   );
 }

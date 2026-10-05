@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const SUITS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
 const SUIT_COLORS: Record<string, string> = { hearts: 'text-red-500', diamonds: 'text-red-500', clubs: 'text-gray-800', spades: 'text-gray-800' };
@@ -435,6 +436,7 @@ export default function HeartsPage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="hearts" />
+      </PremiumBackground>
   );
 }

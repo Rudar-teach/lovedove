@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const WORDS: { scrambled: string; answer: string }[] = [
   { scrambled: 'tnelaV', answer: 'Valentine' },
@@ -306,6 +307,7 @@ export default function CouplesScramblePage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="couplescramble" />
+      </PremiumBackground>
   );
 }

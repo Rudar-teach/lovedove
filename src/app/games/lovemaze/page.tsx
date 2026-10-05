@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const CELL = 20;
 const MAZE_COLS = 21;
@@ -354,6 +355,7 @@ export default function LoveMazePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="lovemaze" />
+      </PremiumBackground>
   );
 }

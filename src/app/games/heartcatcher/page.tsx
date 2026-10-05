@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 type FallingItem = {
   x: number; y: number; vy: number; type: 'heart' | 'rose' | 'bomb' | 'diamond';
@@ -365,6 +366,7 @@ export default function HeartCatcherPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+            <GameSharePanel gameSlug="heartcatcher" />
+      </PremiumBackground>
   );
 }

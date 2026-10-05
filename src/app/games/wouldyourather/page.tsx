@@ -7,6 +7,7 @@ import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
+import GameSharePanel from '@/components/GameSharePanel';
 
 const QUESTIONS = [
   { a: 'Kiss in the rain', b: 'Stargazing all night' },
@@ -77,6 +78,7 @@ export default function WouldYouRatherPage() {
             </div>
           </motion.div>
         </div>
+        <GameSharePanel gameSlug="wouldyourather" />
       </PremiumBackground>
     );
   }
