@@ -5,16 +5,20 @@ interface CardProps {
   className?: string;
   onClick?: () => void;
   hover?: boolean;
+  glass?: boolean;
 }
 
-export function Card({ children, className = '', onClick, hover = false }: CardProps) {
+export default function Card({ children, className = '', onClick, hover = false, glass = false }: CardProps) {
   return (
     <div
       onClick={onClick}
       className={`
-        bg-white rounded-3xl shadow-lg shadow-pink-500/5
-        border border-pink-100 overflow-hidden
-        ${hover ? 'hover:shadow-xl hover:shadow-pink-500/10 hover:-translate-y-1 cursor-pointer transition-all duration-300' : ''}
+        rounded-3xl overflow-hidden
+        ${glass
+          ? 'bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl shadow-pink-500/5'
+          : 'bg-white border border-pink-100 shadow-lg shadow-pink-500/5'
+        }
+        ${hover ? 'hover:shadow-2xl hover:shadow-pink-500/10 hover:-translate-y-1 cursor-pointer transition-all duration-300' : ''}
         ${className}
       `}
     >

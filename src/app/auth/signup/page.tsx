@@ -2,155 +2,133 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Heart, Mail, Lock, User, Loader2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import PremiumBackground from '@/components/PremiumBackground';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-    username: '',
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '', fullName: '', username: '' });
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
+    if (formData.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
-      // Sign up username
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            username: formData.username,
-          },
-        },
+        email: formData.email, password: formData.password,
+        options: { data: { full_name: formData.fullName, username: formData.username } },
       });
-
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error('Signup failed');
-
-      // Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        email: formData.email,
-        full_name: formData.fullName,
-        username: formData.username,
-        theme_color: 'pink',
-      });
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        throw profileError;
-      }
-
+      const { error: profileError } = await supabase.from('profiles').insert({ id: authData.user.id, email: formData.email, full_name: formData.fullName, username: formData.username, theme_color: 'pink' });
+      if (profileError) { console.error('Profile creation error:', profileError); throw profileError; }
       toast.success('Account created! Welcome to Love Dove! 💕');
       router.push('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error: any) { toast.error(error.message || 'Something went wrong'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 -left-40 w-96 h-96 bg-primary-200/40 rounded-full blur-3xl animate-float" />
-        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-rose-200/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-pink-200/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
-      >
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-2xl font-display font-bold gradient-text mb-6">
-            <Heart className="w-7 h-7 text-primary-500 heart-beat" />
-            Love Dove
-          </Link>
-          <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">
-            Create Your Account
-          </h1>
-          <p className="text-gray-600">Join us and start your love story 💕</p>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-primary-500/10 border border-pink-100 p-8">
-          <form onSubmit={handleSignup} className="space-y-5">
-            <Input
-              label="Full Name"
-              placeholder="Rudar Salaria"
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              icon={<User className="w-5 h-5" />}
-              required
-            />
-
-            <Input
-              label="Username"
-              placeholder="rudar_teach"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
-              icon={<span className="text-sm">@</span>}
-              required
-            />
-
-            <Input
-              type="email"
-              label="Email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              icon={<Mail className="w-5 h-5" />}
-              required
-            />
-
-            <Input
-              type="password"
-              label="Password"
-              placeholder="At least 6 characters"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              icon={<Lock className="w-5 h-5" />}
-              required
-              minLength={6}
-            />
-
-            <Button type="submit" isLoading={loading} className="w-full" size="lg">
-              {loading ? 'Creating account...' : 'Sign Up'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/auth/login" className="text-primary-600 font-semibold hover:underline">
-              Log in
+    <PremiumBackground>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-md"
+        >
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center shadow-2xl shadow-primary-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <Heart className="w-7 h-7 text-white heart-beat" fill="white" />
+              </div>
+              <span className="font-display font-black text-3xl gradient-text-animated">Love Dove</span>
             </Link>
+            <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-3xl font-display font-bold text-gray-900 mb-2">
+              Create Your Account
+            </motion.h1>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-gray-600">Join us and start your love story 💕</motion.p>
           </div>
-        </div>
 
-        <p className="text-center text-xs text-gray-500 mt-6">
-          By signing up, you agree to our Terms & Privacy Policy
-        </p>
-      </motion.div>
-    </div>
+          {/* Form Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="glass-strong rounded-[2rem] shadow-2xl shadow-pink-500/10 border border-white/60 p-8 sm:p-10"
+          >
+            <form onSubmit={handleSignup} className="space-y-5">
+              <Input
+                label="Full Name"
+                placeholder="Rudar Salaria"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                icon={<User className="w-5 h-5" />}
+                required
+              />
+              <Input
+                label="Username"
+                placeholder="rudar_teach"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                icon={<span className="text-lg font-bold text-gray-400">@</span>}
+                required
+              />
+              <Input
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                icon={<Mail className="w-5 h-5" />}
+                required
+              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  label="Password"
+                  placeholder="At least 6 characters"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  icon={<Lock className="w-5 h-5" />}
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-[2.2rem] text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <Button type="submit" isLoading={loading} className="w-full" size="lg">
+                {loading ? 'Creating Account...' : <>Create Account <ArrowRight className="w-5 h-5 ml-2" /></>}
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center text-sm text-gray-600 pt-6 border-t border-pink-100/60">
+              Already have an account?{' '}
+              <Link href="/auth/login" className="text-primary-600 font-bold hover:underline">
+                Log in
+              </Link>
+            </div>
+          </motion.div>
+
+          <p className="text-center text-xs text-gray-400 mt-6">
+            By signing up, you agree to our Terms & Privacy Policy
+          </p>
+        </motion.div>
+      </div>
+    </PremiumBackground>
   );
 }
