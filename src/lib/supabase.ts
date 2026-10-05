@@ -81,3 +81,38 @@ export type GameStats = {
   losses: number;
   last_played: string;
 };
+
+export type Proposal = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  title: string;
+  message: string;
+  category: string;
+  response: 'yes' | 'no' | 'maybe' | null;
+  responded_at: string | null;
+  created_at: string;
+  email_sent: boolean;
+  sender?: Profile;
+  receiver?: Profile;
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  type: 'proposal_received' | 'proposal_accepted' | 'proposal_declined' | 'friend_request' | 'game_invite';
+  title: string;
+  message: string;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+};
+
+export type ProposalCategory = {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+  gradient: string;
+  isCustom?: boolean;
+};

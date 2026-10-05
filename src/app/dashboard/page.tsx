@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Zap } from 'lucide-react';
+import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Zap, Mail, Bell } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Profile, GameStats, UserBadge } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -85,6 +85,8 @@ export default function DashboardPage() {
                   <div className="hidden md:flex items-center gap-1">
                     <Link href="/dashboard" className="px-4 py-2 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl">Dashboard</Link>
                     <Link href="/games" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Games</Link>
+                    <Link href="/proposals" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Proposals <Mail className="w-3.5 h-3.5" /></Link>
+                    <Link href="/notifications" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Alerts <Bell className="w-3.5 h-3.5" /></Link>
                     <Link href="/friends" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Friends</Link>
                   </div>
                 </div>
@@ -233,6 +235,8 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
                   <div className="space-y-3">
                     <Link href="/friends"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Users className="w-4 h-4" /> Manage Friends</span><ChevronRight className="w-4 h-4" /></Button></Link>
+                    <Link href="/proposals"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Mail className="w-4 h-4" /> Proposals</span><ChevronRight className="w-4 h-4" /></Button></Link>
+                    <Link href="/notifications"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Bell className="w-4 h-4" /> Notifications</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <Link href="/birthday/new"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Gift className="w-4 h-4" /> Birthday Site</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <Link href="/profile"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Settings className="w-4 h-4" /> Edit Profile</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-full transition-colors font-medium text-sm">
