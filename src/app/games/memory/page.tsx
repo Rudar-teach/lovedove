@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Trophy } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trophy, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
 
 const EMOJIS = ['💕', '💖', '💗', '💓', '💝', '💘', '❤️', '🕊️'];
@@ -95,57 +98,73 @@ export default function MemoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 py-8 px-4">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/dashboard">
-            <button className="p-2 hover:bg-white rounded-full transition-colors">
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
+    <PremiumBackground>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          {/* Premium Header */}
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games">
+              <button className="p-2 hover:bg-white rounded-full transition-colors">
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
+              </button>
+            </Link>
+            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-primary-500" />
+              Memory Match
+            </h1>
+            <button onClick={shuffle} className="p-2 hover:bg-white rounded-full transition-colors">
+              <RefreshCw className="w-6 h-6 text-primary-500" />
             </button>
-          </Link>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Memory Match</h1>
-          <button onClick={shuffle} className="p-2 hover:bg-white rounded-full transition-colors">
-            <RefreshCw className="w-6 h-6 text-primary-500" />
-          </button>
-        </div>
-
-        <div className="flex justify-center gap-6 mb-6">
-          <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-pink-100">
-            <p className="text-sm text-gray-500">Moves</p>
-            <p className="text-2xl font-bold text-gray-900">{moves}</p>
           </div>
-          <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-pink-100">
-            <p className="text-sm text-gray-500">Matches</p>
-            <p className="text-2xl font-bold text-primary-600">{matches}/{EMOJIS.length}</p>
+
+          <div className="flex justify-center gap-6 mb-6">
+            <div className="bg-white/70 backdrop-blur-xl px-5 py-2 rounded-2xl shadow-lg border border-pink-100/60">
+              <p className="text-sm text-gray-500">Moves</p>
+              <p className="text-2xl font-bold text-gray-900">{moves}</p>
+            </div>
+            <div className="bg-white/70 backdrop-blur-xl px-5 py-2 rounded-2xl shadow-lg border border-pink-100/60">
+              <p className="text-sm text-gray-500">Matches</p>
+              <p className="text-2xl font-bold text-primary-600">{matches}/{EMOJIS.length}</p>
+            </div>
           </div>
-        </div>
 
-        <AnimatePresence>
-          {gameOver && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
-              <p className="text-2xl font-bold text-primary-600">🎉 You won in {moves} moves!</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <AnimatePresence>
+            {gameOver && (
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
+                <p className="text-2xl font-bold text-primary-600">🎉 You won in {moves} moves!</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <div className="grid grid-cols-4 gap-3">
-          {cards.map((card, index) => (
-            <motion.button
-              key={card.id}
-              whileHover={{ scale: card.isFlipped || card.isMatched ? 1 : 1.05 }}
-              whileTap={{ scale: card.isFlipped || card.isMatched ? 1 : 0.95 }}
-              onClick={() => handleCardClick(index)}
-              className={`aspect-square rounded-2xl text-3xl flex items-center justify-center transition-all duration-500 ${
-                card.isFlipped || card.isMatched
-                  ? 'bg-white shadow-lg border-2 border-primary-200 rotate-0'
-                  : 'bg-gradient-to-br from-primary-400 to-rose-500 shadow-lg rotate-180'
-              }`}
-            >
-              {card.isFlipped || card.isMatched ? card.emoji : '💕'}
-            </motion.button>
-          ))}
+          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+              <div className="grid grid-cols-4 gap-3">
+                {cards.map((card, index) => (
+                  <motion.button
+                    key={card.id}
+                    whileHover={{ scale: card.isFlipped || card.isMatched ? 1 : 1.05 }}
+                    whileTap={{ scale: card.isFlipped || card.isMatched ? 1 : 0.95 }}
+                    onClick={() => handleCardClick(index)}
+                    className={`aspect-square rounded-2xl text-3xl flex items-center justify-center transition-all duration-500 ${
+                      card.isFlipped || card.isMatched
+                        ? 'bg-white shadow-lg border-2 border-primary-200 rotate-0'
+                        : 'bg-gradient-to-br from-primary-400 to-rose-500 shadow-lg rotate-180'
+                    }`}
+                  >
+                    {card.isFlipped || card.isMatched ? card.emoji : '💕'}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </TiltCard>
+
+          <div className="text-center">
+            <Link href="/games">
+              <Button variant="outline" className="mt-8">← Back to Games</Button>
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </PremiumBackground>
   );
 }
