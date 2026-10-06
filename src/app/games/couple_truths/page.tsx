@@ -1,140 +1,159 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const TRUTHS = [
-  "What's the most romantic thing someone has ever done for you?",
-  "What's your biggest relationship fear?",
-  "What's one thing you've never told your partner?",
-  "When did you first realize you were in love?",
-  "What's your favorite memory together so far?",
-  "What's a dream you have for your relationship?",
-  "What makes you feel most loved and appreciated?",
-  "What's a small thing your partner does that melts your heart?",
-  "What's something you hope never changes about your partner?",
-  "What's the hardest part of being in a long-distance relationship (if applicable)?",
-  "What's a secret talent your partner doesn't know about?",
-  "What would you do if you knew you couldn't fail?",
-  "What's your love language and do you feel understood?",
-  "What's a tradition you want to start together?",
-  "What's something that always makes you laugh together?",
-  "If you could relive one day together, which would it be?",
-  "What's your biggest hope for your future together?",
-  "What does 'home' mean to you?",
-  "What's something your partner does that you find incredibly attractive?",
-  "What's a fear you're working on overcoming?",
-  "When do you feel most vulnerable with your partner?",
-  "What's the most thoughtful gift you've ever received?",
-  "What's a hobby you'd love to try together?",
-  "What does unconditional love mean to you?",
-  "What's something that always cheers you up?",
-  "If you could travel anywhere together, where would you go?",
-  "What's your favorite thing about morning together?",
-  "What's a lesson love has taught you?",
-  "What's your favorite way to spend quality time?",
-  "What makes you feel safe and secure in this relationship?",
+const QUESTIONS = [
+  "What's the first thing you noticed about me?",
+  "What's our most romantic moment?",
+  "What do I do that always makes you smile?",
+  "What's your favorite physical feature of mine?",
+  "What song reminds you most of us?",
+  "Where do you see us in 5 years?",
+  "What's your biggest fear about our relationship?",
+  "What's the best gift I've ever given you?",
+  "What was the moment you knew you loved me?",
+  "What's the most romantic thing I've done?",
+  "What's your dream date with me?",
+  "What small thing do I do that you love?",
+  "What's the biggest surprise I've given you?",
+  "What would you name our future pet?",
+  "What's your favorite 'us' tradition?",
 ];
 
-export default function CoupleTruths() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [current, setCurrent] = useState('');
-  const [truths, setTruths] = useState<string[]>([]);
-  const [done, setDone] = useState<string[]>([]);
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    setTruths([...TRUTHS].sort(() => Math.random() - 0.5));
-  }, []);
+export default function CoupleTruthsPage() {
+  const [phase, setPhase] = useState<'start' | 'playing' | 'result'>('start');
+  const [questions, setQuestions] = useState<typeof QUESTIONS>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [p1Answers, setP1Answers] = useState<string[]>([]);
+  const [p2Answers, setP2Answers] = useState<string[]>([]);
+  const [input, setInput] = useState('');
+  const [p1Turn, setP1Turn] = useState(true);
+  const [feedback, setFeedback] = useState('');
 
   const startGame = () => {
-    const shuffled = [...TRUTHS].sort(() => Math.random() - 0.5);
-    setTruths(shuffled);
-    setDone([]);
-    setIdx(0);
-    setCurrent(shuffled[0]);
-    setGameState('playing');
+    const shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 8);
+    setQuestions(shuffled);
+    setCurrentIdx(0);
+    setP1Answers([]);
+    setP2Answers([]);
+    setInput('');
+    setP1Turn(true);
+    setFeedback('');
+    setPhase('playing');
   };
 
-  const next = () => {
-    setDone(prev => [...prev, current]);
-    if (idx < truths.length - 1) {
-      setIdx(i => i + 1);
-      setCurrent(truths[idx + 1]);
+  const submitAnswer = () => {
+    if (!input.trim() || currentIdx >= questions.length) return;
+    if (p1Turn) {
+      setP1Answers(a => [...a, input.trim()]);
+      setP1Turn(false);
+      setInput('');
     } else {
-      setGameState('finished');
+      setP2Answers(a => [...a, input.trim()]);
+      setP2Answers(a2 => [...a2, input.trim()]);
+      setInput('');
+      if (currentIdx + 1 < questions.length) {
+        setCurrentIdx(i => i + 1);
+        setP1Turn(true);
+        setFeedback('');
+      } else {
+        setFeedback('done');
+        setTimeout(() => setPhase('result'), 500);
+      }
     }
+  };
+
+  const skip = () => {
+    if (p1Turn) {
+      setP1Answers(a => [...a, 'skipped']);
+      setP1Turn(false);
+    } else {
+      setP2Answers(a => [...a, 'skipped']);
+      if (currentIdx + 1 < questions.length) {
+        setCurrentIdx(i => i + 1);
+        setP1Turn(true);
+      } else {
+        setPhase('result');
+      }
+    }
+    setInput('');
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div>
-                <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-              </Link>
-            </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-7xl mb-6">💕</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Couple Truths</h1>
-              <p className="text-gray-600 mb-8 text-lg">Deep, meaningful questions to strengthen your bond!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-2">How to Play:</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>💕 Take turns answering truth questions</li>
-                  <li>💕 Be honest and open with each other</li>
-                  <li>💕 {TRUTHS.length} deep questions to explore</li>
-                  <li>💕 This will bring you closer together!</li>
-                </ul>
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-red-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Play className="w-5 h-5 inline mr-2" /> Start Truths</button>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Heart className="w-5 h-5 text-rose-500" /> Couple Truths</h1>
+            <div className="w-16" />
+          </div>
+
+          {phase === 'start' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">💬</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Couple Truths</h2>
+                  <p className="text-gray-600">Answer 8 deep questions about your relationship! Both players answer, then compare!</p>
+                  <p className="text-sm text-pink-500 font-medium">Be honest and open with each other</p>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Start Truths 💬</Button>
+                </div>
+              </TiltCard>
             </motion.div>
           )}
-          {gameState === 'playing' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="text-center mb-4">
-                <span className="text-sm font-medium text-gray-600">Truth {idx + 1} / {truths.length}</span>
+
+          {phase === 'playing' && questions[currentIdx] && (
+            <motion.div initial={{ opacity: 0, x: p1Turn ? 40 : -40 }} animate={{ opacity: 1, x: 0 }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-600">{p1Turn ? '💙 Player 1\'s Turn' : '💗 Player 2\'s Turn'}</span>
+                <span className="text-sm text-gray-500">Q {currentIdx + 1}/{questions.length}</span>
               </div>
-              <div className="w-full h-2 bg-white/50 rounded-full mb-8 overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-full" style={{ width: `${((idx + 1) / truths.length) * 100}%` }} />
+              <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                <motion.div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full" animate={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }} />
               </div>
-              <div className="bg-gradient-to-br from-rose-500 to-red-500 rounded-[2rem] shadow-2xl p-12 mb-6 text-center text-white">
-                <div className="text-5xl mb-4">💬</div>
-                <p className="text-2xl font-bold leading-relaxed">{current}</p>
-              </div>
-              <button onClick={next} className="w-full px-6 py-4 bg-white/70 rounded-2xl font-bold text-gray-700 hover:bg-white transition-colors">Answered! Next Truth →</button>
+
+              <TiltCard intensity={4}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+                  <p className="text-lg font-bold text-gray-800 mb-6 text-center">{questions[currentIdx]}</p>
+                  <div className="space-y-3">
+                    <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Share your truth..."
+                      className="w-full rounded-xl border-2 border-pink-200 p-4 focus:border-primary-400 outline-none resize-none" rows={3} autoFocus />
+                    <div className="flex gap-3">
+                      <Button onClick={submitAnswer} variant="primary" className="flex-1" disabled={!input.trim()}>Submit</Button>
+                      <Button onClick={skip} variant="outline">Skip</Button>
+                    </div>
+                  </div>
+                </div>
+              </TiltCard>
             </motion.div>
           )}
-          {gameState === 'finished' && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-              <div className="text-6xl mb-6">💕</div>
-              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Beautiful!</h2>
-              <p className="text-gray-600 mb-8">You shared {done.length} truths together!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-rose-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-4">Questions you answered:</h3>
-                {done.map((t, i) => (
-                  <div key={i} className="flex items-start gap-2 mb-2"><span className="text-rose-500">💬</span><p className="text-sm text-gray-700">{t}</p></div>
-                ))}
-              </div>
-              <div className="flex gap-4 justify-center">
-                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-red-500 rounded-2xl text-white font-bold">More Games</Link>
-              </div>
+
+          {phase === 'result' && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+              <TiltCard intensity={5}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">💬</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Truths Shared!</h2>
+                  <p className="text-gray-600">You've both shared your truths. Open hearts, deep connections!</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-xl p-4"><p className="text-blue-500 font-medium">💙 Player 1</p><p className="text-sm text-gray-600">{p1Answers.filter(a => a !== 'skipped').length} answers</p></div>
+                    <div className="bg-rose-50 rounded-xl p-4"><p className="text-rose-500 font-medium">💗 Player 2</p><p className="text-sm text-gray-600">{p2Answers.filter(a => a !== 'skipped').length} answers</p></div>
+                  </div>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Share Again 💬</Button>
+                </div>
+              </TiltCard>
             </motion.div>
           )}
+
+          <div className="text-center mt-6">
+            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
+          </div>
         </div>
       </div>
     </PremiumBackground>

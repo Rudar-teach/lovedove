@@ -1,153 +1,189 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Timer } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const riddles = [
-  { q: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", a: "A map", hint: "Think of something you hold in your hands..." },
-  { q: "The more you take, the more you leave behind. What am I?", a: "Footsteps", hint: "Every step you make..." },
-  { q: "I speak without a mouth and hear without ears. I have no body, but come alive with the wind. What am I?", a: "An echo", hint: "Found in mountains..." },
-  { q: "What has keys but no locks? Space but no room? You can enter, but you can't go outside?", a: "A keyboard", hint: "You're using one right now!" },
-  { q: "I'm light as a feather, yet the strongest person can't hold me for five minutes. What am I?", a: "Breath", hint: "Essential for life..." },
-  { q: "What gets wet while drying?", a: "A towel", hint: "Found in the bathroom..." },
-  { q: "What can you break, even if you never pick it up or touch it?", a: "A promise", hint: "Think about relationships..." },
-  { q: "What has a head and a tail but no body?", a: "A coin", hint: "It has two sides..." },
-  { q: "I have branches, but no fruit, trunk, or leaves. What am I?", a: "A bank", hint: "Financial institution..." },
-  { q: "What goes up but never comes down?", a: "Age", hint: "We all have it..." },
-  { q: "What has many needles but doesn't sew?", a: "A pine tree / compass", hint: "Depends on which kind..." },
-  { q: "What is full of holes but still holds water?", a: "A sponge", hint: "Used in the kitchen..." },
-  { q: "What has legs but cannot walk?", a: "A table / chair", hint: "Found in every home..." },
-  { q: "What comes once in a minute, twice in a moment, but never in a thousand years?", a: "The letter M", hint: "Think about letters..." },
-  { q: "I'm tall when I'm young and short when I'm old. What am I?", a: "A candle", hint: "Produces light..." },
+const RIDDLES = [
+  { q: "What has to be broken before you can use it?", answer: "an egg", options: ["an egg", "a heart", "a promise", "a seal"] },
+  { q: "I'm full of holes but still hold water. What am I?", answer: "a sponge", options: ["a sponge", "a net", "a cloud", "a sieve"] },
+  { q: "What can travel all around the world without leaving its corner?", answer: "a stamp", options: ["a stamp", "a thought", "a shadow", "light"] },
+  { q: "The more you share me, the more I grow. What am I?", answer: "love", options: ["love", "a secret", "knowledge", "money"] },
+  { q: "What has legs but cannot walk?", answer: "a table", options: ["a table", "a chair", "a plant", "a clock"] },
+  { q: "What belongs to you but others use it more than you?", answer: "your name", options: ["your name", "your phone", "your house", "your heart"] },
+  { q: "What gets bigger the more you take away?", answer: "a hole", options: ["a hole", "debt", "anger", "distance"] },
+  { q: "What has many keys but can't open a single lock?", answer: "a piano", options: ["a piano", "a computer", "a map", "a diary"] },
+  { q: "What comes once in a minute, twice in a moment, but never in a thousand years?", answer: "the letter m", options: ["the letter m", "the number 1", "a heartbeat", "love"] },
+  { q: "I can fly without wings. I can cry without eyes. What am I?", answer: "a cloud", options: ["a cloud", "the wind", "a ghost", "a dream"] },
+  { q: "What has one eye but can't see?", answer: "a needle", options: ["a needle", "a potato", "a storm", "a cyclone"] },
+  { q: "What kind of room has no doors or windows?", answer: "a mushroom", options: ["a mushroom", "a cavity", "a mirror", "a thought"] },
+  { q: "What has a tongue but cannot talk, has a soul but cannot feel love?", answer: "a shoe", options: ["a shoe", "a river", "a plant", "a statue"] },
+  { q: "What can fill a room but takes up no space?", answer: "light", options: ["light", "love", "sound", "music"] },
+  { q: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", answer: "a map", options: ["a map", "a painting", "a dream", "a story"] },
 ];
 
-export default function RelationshipRiddles() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
+export default function RelationshipRiddlesPage() {
+  const [phase, setPhase] = useState<'start' | 'playing' | 'result'>('start');
+  const [riddles, setRiddles] = useState<typeof RIDDLES>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
-  const [currentQ, setCurrentQ] = useState(0);
-  const [answer, setAnswer] = useState('');
-  const [showHint, setShowHint] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [answered, setAnswered] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(120);
-  const [shuffled, setShuffled] = useState(riddles);
-
-  useEffect(() => {
-    if (gameState === 'playing' && timeLeft > 0) {
-      const t = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-      return () => clearTimeout(t);
-    } else if (timeLeft === 0 && gameState === 'playing') {
-      setGameState('finished');
-    }
-  }, [gameState, timeLeft]);
+  const timerRef = useRef<number | null>(null);
 
   const startGame = () => {
-    const s = [...riddles].sort(() => Math.random() - 0.5).slice(0, 8);
-    setShuffled(s);
-    setCurrentQ(0);
+    const shuffled = [...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 10);
+    setRiddles(shuffled);
+    setCurrentIdx(0);
     setScore(0);
-    setAnswer('');
-    setShowHint(false);
+    setTimeLeft(60);
+    setStreak(0);
+    setBestStreak(0);
     setFeedback('');
-    setAnswered(false);
-    setTimeLeft(120);
-    setGameState('playing');
+    setPhase('playing');
   };
 
-  const checkAnswer = () => {
-    if (answered) return;
-    const correct = shuffled[currentQ].a.toLowerCase();
-    const userAns = answer.trim().toLowerCase();
-    if (correct.includes(userAns) || userAns.includes(correct.split(' ')[0])) {
-      setScore(s => s + 1);
-      setFeedback('Correct! 🧩');
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setPhase('result');
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [phase]);
+
+  const handleAnswer = (choice: string) => {
+    const correct = riddles[currentIdx].answer;
+    if (choice === correct) {
+      setScore(s => s + 10);
+      setStreak(s => {
+        const ns = s + 1;
+        if (ns > bestStreak) setBestStreak(ns);
+        return ns;
+      });
+      setFeedback('✨ Correct!');
     } else {
-      setFeedback(`It was "${shuffled[currentQ].a}"!`);
+      setStreak(0);
+      setFeedback(`😅 It was: ${correct}`);
     }
-    setAnswered(true);
-  };
-
-  const nextQ = () => {
-    if (currentQ + 1 >= shuffled.length) {
-      setGameState('finished');
-    } else {
-      setCurrentQ(c => c + 1);
-      setAnswer('');
-      setShowHint(false);
+    setTimeout(() => {
       setFeedback('');
-      setAnswered(false);
-    }
+      if (currentIdx + 1 < riddles.length) {
+        setCurrentIdx(i => i + 1);
+      } else {
+        setPhase('result');
+      }
+    }, 1000);
   };
+
+  const percent = Math.round((score / (riddles.length * 10)) * 100);
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <nav className="flex items-center justify-between mb-8">
-          <button onClick={() => router.back()} className="p-2 rounded-full bg-white/70 hover:bg-white transition">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
-            <span className="font-bold">Love Dove</span>
-          </Link>
-          <Link href="/games" className="text-sm text-gray-600 hover:text-pink-500 transition">All Games</Link>
-        </nav>
+    <PremiumBackground>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Sparkles className="w-5 h-5 text-primary-500" /> Relationship Riddles</h1>
+            <div className="w-16" />
+          </div>
 
-        {gameState === 'idle' && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-7xl mb-4">🧩</div>
-            <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">Riddles</h1>
-            <p className="text-gray-600 mb-8 text-lg">Solve brain-teasing riddles together! Can you figure them all out?</p>
-            <button onClick={startGame} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-white font-bold hover:shadow-lg hover:shadow-indigo-500/30 transition transform hover:scale-105">
-              <Play className="inline mr-2" /> Start Game
-            </button>
-          </motion.div>
-        )}
+          {phase === 'start' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">🔍</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Relationship Riddles</h2>
+                  <p className="text-gray-600">Solve 10 riddles with couple-themed answers in 60 seconds! Beat your streak!</p>
+                  <div className="flex gap-2 justify-center text-2xl">
+                    <span className="px-3 py-1 bg-pink-100 rounded-full">🧠</span>
+                    <span className="px-3 py-1 bg-rose-100 rounded-full">💕</span>
+                    <span className="px-3 py-1 bg-pink-100 rounded-full">⏱️</span>
+                  </div>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Play Solo 🔍</Button>
+                </div>
+              </TiltCard>
+            </motion.div>
+          )}
 
-        {gameState === 'playing' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/70 p-6 rounded-3xl shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-semibold text-gray-500">Riddle {currentQ + 1}/{shuffled.length}</span>
-              <span className="text-sm font-semibold text-indigo-500 flex items-center gap-1"><Timer className="w-4 h-4" /> {timeLeft}s</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all" style={{ width: `${(currentQ / shuffled.length) * 100}%` }} />
-            </div>
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl mb-4">
-              <p className="text-xl font-bold text-center text-gray-800">{shuffled[currentQ].q}</p>
-            </div>
-            {feedback && <p className="text-center text-lg font-semibold mb-3">{feedback}</p>}
-            {!answered ? (
-              <>
-                <input type="text" value={answer} onChange={e => setAnswer(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkAnswer()} placeholder="Your answer..." className="w-full px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-500 focus:outline-none mb-3" />
-                <button onClick={() => setShowHint(h => !h)} className="text-sm text-indigo-500 mb-2 hover:underline">💡 {showHint ? 'Hide' : 'Show'} Hint</button>
-                {showHint && <p className="text-sm text-gray-500 mb-3">Hint: {shuffled[currentQ].hint}</p>}
-                <button onClick={checkAnswer} className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg transition">Submit Answer</button>
-              </>
-            ) : (
-              <button onClick={nextQ} className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg transition">
-                {currentQ + 1 >= shuffled.length ? 'Finish' : 'Next Riddle →'}
-              </button>
-            )}
-          </motion.div>
-        )}
+          {phase === 'playing' && riddles[currentIdx] && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-600">Riddle {currentIdx + 1}/{riddles.length}</span>
+                <div className="flex gap-3">
+                  <span className="text-sm font-bold text-pink-600">🔥 {streak} streak</span>
+                  <span className={`text-sm font-bold ${timeLeft <= 15 ? 'text-rose-600' : 'text-gray-500'}`}>⏱️ {timeLeft}s</span>
+                </div>
+              </div>
+              <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                <motion.div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full" animate={{ width: `${((currentIdx + 1) / riddles.length) * 100}%` }} />
+              </div>
 
-        {gameState === 'finished' && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-7xl mb-4">🧩</div>
-            <h2 className="text-3xl font-bold mb-4">Riddles Complete!</h2>
-            <p className="text-5xl font-black bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent mb-2">{score}/{shuffled.length}</p>
-            <p className="text-gray-600 mb-8">
-              {score === shuffled.length ? 'Riddle master! 🏆' : score >= shuffled.length / 2 ? 'Great solving! 🧩' : 'Keep puzzling! 💜'}
-            </p>
-            <button onClick={startGame} className="px-8 py-3 bg-white/70 font-bold rounded-full hover:bg-white transition"><RotateCcw className="inline mr-2" /> Play Again</button>
-            <Link href="/games" className="block mt-4 text-indigo-500 font-semibold hover:underline">More Games</Link>
-          </motion.div>
-        )}
+              <TiltCard intensity={4}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+                  <p className="text-lg font-bold text-gray-800 mb-6 text-center italic leading-relaxed">"{riddles[currentIdx].q}"</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {riddles[currentIdx].options.map((opt, i) => (
+                      <motion.button key={i} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                        onClick={() => handleAnswer(opt)}
+                        className="p-4 rounded-2xl font-semibold text-left bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-100 hover:border-primary-300 hover:from-pink-100 hover:to-rose-100 transition-all text-gray-700">
+                        {['A', 'B', 'C', 'D'][i]}. {opt}
+                      </motion.button>
+                    ))}
+                  </div>
+                  {feedback && (
+                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-center text-lg font-bold mt-4 text-primary-600">{feedback}</motion.p>
+                  )}
+                </div>
+              </TiltCard>
+
+              <div className="flex justify-center gap-4 mt-4">
+                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-4 py-2 shadow border border-pink-100">
+                  <p className="text-xs text-gray-500">Score</p>
+                  <p className="text-xl font-bold text-primary-600">{score}</p>
+                </div>
+                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-4 py-2 shadow border border-pink-100">
+                  <p className="text-xs text-gray-500">Best Streak</p>
+                  <p className="text-xl font-bold text-amber-600">🔥 {bestStreak}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {phase === 'result' && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+              <TiltCard intensity={5}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem} shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">{percent >= 70 ? '🏆' : percent >= 40 ? '💡' : '🧩'}</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">
+                    {percent >= 70 ? 'Riddle Genius!' : percent >= 40 ? 'Great Thinker!' : 'Keep Trying!'}
+                  </h2>
+                  <div className="text-5xl font-black gradient-text">{percent}%</div>
+                  <p className="text-gray-600">Score: {score}/{riddles.length * 10}</p>
+                  <p className="text-amber-600 font-bold">Best streak: 🔥 {bestStreak}</p>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Play Again 🔄</Button>
+                </div>
+              </TiltCard>
+            </motion.div>
+          )}
+
+          <div className="text-center mt-6">
+            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
+          </div>
+        </div>
       </div>
-    </div>
+    </PremiumBackground>
   );
 }

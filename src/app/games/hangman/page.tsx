@@ -1,274 +1,233 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Share2, Sparkles, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
-import { supabase } from '@/lib/supabase';
 
-const WORDS: string[] = [
-  'VALENTINE', 'CUPID', 'ROMANCE', 'SWEETHEART', 'DARLING', 'PASSION',
-  'LOVEBIRD', 'ETERNITY', 'CHERISH', 'BLOSSOM', 'AMOUR', 'WEDDING',
-  'KISSING', 'SOULMATE', 'COURTSHIP', 'BEAUTIFUL', 'HONEYMOON',
-  'ENCHANTED', 'WHISPER', 'EMBRACE', 'DEVOTED', 'INFATUATED',
-  'STARGAZER', 'MOONLIGHT', 'SUGARPLUM', 'AFFECTION', 'CARESS',
-  'FOREVER', 'BELOVED', 'ADORABLE', 'TREASURE', 'TWINKLE',
-  'WONDERFUL', 'ELEGANT', 'PASSIONATE', 'HARMONY', 'ROMANTIC',
-  'KISSABLE', 'LOVELACE', 'BABYLON', 'CUPCAKE', 'DREAMER',
-  'ENAMORED', 'FANTASIA', 'GENTLE', 'HEARTFELT', 'INNOCENT',
-  'JASMINE', 'KINDRED', 'LOLLIPOP', 'MAGNOLIA', 'NIRVANA',
-  'OVERTURE', 'PERFUME', 'QUICKSAND', 'RAINBOW', 'SERENADE',
+const WORDS = [
+  { word: 'LOVE', hint: 'The strongest feeling' },
+  { word: 'KISS', hint: 'A sweet gesture' },
+  { word: 'HUG', hint: 'Warm embrace' },
+  { word: 'SOULMATE', hint: 'Your perfect match' },
+  { word: 'ROMANCE', hint: 'Love story' },
+  { word: 'CUPID', hint: 'God of love' },
+  { word: 'HEART', hint: 'Symbol of love' },
+  { word: 'SWEETHEART', hint: 'Dear one' },
+  { word: 'VALENTINE', hint: 'Day of love' },
+  { word: 'CHOCOLATE', hint: 'Sweet gift' },
+  { word: 'BUTTERFLY', hint: 'Stomach feeling' },
+  { word: 'PASSION', hint: 'Intense feeling' },
+  { word: 'DEVOTION', hint: 'Deep care' },
+  { word: 'AFFECTION', hint: 'Warm feeling' },
+  { word: 'CHERISH', hint: 'Hold dear' },
+  { word: 'ADORATION', hint: 'Deep love' },
+  { word: 'FOREVER', hint: 'Eternal' },
+  { word: 'PARTNER', hint: 'Your companion' },
 ];
 
-const HANGMAN_STAGES = [
-  // Stage 0: just the gallows
-  { head: false, body: false, leftArm: false, rightArm: false, leftLeg: false, rightLeg: false },
-  // Stage 1: head
-  { head: true, body: false, leftArm: false, rightArm: false, leftLeg: false, rightLeg: false },
-  // Stage 2: head + body
-  { head: true, body: true, leftArm: false, rightArm: false, leftLeg: false, rightLeg: false },
-  // Stage 3: head + body + left arm
-  { head: true, body: true, leftArm: true, rightArm: false, leftLeg: false, rightLeg: false },
-  // Stage 4: head + body + both arms
-  { head: true, body: true, leftArm: true, rightArm: true, leftLeg: false, rightLeg: false },
-  // Stage 5: head + body + both arms + left leg
-  { head: true, body: true, leftArm: true, rightArm: true, leftLeg: true, rightLeg: false },
-  // Stage 6: full hangman (game over)
-  { head: true, body: true, leftArm: true, rightArm: true, leftLeg: true, rightLeg: true },
-];
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-export default function HangmanPage() {
-  const [word, setWord] = useState('');
-  const [guessed, setGuessed] = useState<Set<string>>(new Set());
-  const [wrongGuesses, setWrongGuesses] = useState(0);
-  const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [inviteCopied, setInviteCopied] = useState(false);
+export default function LoveHangmanPage() {
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
+  const [currentWord, setCurrentWord] = useState<typeof WORDS[0] | null>(null);
+  const [guessed, setGuessed] = useState<string[]>([]);
+  const [wrong, setWrong] = useState(0);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(120);
+  const [round, setRound] = useState(0);
+  const [best, setBest] = useState(0);
+  const maxWrong = 7;
 
-  const createSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const { data } = await supabase.from('game_sessions').insert({
-      game_type: 'hangman',
-      players: [session.user.id],
-      game_state: { word: '', guessed: [] },
-      status: 'active',
-      current_turn: session.user.id,
-    }).select('id').single();
-    if (data) setSessionId(data.id);
-  };
+  useEffect(() => {
+    const b = localStorage.getItem('lovehangman_best');
+    if (b) setBest(Number(b));
+  }, []);
 
-  const pickWord = useCallback(() => {
-    const w = WORDS[Math.floor(Math.random() * WORDS.length)];
-    setWord(w);
-    setGuessed(new Set());
-    setWrongGuesses(0);
-    setStatus('playing');
+  const startGame = useCallback(() => {
+    setScore(0);
+    setWrong(0);
+    setGuessed([]);
+    setRound(0);
+    setTimeLeft(120);
+    const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+    setCurrentWord(word);
+    setState('playing');
+  }, []);
+
+  const nextWord = useCallback(() => {
+    const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+    setCurrentWord(word);
+    setGuessed([]);
+    setWrong(0);
+    setRound((r) => r + 1);
   }, []);
 
   useEffect(() => {
-    createSession();
-    pickWord();
-  }, [pickWord]);
-
-  const copyInvite = () => {
-    const url = `${window.location.origin}/games/hangman?session=${sessionId || 'demo'}`;
-    navigator.clipboard.writeText(url);
-    setInviteCopied(true);
-    setTimeout(() => setInviteCopied(false), 2000);
-  };
-
-  const handleGuess = (letter: string) => {
-    if (status !== 'playing' || guessed.has(letter)) return;
-    const newGuessed = new Set(guessed);
-    newGuessed.add(letter);
-    setGuessed(newGuessed);
-
-    if (!word.includes(letter)) {
-      const newWrong = wrongGuesses + 1;
-      setWrongGuesses(newWrong);
-      if (newWrong >= HANGMAN_STAGES.length - 1) {
-        setStatus('lost');
-        saveGame(false);
+    if (state !== 'playing') return;
+    if (timeLeft <= 0) {
+      setState('finished');
+      if (score > best) {
+        setBest(score);
+        localStorage.setItem('lovehangman_best', String(score));
       }
-    } else {
-      if (word.split('').every(l => newGuessed.has(l))) {
-        setStatus('won');
-        saveGame(true);
+      return;
+    }
+    const t = setInterval(() => setTimeLeft((tt) => tt - 1), 1000);
+    return () => clearInterval(t);
+  }, [timeLeft, state, score, best]);
+
+  useEffect(() => {
+    if (state !== 'playing' || !currentWord) return;
+    const letters = currentWord.word.split('');
+    if (letters.every((l) => guessed.includes(l))) {
+      setScore((s) => s + Math.max(10, 50 - wrong * 5));
+      setTimeout(() => {
+        nextWord();
+      }, 1200);
+    } else if (wrong >= maxWrong) {
+      setState('finished');
+      if (score > best) {
+        setBest(score);
+        localStorage.setItem('lovehangman_best', String(score));
       }
+    }
+  }, [guessed, wrong, currentWord, state, score, best, nextWord]);
+
+  const guess = (letter: string) => {
+    if (state !== 'playing' || guessed.includes(letter)) return;
+    setGuessed((prev) => [...prev, letter]);
+    if (currentWord && !currentWord.word.includes(letter)) {
+      setWrong((w) => w + 1);
     }
   };
 
-  const saveGame = async (won: boolean) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session || !sessionId) return;
-    await supabase.from('game_sessions').update({
-      game_state: { word, guessed: Array.from(guessed) },
-      status: 'completed',
-      winner_id: won ? session.user.id : null,
-    }).eq('id', sessionId);
-  };
-
-  const displayWord = word.split('').map(l => (guessed.has(l) ? l : '_')).join(' ');
-
-  const stage = wrongGuesses >= HANGMAN_STAGES.length - 1
-    ? HANGMAN_STAGES[HANGMAN_STAGES.length - 1]
-    : HANGMAN_STAGES[wrongGuesses];
-
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const displayWord = currentWord
+    ? currentWord.word.split('').map((l) => (guessed.includes(l) ? l : '_')).join(' ')
+    : '';
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
+      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-lg">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+              <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary-500" />
-              Hangman
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Heart className="text-pink-400" /> Love Hangman
             </h1>
-            <button onClick={pickWord} className="p-2 hover:bg-white rounded-full transition-colors">
-              <RefreshCw className="w-6 h-6 text-primary-500" />
-            </button>
+            <div className="w-16" />
           </div>
 
-          {/* Invite Button */}
-          <div className="flex justify-center mb-4">
-            <Button onClick={copyInvite} variant="outline" size="sm">
-              {inviteCopied ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Link Copied!
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Invite Friend
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Word Display */}
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
-              <div className="flex flex-col items-center gap-6">
-                {/* Hangman SVG */}
-                <svg viewBox="0 0 200 200" className="w-48 h-48">
-                  {/* Gallows */}
-                  <line x1="20" y1="190" x2="180" y2="190" stroke="#d1d5db" strokeWidth="4" strokeLinecap="round" />
-                  <line x1="60" y1="190" x2="60" y2="20" stroke="#d1d5db" strokeWidth="4" strokeLinecap="round" />
-                  <line x1="60" y1="20" x2="140" y2="20" stroke="#d1d5db" strokeWidth="4" strokeLinecap="round" />
-                  <line x1="140" y1="20" x2="140" y2="40" stroke="#d1d5db" strokeWidth="4" strokeLinecap="round" />
-
-                  {/* Head */}
-                  {stage.head && (
-                    <circle cx="140" cy="55" r="18" fill="none" stroke="#ec4899" strokeWidth="3" />
-                  )}
-                  {/* Body */}
-                  {stage.body && (
-                    <line x1="140" y1="73" x2="140" y2="120" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" />
-                  )}
-                  {/* Left Arm */}
-                  {stage.leftArm && (
-                    <line x1="140" y1="85" x2="115" y2="105" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" />
-                  )}
-                  {/* Right Arm */}
-                  {stage.rightArm && (
-                    <line x1="140" y1="85" x2="165" y2="105" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" />
-                  )}
-                  {/* Left Leg */}
-                  {stage.leftLeg && (
-                    <line x1="140" y1="120" x2="115" y2="150" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" />
-                  )}
-                  {/* Right Leg */}
-                  {stage.rightLeg && (
-                    <line x1="140" y1="120" x2="165" y2="150" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" />
-                  )}
-                </svg>
-
-                {/* Word */}
-                <div className="text-center">
-                  <p className="text-3xl md:text-4xl font-mono font-bold tracking-widest text-gray-800 mb-2">
-                    {displayWord}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Wrong guesses: {wrongGuesses} / {HANGMAN_STAGES.length - 1}
-                  </p>
-                </div>
-
-                {/* Alphabet */}
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {alphabet.map(letter => {
-                    const guessedL = guessed.has(letter);
-                    const inWord = word.includes(letter);
-                    return (
-                      <motion.button
-                        key={letter}
-                        whileHover={{ scale: guessedL || status !== 'playing' ? 1 : 1.1 }}
-                        whileTap={{ scale: guessedL || status !== 'playing' ? 1 : 0.9 }}
-                        onClick={() => handleGuess(letter)}
-                        disabled={guessedL || status !== 'playing'}
-                        className={`w-9 h-9 rounded-lg font-bold text-sm transition-all ${
-                          guessedL
-                            ? inWord
-                              ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                              : 'bg-red-100 text-red-400 border-2 border-red-200 line-through'
-                            : status === 'playing'
-                              ? 'bg-white border-2 border-pink-200 text-gray-700 hover:border-primary-400 hover:bg-primary-50'
-                              : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
-                        }`}
-                      >
-                        {letter}
-                      </motion.button>
-                    );
-                  })}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-2xl font-bold text-white">{score}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-300">{best}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Time</div>
+                <div className={`text-2xl font-bold ${timeLeft <= 20 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                  {timeLeft}s
                 </div>
               </div>
             </div>
-          </TiltCard>
 
-          {/* Win/Lose Message */}
-          <AnimatePresence>
-            {status !== 'playing' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mt-6"
-              >
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6">
-                  <div className="text-5xl mb-3">{status === 'won' ? '🎉' : '💔'}</div>
-                  <h2 className="text-2xl font-bold gradient-text mb-2">
-                    {status === 'won' ? 'You Won!' : 'You Lost!'}
-                  </h2>
-                  <p className="text-xl text-gray-700 mb-1">
-                    The word was: <span className="font-bold text-primary-600">{word}</span>
+            {/* Heart Lives */}
+            <div className="flex justify-center gap-1 mb-4">
+              {Array.from({ length: maxWrong }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  animate={{ scale: i < wrong ? 0.5 : 1, opacity: i < wrong ? 0.4 : 1 }}
+                  className="text-3xl"
+                >
+                  💖
+                </motion.span>
+              ))}
+            </div>
+
+            {/* Word Display */}
+            <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
+              {currentWord && (
+                <>
+                  <p className="text-white/60 text-sm mb-2 italic">"{currentWord.hint}"</p>
+                  <p className="text-3xl font-bold tracking-widest text-white font-mono">
+                    {displayWord}
                   </p>
-                  <Button onClick={pickWord} variant="primary" className="mt-4">
-                    Play Again 🎮
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </>
+              )}
+            </div>
 
-          <div className="text-center">
-            <Link href="/games">
-              <Button variant="outline" className="mt-8">← Back to Games</Button>
-            </Link>
-          </div>
+            {/* Keyboard */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {ALPHABET.map((letter) => {
+                const isGuessed = guessed.includes(letter);
+                const isCorrect = currentWord?.word.includes(letter);
+                return (
+                  <button
+                    key={letter}
+                    onClick={() => guess(letter)}
+                    disabled={isGuessed || state !== 'playing'}
+                    className={`aspect-square rounded-lg font-bold text-sm transition-all ${
+                      isGuessed
+                        ? isCorrect
+                          ? 'bg-green-500 text-white'
+                          : 'bg-red-500/50 text-white/50 line-through'
+                        : 'bg-white/10 hover:bg-white/20 text-white'
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+            </div>
+
+            {state === 'idle' && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={startGame}
+                className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Play size={20} /> Start Game
+              </motion.button>
+            )}
+
+            <AnimatePresence>
+              {state === 'finished' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-3"
+                >
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                      {score >= 100 ? '🏆 Amazing!' : score >= 50 ? '💖 Great!' : '💕 Good Try!'}
+                    </h2>
+                    <p className="text-white/70">Score: <span className="text-pink-300 font-bold">{score}</span></p>
+                    {currentWord && <p className="text-white/50 text-sm">Word was: {currentWord.word}</p>}
+                  </div>
+                  <button
+                    onClick={startGame}
+                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <RotateCcw size={20} /> Play Again
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </div>
-            <GameSharePanel gameSlug="hangman" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

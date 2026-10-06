@@ -1,266 +1,229 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Share2, Sparkles, Copy, Check, MessageCircle, Flame } from 'lucide-react';
+import { ArrowLeft, Heart, Sparkles, RotateCcw, Shield, Flame } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
-import { supabase } from '@/lib/supabase';
-
-const TRUTHS = [
-  "What is the first thing you noticed about me?",
-  "What's your favorite memory of us together?",
-  "If you could describe our love in one word, what would it be?",
-  "What's something you've never told me but want to?",
-  "What was your first impression of me?",
-  "What's the most romantic thing I've ever done for you?",
-  "What's your biggest fear about our relationship?",
-  "If we had a movie of our love story, what would the title be?",
-  "What's the most embarrassing thing you've done for love?",
-  "What's the biggest surprise you've ever had from me?",
-  "What's your favorite physical feature of mine?",
-  "What song reminds you most of us?",
-  "Where do you see us in 10 years?",
-  "What's the craziest thing on your bucket list with me?",
-  "What's something I do that always makes you smile?",
-  "What's your love language?",
-  "What was the moment you knew you loved me?",
-  "What's the best compliment you've ever received from me?",
-  "What's your dream date with me?",
-  "What's something about me that you find irresistible?",
-  "If you could change one thing about our relationship, what would it be?",
-  "What's the most thoughtful gift you've ever given or received?",
-  "What's your favorite pet name for me?",
-  "What's the longest we've ever been apart and how did it feel?",
-  "What's something you admire most about me?",
-  "What's your favorite way to spend a rainy day together?",
-  "What fictional couple do we remind you of?",
-  "What's the kindest thing I've ever done for you?",
-  "What makes you feel most loved by me?",
-  "What's your favorite 'us' tradition?",
-  "If we could travel anywhere together right now, where would we go?",
-  "What's something small I do that makes a big difference to you?",
-  "What was the moment you felt proudest of us as a couple?",
-  "What's the funniest thing that's happened between us?",
-];
 
 const DARES = [
-  "Give your partner a 30-second hug",
-  "Whisper something sweet in your partner's ear",
-  "Slow dance with your partner for one minute",
-  "Send your partner a love text right now",
-  "Recreate our first kiss pose",
-  "Make a heart with your hands and hold it for 10 seconds",
-  "Sing a love song chorus out loud",
-  "Tell your partner three things you're grateful for about them",
-  "Draw a heart on your partner's hand with a pen",
-  "Give your partner a forehead kiss",
-  "Massage your partner's shoulders for 60 seconds",
-  "Say 'I love you' in five different languages",
-  "Make your partner's favorite snack",
-  "Look into your partner's eyes for one full minute without talking",
-  "Write a short love poem about your partner",
-  "Give your partner your best compliment",
-  "Pretend it's your first date and ask your partner on a date",
-  "Do your best romantic movie kiss impression",
-  "Create a 30-second couple TikTok dance",
-  "Tell your partner what you'd name your future kids",
-  "Show your partner your favorite photo of them on your phone",
-  "Plant a kiss on your partner's cheek right now",
-  "Make a heart shape with your partner's hands and pose",
-  "Say the alphabet while your partner gives you eskimo kisses",
-  "Do a silly love dance for your partner",
-  "Trace a heart on your partner's back with your finger",
-  "Tell your partner what you love most about their personality",
-  "Give your partner a piggyback ride around the room",
-  "Close your eyes and guess what your partner smells like",
-  "Sing 'Happy Birthday' in a romantic voice",
-  "Recreate your partner's best photo pose together",
-  "Pretend to be on a cooking show and describe your partner like one",
-  "Hand-feed your partner a small treat",
-  "Make a list of 5 date ideas for next month",
-  "Do your best impression of your partner's laugh",
+  "Give your partner 5 genuine compliments right now",
+  "Write a love poem and read it aloud",
+  "Recreate your partner's most charming pose",
+  "Cook their favorite meal together tonight",
+  "Plan a surprise date for this weekend",
+  "Dance in the kitchen to your song",
+  "Make a list of 10 things you love about them",
+  "Take a silly couples selfie and frame it",
+  "Give them a 5-minute full-body massage",
+  "Plant a kiss on every fingertip",
+  "Send 3 flirty texts they'll receive later today",
+  "Draw a heart on their hand with a marker",
+  "Look into each other's eyes for 60 seconds without laughing",
+  "Slow dance in the living room",
+  "Feed each other chocolate-covered strawberries",
+  "Write and mail a real love letter",
+  "Cook breakfast together tomorrow morning",
+  "Create a new couple tradition tonight",
+  "Make a scrapbook page of your favorite memory",
+  "Tell them 5 things you'd miss if they weren't here",
+  "Do your best impression of them and ask for feedback",
+  "Create a playlist together of your top 10 songs",
+  "Give them a shoulder massage with lavender oil",
+  "Plan an imaginary dream vacation together",
+  "Recreate your first date at home tonight",
+  "Hold hands and don't let go for 10 full minutes",
+  "Teach each other your favorite board game",
+  "Stargaze together on a blanket outside tonight",
+  "Create a 'reasons I love you' jar",
+  "Have a 20-minute no-phones deep conversation",
 ];
 
-export default function TruthOrDarePage() {
-  const [mode, setMode] = useState<'truth' | 'dare' | null>(null);
-  const [content, setContent] = useState<string | null>(null);
-  const [round, setRound] = useState(0);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [inviteCopied, setInviteCopied] = useState(false);
+const SPICY_DARES = [
+  ...DARES,
+  "Whisper 3 things you've been thinking about but haven't said",
+  "Give your partner a 30-second slow kiss",
+  "Create a short couple TikTok dance together",
+  "Roleplay meeting for the first time at a bar",
+  "Take turns giving each other neck/shoulder massages",
+  "Write down a secret fantasy and share it with each other",
+];
 
-  const createSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const { data } = await supabase.from('game_sessions').insert({
-      game_type: 'truthordare',
-      players: [session.user.id],
-      game_state: { round: 0 },
-      status: 'active',
-      current_turn: session.user.id,
-    }).select('id').single();
-    if (data) setSessionId(data.id);
+type Mode = 'soft' | 'spicy';
+type Phase = 'start' | 'dare' | 'result';
+
+export default function TruthOrDarePage() {
+  const [mode, setMode] = useState<Mode>('soft');
+  const [phase, setPhase] = useState<Phase>('start');
+  const [dares, setDares] = useState(DARES);
+  const [current, setCurrent] = useState('');
+  const [idx, setIdx] = useState(0);
+  const [done, setDone] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(30);
+  const [toast, setToast] = useState(false);
+
+  const softMode = () => {
+    const shuffled = [...DARES].sort(() => Math.random() - 0.5);
+    setDares(shuffled);
+    setMode('soft');
+    setDone([]);
+    setScore(0);
+    setIdx(0);
+    setCurrent(shuffled[0]);
+    setTimer(30);
+    setPhase('dare');
+  };
+
+  const spicyMode = () => {
+    const shuffled = [...SPICY_DARES].sort(() => Math.random() - 0.5);
+    setDares(shuffled);
+    setMode('spicy');
+    setDone([]);
+    setScore(0);
+    setIdx(0);
+    setCurrent(shuffled[0]);
+    setTimer(45);
+    setPhase('dare');
   };
 
   useEffect(() => {
-    createSession();
-  }, []);
+    if (phase !== 'dare' || timer <= 0) return;
+    const t = setTimeout(() => setTimer(x => x - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, timer]);
 
-  const copyInvite = () => {
-    const url = `${window.location.origin}/games/truthordare?session=${sessionId || 'demo'}`;
-    navigator.clipboard.writeText(url);
-    setInviteCopied(true);
-    setTimeout(() => setInviteCopied(false), 2000);
+  const next = () => {
+    setDone(d => [...d, current]);
+    setScore(s => s + (mode === 'soft' ? 10 : 25));
+    if (idx < dares.length - 1) {
+      setIdx(i => i + 1);
+      setCurrent(dares[idx + 1]);
+      setTimer(mode === 'spicy' ? 45 : 30);
+    } else {
+      setPhase('result');
+    }
   };
 
-  const pickMode = (selectedMode: 'truth' | 'dare') => {
-    const arr = selectedMode === 'truth' ? TRUTHS : DARES;
-    const randomContent = arr[Math.floor(Math.random() * arr.length)];
-    setMode(selectedMode);
-    setContent(randomContent);
-    setRound(r => r + 1);
+  const skip = () => {
+    if (idx < dares.length - 1) {
+      setIdx(i => i + 1);
+      setCurrent(dares[idx + 1]);
+      setTimer(mode === 'spicy' ? 45 : 30);
+    } else {
+      setPhase('result');
+    }
   };
 
-  const nextRound = () => {
-    setMode(null);
-    setContent(null);
+  const copyLink = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setToast(true);
+      setTimeout(() => setToast(false), 2500);
+    }
   };
 
   return (
     <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Premium Header */}
+        <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary-500" />
-              Truth or Dare
-            </h1>
-            <button onClick={() => { setMode(null); setContent(null); setRound(0); }} className="p-2 hover:bg-white rounded-full transition-colors">
-              <RefreshCw className="w-6 h-6 text-primary-500" />
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Flame className="w-5 h-5 text-rose-500" /> Truth or Dare</h1>
+            <button onClick={() => setPhase('start')} className="p-2 hover:bg-white rounded-full transition-colors"><RotateCcw className="w-6 h-6 text-gray-600" /></button>
+          </div>
+
+          <div className="flex justify-center mb-4">
+            <button onClick={copyLink} className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full shadow border border-pink-100/60 text-sm font-medium text-gray-700">
+              <Heart className="w-4 h-4" /> Share Game
             </button>
           </div>
 
-          {/* Invite Button */}
-          <div className="flex justify-center mb-6">
-            <Button onClick={copyInvite} variant="outline" size="sm">
-              {inviteCopied ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Link Copied!
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Invite Friend
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Round Counter */}
-          <div className="text-center mb-6">
-            <div className="inline-block px-4 py-2 rounded-full bg-white/70 backdrop-blur-xl border border-pink-100/60 shadow-lg">
-              <span className="text-sm font-medium text-gray-700">Round: </span>
-              <span className="text-lg font-bold text-primary-600">{round}</span>
-            </div>
-          </div>
-
-          {/* Game Area */}
           <AnimatePresence mode="wait">
-            {!mode ? (
-              <motion.div
-                key="choose"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-              >
-                <p className="text-center text-xl font-medium text-gray-700 mb-4">
-                  Pick your challenge! 💕
-                </p>
+            {phase === 'start' && (
+              <motion.div key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => pickMode('truth')}
-                    className="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-[2rem] p-8 shadow-2xl flex flex-col items-center justify-center min-h-[200px]"
-                  >
-                    <MessageCircle className="w-12 h-12 mb-3" />
-                    <span className="text-3xl font-bold mb-2">Truth 💬</span>
-                    <span className="text-sm opacity-90">Answer a question honestly</span>
-                  </motion.button>
-                </TiltCard>
-                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => pickMode('dare')}
-                    className="w-full bg-gradient-to-br from-rose-400 to-rose-600 text-white rounded-[2rem] p-8 shadow-2xl flex flex-col items-center justify-center min-h-[200px]"
-                  >
-                    <Flame className="w-12 h-12 mb-3" />
-                    <span className="text-3xl font-bold mb-2">Dare 😈</span>
-                    <span className="text-sm opacity-90">Complete a fun challenge</span>
-                  </motion.button>
-                </TiltCard>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className={`bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 md:p-10 text-center`}>
-                    <div className={`inline-block px-6 py-2 rounded-full text-white font-bold text-lg mb-6 ${
-                      mode === 'truth' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gradient-to-r from-rose-400 to-rose-600'
-                    }`}>
-                      {mode === 'truth' ? '💬 Truth' : '😈 Dare'}
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">🔥</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">Truth or Dare</h2>
+                    <p className="text-gray-600">Fun challenges to deepen your bond!</p>
+                    <p className="text-sm text-gray-500">Choose your comfort level:</p>
+                    <div className="space-y-3">
+                      <button onClick={softMode} className="w-full p-5 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-100 border-2 border-pink-200 hover:border-pink-400 text-left transition-all">
+                        <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-pink-500" /><span className="font-bold text-gray-800">Soft Mode</span></div>
+                        <p className="text-sm text-gray-600">Sweet, romantic dares — {DARES.length} challenges</p>
+                      </button>
+                      <button onClick={spicyMode} className="w-full p-5 rounded-2xl bg-gradient-to-br from-red-100 to-rose-100 border-2 border-red-200 hover:border-red-400 text-left transition-all">
+                        <div className="flex items-center gap-2"><Flame className="w-5 h-5 text-red-500" /><span className="font-bold text-gray-800">Spicy Mode</span></div>
+                        <p className="text-sm text-gray-600">Extra passionate dares — {SPICY_DARES.length} challenges</p>
+                      </button>
                     </div>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-2xl md:text-3xl font-bold text-gray-900 leading-relaxed min-h-[120px] flex items-center justify-center"
-                    >
-                      {content}
-                    </motion.p>
                   </div>
                 </TiltCard>
-                <div className="flex justify-center gap-3 mt-6">
-                  <Button onClick={() => pickMode(mode)} variant="outline">
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Switch
-                  </Button>
-                  <Button onClick={nextRound} variant="primary" size="lg">
-                    Next Round →
-                  </Button>
+              </motion.div>
+            )}
+
+            {phase === 'dare' && (
+              <motion.div key={`dare-${idx}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-600">Dare {idx + 1}/{dares.length}</span>
+                  <span className={`text-sm font-bold ${timer <= 10 ? 'text-red-500' : 'text-gray-500'}`}>Score: {score}</span>
                 </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                  <motion.div className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-full" animate={{ width: `${((idx + 1) / dares.length) * 100}%` }} />
+                </div>
+                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.08)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center">
+                    <div className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white mb-4 bg-gradient-to-r from-rose-500 to-red-500">
+                      DARE #{idx + 1}
+                    </div>
+                    <p className="text-xl font-bold text-gray-800 leading-relaxed">{current}</p>
+                  </div>
+                </TiltCard>
+                <div className="flex gap-3 mt-6">
+                  <Button onClick={next} variant="primary" size="lg" className="flex-1">Completed! +{mode === 'soft' ? '10' : '25'} pts</Button>
+                  <Button onClick={skip} variant="outline">Skip</Button>
+                </div>
+              </motion.div>
+            )}
+
+            {phase === 'result' && (
+              <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.15)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">🏆</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">Dare Master!</h2>
+                    <p className="text-5xl font-black gradient-text">{score} pts</p>
+                    <p className="text-gray-600">You completed {done.length} dares!</p>
+                    <div className="space-y-2 text-left max-h-80 overflow-y-auto">
+                      {done.map((d, i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 bg-rose-50 rounded-xl">
+                          <span className="text-lg">✅</span>
+                          <p className="text-sm text-gray-700">{d}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <Button onClick={() => setPhase('start')} variant="primary" size="lg" className="w-full">Play Again 🔄</Button>
+                  </div>
+                </TiltCard>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <p className="text-center text-sm text-gray-400 mt-8">
-            Have fun and be honest with each other! 💕
-          </p>
-
-          <div className="text-center">
-            <Link href="/games">
-              <Button variant="outline" className="mt-8">← Back to Games</Button>
-            </Link>
+          <div className="text-center mt-6">
+            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
           </div>
+          <AnimatePresence>
+            {toast && (
+              <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
+                Link copied! Share with your partner 💕
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-            <GameSharePanel gameSlug="truthordare" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

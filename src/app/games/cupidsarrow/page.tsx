@@ -1,316 +1,262 @@
 'use client';
-
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2, Heart, RotateCcw } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-type Target = { x: number; y: number; vy: number; size: number; hit: boolean; id: number };
-type Arrow = { x: number; y: number; vy: number };
+const GAME_W = 500;
+const GAME_H = 600;
+const ARCHER_X = 60;
+const ARROW_SPEED = 8;
+const TARGETS = [
+  { label: '💕', points: 10 },
+  { label: '💖', points: 20 },
+  { label: '💗', points: 15 },
+  { label: '💘', points: 25 },
+  { label: '💝', points: 30 },
+  { label: '👑', points: 50 },
+  { label: '⭐', points: 35 },
+  { label: '🏆', points: 40 },
+];
 
 export default function CupidsArrowPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [highScore, setHighScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [level, setLevel] = useState(1);
+  const [arrows, setArrows] = useState<{ x: number; y: number; id: number }[]>([]);
+  const [targets, setTargets] = useState<
+    { x: number; y: number; type: number; id: number; hit?: boolean }[]
+  >([]);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [best, setBest] = useState(0);
   const [combo, setCombo] = useState(0);
-  const animRef = useRef(0);
-  const targetsRef = useRef<Target[]>([]);
-  const arrowsRef = useRef<Arrow[]>([]);
-  const spawnTimerRef = useRef(0);
-  const gameOverRef = useRef(false);
-  const levelRef = useRef(1);
-  const scoreRef = useRef(0);
-  const livesRef = useRef(3);
-  const comboRef = useRef(0);
-  const gameStartedRef = useRef(false);
-  const spawnIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const targetsRefAlt = useRef<Target[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const targetIdRef = useRef(0);
+  const arrowIdRef = useRef(0);
 
-  // Load high score from localStorage on mount (client-side only)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = parseInt(localStorage.getItem('cupidsArrowHighScore') || '0');
-      if (!isNaN(stored)) setHighScore(stored);
-    }
+    const b = localStorage.getItem('cupidsarrow_best');
+    if (b) setBest(Number(b));
   }, []);
 
-  const W = 400;
-  const H = 500;
-  const BOW_X = W / 2;
-  const BOW_Y = H - 40;
-  const BASE_SPAWN_INTERVAL = 90;
-  const BASE_TARGET_SPEED = 0.8;
+  const spawnTarget = useCallback(() => {
+    const id = targetIdRef.current++;
+    const type = Math.floor(Math.random() * TARGETS.length);
+    const y = 80 + Math.random() * (GAME_H - 200);
+    setTargets((prev) => {
+      if (prev.length > 5) return prev;
+      return [...prev, { x: GAME_W - 80, y, type, id }];
+    });
+  }, []);
 
-  const resetGame = useCallback(() => {
+  const startGame = useCallback(() => {
+    setArrows([]);
+    setTargets([]);
     setScore(0);
-    setLives(3);
-    setGameOver(false);
-    setLevel(1);
     setCombo(0);
-    gameOverRef.current = false;
-    levelRef.current = 1;
-    targetsRef.current = [];
-    arrowsRef.current = [];
-    spawnTimerRef.current = 0;
+    setTimeLeft(30);
+    setState('playing');
   }, []);
 
-  // Main game loop
+  const shoot = useCallback(() => {
+    if (state !== 'playing') return;
+    const id = arrowIdRef.current++;
+    setArrows((prev) => [...prev, { x: ARCHER_X + 30, y: GAME_H / 2 + 20, id }]);
+  }, [state]);
+
   useEffect(() => {
+    if (state !== 'playing') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let frame = 0;
-
-    const spawn = () => {
-      const existing = targetsRef.current.filter(t => !t.hit);
-      if (existing.length < 5 + levelRef.current) {
-        const size = 18 + Math.random() * 10;
-        targetsRef.current.push({
-          x: 30 + Math.random() * (W - 60),
-          y: -size,
-          vy: -(BASE_TARGET_SPEED + levelRef.current * 0.25 + Math.random() * 0.5),
-          size,
-          hit: false,
-          id: Date.now() + Math.random(),
-        });
-      }
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, W, H);
-
-      // Background gradient
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#fdf2f8');
-      bg.addColorStop(1, '#fce7f3');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
-
-      // Stars
-      ctx.fillStyle = 'rgba(236, 72, 153, 0.1)';
-      for (let i = 0; i < 30; i++) {
-        const sx = ((i * 137) % W);
-        const sy = ((i * 97 + frame * 0.3) % H);
-        ctx.beginPath();
-        ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Bow
-      ctx.strokeStyle = '#9d174d';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(BOW_X, BOW_Y, 30, -Math.PI * 0.8, Math.PI * 0.8);
-      ctx.stroke();
-      // String
-      ctx.strokeStyle = '#be185d';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(BOW_X + Math.cos(-Math.PI * 0.8) * 30, BOW_Y + Math.sin(-Math.PI * 0.8) * 30);
-      ctx.lineTo(BOW_X, BOW_Y - 10);
-      ctx.lineTo(BOW_X + Math.cos(Math.PI * 0.8) * 30, BOW_Y + Math.sin(Math.PI * 0.8) * 30);
-      ctx.stroke();
-
-      // Targets
-      targetsRef.current = targetsRef.current.filter(t => {
-        if (t.hit) return false;
-        t.y += t.vy;
-        // Draw heart
-        ctx.save();
-        ctx.translate(t.x, t.y);
-        ctx.scale(t.size / 20, t.size / 20);
-        ctx.fillStyle = '#ec4899';
-        ctx.beginPath();
-        ctx.moveTo(0, -4);
-        ctx.bezierCurveTo(5, -10, 12, -4, 0, 8);
-        ctx.bezierCurveTo(-12, -4, -5, -10, 0, -4);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(-3, -2, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Missed - off screen top
-        if (t.y < -t.size * 2) {
-          if (!gameOverRef.current) {
-            setCombo(0);
-            setLives(l => {
-              const nl = l - 1;
-              if (nl <= 0 && !gameOverRef.current) {
-                gameOverRef.current = true;
-                setGameOver(true);
-                if (scoreRef.current > highScore) {
-                  setHighScore(scoreRef.current);
-                }
-              }
-              return Math.max(0, nl);
-            });
+    let timer = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          setState('finished');
+          if (score > best) {
+            setBest(score);
+            localStorage.setItem('cupidsarrow_best', String(score));
           }
-          return false;
+          return 0;
         }
-        return true;
+        return t - 1;
       });
+    }, 1000);
 
-      // Arrows
-      arrowsRef.current = arrowsRef.current.filter(a => {
-        a.y -= 8;
-        ctx.fillStyle = '#be185d';
-        ctx.fillRect(a.x - 1, a.y - 8, 2, 16);
-        // Arrowhead
-        ctx.fillStyle = '#9d174d';
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y - 12);
-        ctx.lineTo(a.x - 4, a.y - 6);
-        ctx.lineTo(a.x + 4, a.y - 6);
-        ctx.fill();
+    const spawnInterval = setInterval(() => spawnTarget(), 1200);
 
-        // Collision
-        for (const t of targetsRef.current) {
-          if (t.hit) continue;
-          const dx = a.x - t.x;
-          const dy = a.y - t.y;
-          if (Math.sqrt(dx * dx + dy * dy) < t.size * 0.6) {
-            t.hit = true;
-            setCombo(c => c + 1);
-            const pts = 10 + levelRef.current * 5 + combo * 2;
-            setScore(s => {
-              const ns = s + pts;
-              if (ns > highScore) {
-                setHighScore(ns);
-              }
-              scoreRef.current = s + pts;
+    let running = true;
+    const loop = () => {
+      if (!running) return;
+
+      setArrows((prevArrows) => {
+        const updated = prevArrows
+          .map((a) => ({ ...a, x: a.x + ARROW_SPEED }))
+          .filter((a) => a.x < GAME_W + 50);
+
+        setTargets((prevTargets) => {
+          const moving = prevTargets
+            .map((t) => ({ ...t, x: t.x - 1.5 }))
+            .filter((t) => t.x > -60);
+
+          let hitScore = 0;
+          let hitCombo = 0;
+
+          const remaining = moving.map((t) => {
+            if (t.hit) return t;
+            const hitArrow = updated.find(
+              (a) =>
+                !a._used &&
+                Math.abs(a.x - t.x) < 35 &&
+                Math.abs(a.y - t.y) < 35,
+            );
+            if (hitArrow) {
+              (hitArrow as any)._used = true;
+              hitCombo++;
+              const multiplier = Math.min(hitCombo, 5);
+              hitScore += TARGETS[t.type].points * multiplier;
+              return { ...t, hit: true };
+            }
+            return t;
+          });
+
+          const usedCount = updated.filter((a) => (a as any)._used).length;
+          const filteredArrows = updated.filter((a) => !(a as any)._used);
+
+          if (hitScore > 0) {
+            setScore((s) => {
+              const ns = s + hitScore;
               return ns;
             });
-            if ((combo + 1) % 5 === 0) {
-              setLevel(l => {
-                const nl = l + 1;
-                levelRef.current = nl;
-                return nl;
-              });
-            }
-            return false;
+            setCombo(hitCombo);
           }
-        }
-        return a.y > -20;
+
+          return remaining;
+        });
+
+        return updated;
       });
 
-      // Level up check
-      const currentScore = score;
-      const newLevel = Math.floor(currentScore / 100) + 1;
-      if (newLevel > levelRef.current) {
-        levelRef.current = newLevel;
-        setLevel(newLevel);
-      }
-
-      frame++;
-      if (frame % Math.max(20, BASE_SPAWN_INTERVAL - levelRef.current * 8) === 0 && !gameOverRef.current) {
-        spawn();
-      }
-      spawnTimerRef.current++;
-
-      animRef.current = requestAnimationFrame(draw);
+      animRef.current = requestAnimationFrame(loop);
     };
 
-    animRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [score, combo]);
+    animRef.current = requestAnimationFrame(loop);
 
-  const shoot = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (gameOver || gameOverRef.current) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    const mx = (e.clientX - rect.left) * scaleX;
-    const my = (e.clientY - rect.top) * scaleY;
-    if (my < H - 60) {
-      arrowsRef.current.push({ x: mx, y: my, vy: 8 });
-    }
-  };
+    return () => {
+      running = false;
+      cancelAnimationFrame(animRef.current);
+      clearInterval(timer);
+      clearInterval(spawnInterval);
+    };
+  }, [state, spawnTarget, best, score]);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-  };
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        e.preventDefault();
+        if (state === 'idle') startGame();
+        else if (state === 'playing') shoot();
+      }
+    },
+    [state, startGame, shoot],
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Header */}
+      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
+            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+              <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" />
-              Cupid&apos;s Arrow
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="text-yellow-400" /> Cupid's Arrow
             </h1>
-            <div className="w-10" />
+            <div className="w-16" />
           </div>
 
-          {/* HUD */}
-          <div className="flex justify-center gap-3 mb-3">
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-sm font-bold text-primary-600 shadow border border-pink-100">
-              ❤️ x{lives}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-2xl font-bold text-white">{score}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Best</div>
+                <div className="text-2xl font-bold text-pink-300">{best}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Time</div>
+                <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                  {timeLeft}s
+                </div>
+              </div>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-sm font-bold text-pink-600 shadow border border-pink-100">
-              Score: {score}
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-sm font-bold text-rose-600 shadow border border-pink-100">
-              Lv.{level}
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-sm font-bold text-gray-600 shadow border border-pink-100">
-              🏆 {highScore}
-            </div>
-          </div>
 
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-3 flex justify-center overflow-auto">
+            <div className="relative">
               <canvas
                 ref={canvasRef}
-                width={W}
-                height={H}
-                onClick={shoot}
-                className="rounded-2xl cursor-crosshair"
-                style={{ maxWidth: '100%', height: 'auto' }}
+                width={GAME_W}
+                height={GAME_H}
+                className="w-full rounded-2xl cursor-pointer"
+                style={{ aspectRatio: `${GAME_W}/${GAME_H}` }}
+                onClick={() => {
+                  if (state === 'idle') startGame();
+                  else if (state === 'playing') shoot();
+                }}
               />
+
+              <AnimatePresence>
+                {state === 'idle' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl"
+                  >
+                    <Sparkles className="text-yellow-400 mb-3" size={48} />
+                    <p className="text-white text-lg font-bold">Click or Space to Shoot</p>
+                    <p className="text-white/60 text-sm">Hit the hearts for points!</p>
+                  </motion.div>
+                )}
+
+                {state === 'finished' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl"
+                  >
+                    <Trophy className="text-yellow-400 mb-2" size={48} />
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                      {score >= 200 ? '🏆 Cupid Champion!' : score >= 100 ? '💖 Great Shot!' : '💕 Nice Aim!'}
+                    </h2>
+                    <p className="text-white/80 mb-4">Score: {score}</p>
+                    <button
+                      onClick={startGame}
+                      className="px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
+                    >
+                      <RotateCcw size={18} /> Play Again
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </TiltCard>
-
-          <p className="text-center text-sm text-gray-500 mt-3">
-            Click or tap above the bow to shoot arrows at the hearts 💘
-          </p>
-
-          {gameOver && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 text-center space-y-3">
-              <p className="text-2xl font-bold text-primary-600">Game Over! 💔</p>
-              <p className="text-gray-600">You scored {score} points at Level {level}</p>
-              <p className="text-sm text-gray-500">High Score: {highScore}</p>
-              <Button onClick={resetGame} variant="primary"><RotateCcw className="w-4 h-4 mr-1" /> Play Again</Button>
-            </motion.div>
-          )}
-
-          <div className="flex justify-center mt-4">
-            <Button onClick={copyLink} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-1" /> Invite Friend
-            </Button>
-          </div>
+          </motion.div>
         </div>
       </div>
-            <GameSharePanel gameSlug="cupidsarrow" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

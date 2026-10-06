@@ -1,64 +1,204 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Shuffle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
 
-const WORDS = ['LOVE', 'KISS', 'HUG', 'DATE', 'HEART', 'SOUL', 'DREAM', 'CHERISH', 'PASSION', 'ROMANCE', 'VALENTINE', 'CUPID', 'FOREVER', 'TOGETHER', 'ADORE'];
+type Phase = 'idle' | 'playing' | 'finished';
 
-export default function LoveScramble2() {
+interface SentencePuzzle {
+  scrambled: string[];
+  correct: string[];
+  hint: string;
+  emoji: string;
+}
+
+const SENTENCES: SentencePuzzle[] = [
+  { scrambled: ['love', 'I', 'you'], correct: ['I', 'love', 'you'], hint: 'The classic 3 words', emoji: '❤️' },
+  { scrambled: ['be', 'mine', 'will', 'you'], correct: ['Will', 'you', 'be', 'mine'], hint: 'A question of the heart', emoji: '💍' },
+  { scrambled: ['are', 'my', 'you', 'everything'], correct: ['You', 'are', 'my', 'everything'], hint: 'You mean the world', emoji: '🌍' },
+  { scrambled: ['kiss', 'a', 'me', 'give'], correct: ['Give', 'me', 'a', 'kiss'], hint: 'A sweet request', emoji: '💋' },
+  { scrambled: ['always', 'love', 'I', 'will', 'you'], correct: ['I', 'will', 'always', 'love', 'you'], hint: 'A forever promise', emoji: '♾️' },
+  { scrambled: ['together', 'grow', 'we', 'old', 'will'], correct: ['We', 'will', 'grow', 'old', 'together'], hint: 'Aging side by side', emoji: '👵' },
+  { scrambled: ['hold', 'me', 'please', 'me'], correct: ['Please', 'hold', 'me'], hint: 'A comforting request', emoji: '🫂' },
+  { scrambled: ['heart', 'you', 'have', 'my'], correct: ['You', 'have', 'my', 'heart'], hint: 'A gift of devotion', emoji: '💝' },
+  { scrambled: ['soul', 'mate', 'you', 'are', 'my'], correct: ['You', 'are', 'my', 'soul', 'mate'], hint: 'A perfect match', emoji: '✨' },
+  { scrambled: ['dreams', 'you', 'are', 'my', 'come', 'true'], correct: ['You', 'are', 'my', 'dreams', 'come', 'true'], hint: 'Wishes fulfilled', emoji: '🌟' },
+];
+
+const shuffleArr = <T,>(arr: T[]): T[] => {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
+
+export default function LoveScramble2Page() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [puzzles, setPuzzles] = useState<SentencePuzzle[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [tiles, setTiles] = useState<{ word: string; idx: number; used: boolean }[]>([]);
+  const [placed, setPlaced] = useState<{ word: string; idx: number }[]>([]);
   const [score, setScore] = useState(0);
-  const [scrambledWord, setScrambledWord] = useState('');
-  const [userAnswer, setUserAnswer] = useState('');
-  const [words, setWords] = useState<typeof WORDS>([]);
+  const [timeLeft, setTimeLeft] = useState(120);
+  const [timerActive, setTimerActive] = useState(false);
+  const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-  const scramble = (word: string) => word.split('').sort(() => Math.random() - 0.5).join('');
-  useEffect(() => { setWords([...WORDS].sort(() => Math.random() - 0.5).slice(0, 8)); }, []);
-  useEffect(() => { if (gameState !== 'playing' || timeLeft <= 0) return; const t = setInterval(() => setTimeLeft(p => p - 1), 1000); return () => clearInterval(t); }, [gameState, timeLeft]);
-  useEffect(() => { if (gameState === 'playing' && timeLeft === 0) setGameState('finished'); }, [timeLeft, gameState]);
-  useEffect(() => { if (gameState === 'playing' && words.length > 0) setScrambledWord(scramble(words[currentIndex])); }, [currentIndex, gameState, words]);
+  useEffect(() => {
+    if (!timerActive) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      setPhase('finished');
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft, timerActive]);
 
-  const handleSubmit = () => {
-    if (userAnswer.toUpperCase() === words[currentIndex]) setScore(s => s + 10);
-    if (currentIndex < words.length - 1) setCurrentIndex(i => i + 1);
-    else setGameState('finished');
-    setUserAnswer('');
+  const startGame = () => {
+    const fixed = SENTENCES.map(s => ({ ...s, scrambled: shuffleArr(s.correct) }));
+    const shuffled = [...fixed].sort(() => Math.random() - 0.5);
+    setPuzzles(shuffled);
+    setCurrentIdx(0);
+    setTiles(shuffled[0].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
+    setPlaced([]);
+    setScore(0);
+    setTimeLeft(120);
+    setTimerActive(true);
+    setFeedback(null);
+    setPhase('playing');
   };
 
-  const startGame = () => { setGameState('playing'); setCurrentIndex(0); setTimeLeft(45); setScore(0); setUserAnswer(''); setWords([...WORDS].sort(() => Math.random() - 0.5).slice(0, 8)); };
+  const placeWord = (word: string, idx: number) => {
+    if (placed.length >= puzzles[currentIdx].correct.length) return;
+    setPlaced(p => [...p, { word, idx }]);
+    setTiles(t => t.map(x => x.idx === idx ? { ...x, used: true } : x));
+    setTimeout(checkAnswer, 200);
+  };
+
+  const removeWord = (idx: number) => {
+    setPlaced(p => p.filter(x => x.idx !== idx));
+    setTiles(t => t.map(x => x.idx === idx ? { ...x, used: false } : x));
+  };
+
+  const checkAnswer = () => {
+    const current = puzzles[currentIdx];
+    const isCorrect = placed.length === current.correct.length &&
+      placed.every((p, i) => p.word.toLowerCase() === current.correct[i].toLowerCase());
+    if (isCorrect) {
+      setScore(s => s + current.correct.length * 10);
+      setFeedback('correct');
+      setTimeout(() => nextPuzzle(), 1200);
+    } else if (placed.length === current.correct.length) {
+      setFeedback('wrong');
+      setTimeout(() => {
+        setPlaced([]);
+        setTiles(current.scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
+        setFeedback(null);
+      }, 1000);
+    }
+  };
+
+  const nextPuzzle = () => {
+    if (currentIdx >= puzzles.length - 1) {
+      setPhase('finished');
+      return;
+    }
+    const next = currentIdx + 1;
+    setCurrentIdx(next);
+    setTiles(puzzles[next].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
+    setPlaced([]);
+    setFeedback(null);
+  };
+
+  const shuffleTiles = () => {
+    setTiles(t => shuffleArr(t));
+  };
+
+  const skip = () => {
+    setPlaced([]);
+    setTiles(puzzles[currentIdx].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
+  };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3"><button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div><span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span></Link>
-            </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-6xl mb-6">🔤</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Scramble 2</h1><p className="text-gray-600 mb-8 text-lg">More word scramble fun!</p>
-            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
-          </motion.div>)}
-          {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="flex justify-between items-center mb-4"><span className="text-sm font-medium text-gray-600">Score: {score}</span><div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-white/70'}`}><Timer className="w-4 h-4" /><span className="font-bold">{timeLeft}s</span></div></div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-12 mb-6 text-center"><p className="text-sm text-gray-500 mb-2">Unscramble this word:</p><p className="text-4xl font-black tracking-widest">{scrambledWord}</p></div>
-            <input type="text" value={userAnswer} onChange={(e) => setUserAnswer(e.target.value.toUpperCase())} placeholder="Type answer..." className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-center text-xl font-bold tracking-widest mb-4 outline-none" onKeyDown={(e) => e.key === 'Enter' && handleSubmit()} autoFocus />
-            <button onClick={handleSubmit} className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl">Submit</button>
-          </motion.div>)}
-          {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-6xl mb-6">🏆</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Done!</h2><p className="text-5xl font-black gradient-text mb-4">{score}</p>
-            <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-          </motion.div>)}
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
+            <ArrowLeft className="w-4 h-4" /> Back to Games
+          </Link>
+
+          <AnimatePresence mode="wait">
+            {phase === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="text-6xl mb-4">💬</div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Sentence Scramble</h1>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Rearrange word tiles to form romantic sentences. Each word unlocks the next part of the puzzle!</p>
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Unscrambling
+                </button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && puzzles[currentIdx] && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">⏱️ {timeLeft}s</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-purple-600 font-semibold">{currentIdx + 1}/{puzzles.length}</span>
+                </div>
+
+                <motion.div key={currentIdx} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white/90 rounded-2xl p-6 shadow-xl">
+                  <div className="text-center text-3xl mb-2">{puzzles[currentIdx].emoji}</div>
+                  <p className="text-center text-sm text-rose-500 italic mb-4">Hint: {puzzles[currentIdx].hint}</p>
+
+                  <div className={`min-h-[80px] bg-gradient-to-r ${feedback === 'correct' ? 'from-green-100 to-emerald-100' : 'from-rose-50 to-pink-50'} rounded-xl p-3 mb-4 flex flex-wrap gap-2 justify-center items-center border-2 border-dashed border-rose-300`}>
+                    {placed.length === 0 && <span className="text-rose-400 italic text-sm">Tap words below to build sentence...</span>}
+                    {placed.map(p => (
+                      <button key={p.idx} onClick={() => removeWord(p.idx)} className="bg-white border-2 border-rose-400 text-rose-700 font-semibold px-3 py-1.5 rounded-lg shadow">
+                        {p.word}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {tiles.filter(t => !t.used).map(t => (
+                      <button key={t.idx} onClick={() => placeWord(t.word, t.idx)} className="bg-gradient-to-r from-rose-400 to-pink-400 text-white font-semibold px-3 py-1.5 rounded-lg shadow hover:scale-105 transition">
+                        {t.word}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center gap-2 mt-4">
+                    <button onClick={shuffleTiles} className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm"><Shuffle className="w-3 h-3 inline mr-1" /> Shuffle</button>
+                    <button onClick={skip} className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full text-sm">Reset</button>
+                  </div>
+
+                  {feedback === 'correct' && <p className="text-center text-green-600 font-bold mt-3">✨ Perfect!</p>}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {phase === 'finished' && (
+              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
+                <Sparkles className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Sentence Master!</h2>
+                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
+                <p className="text-xl text-pink-600 mb-6">points earned</p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Play Again
+                  </button>
+                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

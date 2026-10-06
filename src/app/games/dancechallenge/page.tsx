@@ -1,282 +1,136 @@
 'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2, RotateCcw, Flame, Trophy, Star, Zap, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Timer, Music } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
 const MOVES = [
-  { emoji: '💃', name: 'Spin Around', desc: 'Do a graceful spin! Twirl like you\'re on a dance floor!' },
-  { emoji: '✨', name: 'Strike a Pose', desc: 'Find your most dramatic pose and hold it!' },
-  { emoji: '💑', name: 'Do a Dip', desc: 'Gently dip your partner (or air-dip) with style!' },
-  { emoji: '🌹', name: 'Romantic Sway', desc: 'Slow dance sway with your eyes locked!' },
-  { emoji: '🎶', name: 'Moonwalk', desc: 'Try the moonwalk — backwards like Michael!' },
-  { emoji: '💫', name: 'Body Wave', desc: 'Wave your body from head to toe like a wave!' },
-  { emoji: '💖', name: 'Heart Hands', desc: 'Make heart shapes with your hands, together!' },
-  { emoji: '🕺', name: 'Funky Moves', desc: 'Do your funniest, funkiest dance moves!' },
-  { emoji: '💪', name: 'Power Pose', desc: 'Flex and show your confidence!' },
-  { emoji: '🌀', name: 'Twirl Partner', desc: 'Gently twirl your partner around!' },
+  { name: 'Slow Sway', emoji: '💫', points: 30, duration: 10 },
+  { name: 'Dip & Spin', emoji: '🌪️', points: 40, duration: 15 },
+  { name: 'Lift Lift', emoji: '🦋', points: 50, duration: 10 },
+  { name: 'Body Roll', emoji: '💃', points: 25, duration: 8 },
+  { name: 'Freestyle Flair', emoji: '✨', points: 45, duration: 20 },
+  { name: 'Hip Hop Shuffle', emoji: '🎧', points: 30, duration: 12 },
+  { name: 'Tango Step', emoji: '💃🕺', points: 35, duration: 10 },
+  { name: 'Cha-Cha Slide', emoji: '💕', points: 30, duration: 12 },
 ];
 
-type Rating = { label: string; min: number };
-
-const RATINGS: Rating[] = [
-  { label: 'Dancing Royalty', min: 450 },
-  { label: 'Smooth Movers', min: 350 },
-  { label: 'Rhythm Lovers', min: 250 },
-  { label: 'Cute Couple', min: 150 },
-  { label: 'Getting There', min: 50 },
-  { label: 'Shy Starters', min: 0 },
-];
-
-const COMBO_MESSAGES = [
-  '🔥 Fire move!',
-  '💫 Electric!',
-  '⭐ Stellar!',
-  '💖 Perfect harmony!',
-  '🌹 Beautiful!',
-  '✨ Magnificent!',
-  '🎵 Grooving!',
-  '💕 So romantic!',
-];
+const SONGS = ['Perfect - Ed Sheeran', 'All of Me - John Legend', 'Thinking Out Loud', 'At Last - Etta James'];
 
 export default function DanceChallengePage() {
-  const [playing, setPlaying] = useState(false);
-  const [round, setRound] = useState(0);
-  const [totalRounds] = useState(8);
-  const [currentMove, setCurrentMove] = useState<(typeof MOVES)[0] | null>(null);
-  const [timer, setTimer] = useState(10);
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'ready' | 'playing' | 'finished'>('idle');
+  const [moveIndex, setMoveIndex] = useState(0);
+  const [moveTime, setMoveTime] = useState(0);
   const [score, setScore] = useState(0);
+  const [song, setSong] = useState('');
   const [combo, setCombo] = useState(0);
-  const [bestCombo, setBestCombo] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const [lastScore, setLastScore] = useState(0);
-  const [comboMsg, setComboMsg] = useState('');
-  const [done, setDone] = useState(false);
-  const timerRef = useRef(0);
 
-  const startGame = () => {
-    setPlaying(true);
-    setRound(0);
+  const start = () => {
+    const s = SONGS[Math.floor(Math.random() * SONGS.length)];
+    setSong(s);
+    setMoveIndex(0);
+    setMoveTime(MOVES[0].duration);
     setScore(0);
     setCombo(0);
-    setBestCombo(0);
-    setDone(false);
-    setShowResult(false);
-    nextRound();
+    setState('ready');
   };
 
-  const nextRound = () => {
-    setShowResult(false);
-    const move = MOVES[Math.floor(Math.random() * MOVES.length)];
-    setCurrentMove(move);
-    setTimer(10);
-    setRound(r => r + 1);
-  };
-
-  // Timer
-  useEffect(() => {
-    if (!playing || showResult || done) return;
-    timerRef.current = window.setInterval(() => {
-      setTimer(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          setShowResult(true);
-          setLastScore(0);
-          setCombo(c => {
-            const nc = 0;
-            setBestCombo(prev => Math.max(prev, comboRef.current));
-            comboRef.current = 0;
-            return nc;
-          });
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [playing, showResult, done]);
-
-  const comboRef = useRef(0);
-
-  useEffect(() => { comboRef.current = combo; }, [combo]);
-
-  const handleDance = () => {
-    if (!playing || showResult) return;
-    const style = Math.floor(Math.random() * 60) + 20 + combo * 5;
-    const newCombo = combo + 1;
-    setCombo(newCombo);
-    setScore(s => s + style);
-    setLastScore(style);
-    setShowResult(true);
-    if (newCombo > bestCombo) setBestCombo(newCombo);
-    if (newCombo % 4 === 0 && newCombo > 0) {
-      setComboMsg(COMBO_MESSAGES[Math.floor(Math.random() * COMBO_MESSAGES.length)]);
-    }
+  const beginMove = () => {
+    setState('playing');
   };
 
   useEffect(() => {
-    if (showResult) {
-      const timeout = setTimeout(() => {
-        if (round >= totalRounds) {
-          setPlaying(false);
-          setDone(true);
-        } else {
-          nextRound();
-        }
-      }, 1500);
-      return () => clearTimeout(timeout);
+    if (state !== 'playing') return;
+    if (moveTime <= 0) {
+      setCombo(0);
+      if (moveIndex + 1 >= MOVES.length) setState('finished');
+      else {
+        setMoveIndex((i) => i + 1);
+        setMoveTime(MOVES[moveIndex + 1].duration);
+      }
+      return;
     }
-  }, [showResult, round, totalRounds]);
+    const t = setTimeout(() => setMoveTime((x) => x - 1), 1000);
+    return () => clearTimeout(t);
+  }, [moveTime, state, moveIndex]);
 
-  const rating = RATINGS.find(r => score >= r.min)!;
-
-  const shareLink = () => {
-    if (typeof navigator !== 'undefined' && (navigator as any).share) {
-      (navigator as any).share({ title: 'Dance Challenge', url: typeof window !== 'undefined' ? window.location.href : '' });
-    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
-    }
+  const completeMove = () => {
+    setCombo((c) => c + 1);
+    const bonus = combo * 2;
+    setScore((s) => s + MOVES[moveIndex].points + bonus);
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" /> Dance Challenge
-            </h1>
-            <div className="w-10" />
-          </div>
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
 
-          {!playing && !done && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <TiltCard>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 text-center space-y-4">
-                  <motion.div animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                    <span className="text-8xl">💃</span>
-                  </motion.div>
-                  <p className="text-gray-700 font-semibold text-lg">Get your groove on! 💃🕺</p>
-                  <p className="text-sm text-gray-500">8 dance moves, 10 seconds each. Score points with your style!</p>
-                  <Button onClick={startGame} variant="primary">Start Dancing!</Button>
-                </div>
-              </TiltCard>
-            </motion.div>
-          )}
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <Music className="w-20 h-20 text-fuchsia-400 mx-auto mb-6" />
+            <h1 className="text-5xl font-bold text-white mb-4">Dance Challenge</h1>
+            <p className="text-white/80 mb-8 text-lg">Dance together, move by move. Build a combo for bonus points.</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Pick a Song
+            </button>
+          </motion.div>
+        )}
 
-          {playing && currentMove && (
-            <>
-              <div className="flex justify-center gap-2 mb-3 text-sm font-bold flex-wrap">
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-primary-600 shadow border border-pink-100 flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> {timer}s
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-pink-600 shadow border border-pink-100">
-                  Round {round}/{totalRounds}
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-rose-600 shadow border border-pink-100">
-                  Score: {score}
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-orange-600 shadow border border-pink-100">
-                  🔥 {combo}x
-                </div>
+        {state === 'ready' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center mt-20">
+            <div className="text-7xl mb-6 animate-bounce">💃🕺</div>
+            <h2 className="text-3xl font-bold text-white mb-2">Now Playing</h2>
+            <p className="text-2xl text-pink-300 font-semibold mb-8">{song}</p>
+            <button onClick={beginMove} className="px-8 py-4 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-2xl font-semibold text-lg">
+              Hit the Dance Floor!
+            </button>
+          </motion.div>
+        )}
+
+        {state === 'playing' && (
+          <motion.div key={moveIndex} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="max-w-2xl mx-auto mt-8">
+            <div className="flex justify-between items-center mb-4 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">Move {moveIndex + 1}/{MOVES.length}</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Combo: {combo}x</span>
+            </div>
+            <div className="bg-gradient-to-br from-fuchsia-500/40 to-pink-500/40 backdrop-blur-md rounded-3xl p-10 border-2 border-fuchsia-300/40 text-center">
+              <div className="text-8xl mb-4">{MOVES[moveIndex].emoji}</div>
+              <h2 className="text-3xl font-bold text-white mb-3">{MOVES[moveIndex].name}</h2>
+              <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mb-3">
+                <motion.div className="bg-gradient-to-r from-fuchsia-400 to-pink-400 h-full" animate={{ width: `${(moveTime / MOVES[moveIndex].duration) * 100}%` }} />
               </div>
+              <div className="text-white/80">Time: {moveTime}s • Worth {MOVES[moveIndex].points} pts</div>
+            </div>
+            <button onClick={completeMove} className="w-full mt-6 py-4 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-2xl font-semibold text-lg">
+              Nailed It! +{MOVES[moveIndex].points + combo * 2}
+            </button>
+          </motion.div>
+        )}
 
-              <TiltCard>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-5 pointer-events-none">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="absolute text-4xl" style={{ top: `${15 * i}%`, left: `${10 * i}%` }}>
-                        {i % 2 === 0 ? '💃' : '🕺'}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="relative text-center space-y-4">
-                    <motion.div
-                      key={currentMove.name + (showResult ? 'done' : 'active')}
-                      animate={{ scale: showResult ? 1.3 : [1, 1.1, 1], rotate: showResult ? [0, -10, 10, 0] : 0 }}
-                      transition={{ duration: showResult ? 0.5 : 1, repeat: showResult ? 0 : Infinity }}
-                      className="text-8xl"
-                    >
-                      {currentMove.emoji}
-                    </motion.div>
-
-                    <AnimatePresence mode="wait">
-                      {!showResult ? (
-                        <motion.div key="dance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                          <h2 className="text-2xl font-display font-black text-primary-600">{currentMove.name}!</h2>
-                          <p className="text-gray-600 mt-1">{currentMove.desc}</p>
-                        </motion.div>
-                      ) : (
-                        <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-                          <p className="text-xl font-bold text-primary-600">+{lastScore} style points!</p>
-                          {comboMsg && <p className="text-lg text-orange-500 font-bold">{comboMsg}</p>}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {!showResult && (
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={handleDance}
-                        className="mt-2 bg-gradient-to-r from-primary-500 to-rose-500 text-white rounded-full px-8 py-4 font-display font-black text-xl shadow-lg animate-pulse"
-                      >
-                        <Zap className="w-5 h-5 inline mr-2" />DO THE MOVE!
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
-              </TiltCard>
-            </>
-          )}
-
-          {done && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <TiltCard>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 text-center space-y-3">
-                  <motion.div animate={{ rotate: [0, -5, 5, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                    <span className="text-6xl">{rating.label === 'Dancing Royalty' ? '👑' : '🏆'}</span>
-                  </motion.div>
-                  <h2 className="text-3xl font-display font-black gradient-text-animated">Dance Rating!</h2>
-                  <p className="text-xl font-bold text-primary-600">{rating.label}</p>
-                  <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
-                    <div className="bg-pink-50 rounded-xl p-3">
-                      <div className="text-xs text-gray-500">Total Score</div>
-                      <div className="text-2xl font-bold text-primary-600">{score}</div>
-                    </div>
-                    <div className="bg-pink-50 rounded-xl p-3">
-                      <div className="text-xs text-gray-500">Best Combo</div>
-                      <div className="text-2xl font-bold text-rose-600">🔥 {bestCombo}x</div>
-                    </div>
-                  </div>
-                  <Button onClick={startGame} variant="primary"><RotateCcw className="w-4 h-4 mr-1" /> Dance Again</Button>
-                </div>
-              </TiltCard>
-            </motion.div>
-          )}
-
-          <div className="flex justify-center gap-3 mt-6">
-            <Button onClick={shareLink} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-1" /> Invite Friend
-            </Button>
-            {playing && (
-              <Button onClick={startGame} variant="ghost" size="sm">
-                <RotateCcw className="w-4 h-4 mr-1" /> Reset
-              </Button>
-            )}
-          </div>
-        </div>
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Performance Complete!</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-fuchsia-300">{score}</div>
+              <div className="text-white/80 mt-2">Total Dance Points</div>
+              <p className="mt-6 text-white/80 italic">"Dance is the hidden language of the soul — together, it is the loudest."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Dance Again
+              </button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
-            <GameSharePanel gameSlug="dancechallenge" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

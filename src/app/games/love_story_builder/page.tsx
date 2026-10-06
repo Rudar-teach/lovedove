@@ -1,61 +1,127 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, BookOpen, Star } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
 
-const WORDS = ['Rose', 'Kiss', 'Date', 'Hug', 'Love', 'Heart', 'Soul', 'Dream', 'Cupid', 'Angel', 'Baby', 'Forever'];
+const PARTS = [
+  { name: 'The Meeting', emoji: '☕', questions: ['Where did you first see each other?', 'What were you wearing?', 'What was the first thing you noticed?'] },
+  { name: 'First Date', emoji: '🍽️', questions: ['Where did you go?', 'What did you order?', 'What was the best moment?'] },
+  { name: 'First Kiss', emoji: '💋', questions: ['Where did it happen?', 'What happened before?', 'How did it feel?'] },
+  { name: 'Saying I Love You', emoji: '💬', questions: ['Who said it first?', 'Where were you?', 'What did they do after?'] },
+  { name: 'Future Dreams', emoji: '🏡', questions: ['Where do you want to live?', 'What traditions will you start?', 'What is your biggest dream together?'] },
+];
 
-export default function LoveStoryBuilder() {
+export default function LoveStoryBuilderPage() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [story, setStory] = useState<string[]>([]);
-  const [line, setLine] = useState('');
-  const [turn, setTurn] = useState<'p1' | 'p2'>('p1');
-  const start = () => { setGameState('playing'); setStory(['Once upon a time, there was a couple who...']); setLine(''); setTurn('p1'); };
-  const submit = () => {
-    if (!line.trim()) return;
-    const newLine = `${turn === 'p1' ? '💕' : '💖'} ${line.trim()}`;
-    setStory(prev => [...prev, newLine]);
-    setLine('');
-    setTurn(t => t === 'p1' ? 'p2' : 'p1');
-    if (story.length >= 8) setGameState('finished');
+  const [state, setState] = useState<'idle' | 'building' | 'finished'>('idle');
+  const [partIndex, setPartIndex] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: string]: { question: string; answer: string; quality: number } }>({});
+  const [score, setScore] = useState(0);
+
+  const start = () => {
+    setPartIndex(0);
+    setAnswers({});
+    setScore(0);
+    setState('building');
   };
+
+  const answerQ = (part: string, q: string, val: string) => {
+    const key = `${part}-${q}`;
+    setAnswers((a) => ({ ...a, [key]: { question: q, answer: val, quality: val.length > 30 ? 3 : val.length > 10 ? 2 : 1 } }));
+  };
+
+  const nextPart = () => {
+    const part = PARTS[partIndex];
+    let partScore = 0;
+    part.questions.forEach((q) => {
+      const key = `${part.name}-${q}`;
+      if (answers[key]) partScore += answers[key].quality * 5;
+    });
+    setScore((s) => s + partScore);
+    if (partIndex + 1 >= PARTS.length) setState('finished');
+    else setPartIndex((i) => i + 1);
+  };
+
+  const current = PARTS[partIndex];
+  const answeredCount = current.questions.filter((q) => answers[`${current.name}-${q}`]?.answer).length;
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3"><button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div><span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span></Link>
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
+
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <BookOpen className="w-20 h-20 text-indigo-300 mx-auto mb-6" />
+            <h1 className="text-5xl font-bold text-white mb-4">Love Story Builder</h1>
+            <p className="text-white/80 mb-8 text-lg">Construct your unique love story chapter by chapter. Every detail makes it more beautiful.</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Start Writing
+            </button>
+          </motion.div>
+        )}
+
+        {state === 'building' && (
+          <div className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-4 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">{current.emoji} {current.name}</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
             </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-amber-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-6xl mb-6">📚</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Story Builder</h1><p className="text-gray-600 mb-8 text-lg">Build a love story together!</p>
-            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
-          </motion.div>)}
-          {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="text-center mb-4"><span className="px-3 py-1 rounded-full bg-white/70 text-sm font-semibold">{turn === 'p1' ? '💕 Partner 1' : '💖 Partner 2'}'s turn</span></div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6">
-              <p className="text-xl italic text-gray-700 leading-relaxed">{story.map((l, i) => <div key={i}>{l}</div>)}</p>
+            <div className="flex gap-1 mb-6">
+              {PARTS.map((p, i) => (
+                <div key={p.name} className={`flex-1 h-2 rounded-full ${i < partIndex || answers[`${p.name}-${p.questions[0]}`] ? 'bg-gradient-to-r from-indigo-400 to-purple-400' : 'bg-white/10'}`} />
+              ))}
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6">
-              <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Continue the story..." className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-center mb-4 outline-none focus:border-amber-500" onKeyDown={(e) => e.key === 'Enter' && submit()} autoFocus />
-              <button onClick={submit} disabled={!line.trim()} className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl disabled:opacity-50">Continue Story</button>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 mb-6 border border-white/20">
+              <div className="text-4xl mb-3 text-center">{current.emoji}</div>
+              <h2 className="text-2xl font-bold text-white mb-2">{current.name}</h2>
+              <p className="text-white/70 text-center text-sm mb-4">{answeredCount}/{current.questions.length} answered</p>
             </div>
-          </motion.div>)}
-          {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-6xl mb-6">📖</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Your Love Story!</h2>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-8 text-center"><p className="text-xl italic text-gray-700 leading-relaxed">{story.map((l, i) => <div key={i}>{l}</div>)}</p></div>
-            <button onClick={start} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> New Story</button>
-          </motion.div>)}
-        </div>
+            <div className="bg-white/95 text-gray-800 rounded-3xl p-6 shadow-2xl">
+              <h3 className="font-bold text-indigo-600 mb-4 flex items-center gap-2"><BookOpen size={18} /> {current.name}</h3>
+              <div className="space-y-4">
+                {current.questions.map((q) => (
+                  <div key={q}>
+                    <label className="block text-gray-700 font-semibold text-sm mb-1">{q}</label>
+                    <textarea
+                      value={answers[`${current.name}-${q}`]?.answer || ''}
+                      onChange={(e) => answerQ(current.name, q, e.target.value)}
+                      rows={2}
+                      className="w-full bg-indigo-50 rounded-xl px-4 py-3 outline-none resize-none text-sm"
+                      placeholder="Write your answer..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button onClick={nextPart} className="w-full mt-4 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl font-semibold">
+              {partIndex + 1 >= PARTS.length ? 'Complete Story ✨' : 'Next Chapter →'}
+            </button>
+          </div>
+        )}
+
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Story Complete!</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-indigo-300">{score}</div>
+              <div className="text-white/80 mt-2">Story Score</div>
+              <p className="mt-6 text-white/80 italic">"A love story is not written in ink, but in the moments you share."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Rewrite Story
+              </button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
     </PremiumBackground>
   );

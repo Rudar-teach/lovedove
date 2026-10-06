@@ -1,177 +1,208 @@
 'use client';
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw, BookOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Sparkles, RotateCcw, BookOpen, Smile } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const PROMPTS = [
-  "Today I felt most loved when...",
-  "My favorite memory of us is...",
-  "The thing I love most about you is...",
-  "When we first met, I thought...",
-  "You make me smile when...",
-  "I'm grateful for...",
-  "My favorite thing to do with you is...",
-  "I love the way you...",
-  "The best date we ever had was...",
-  "I can't wait to...",
-  "When you hold my hand, I feel...",
-  "I fell in love with you when...",
-  "You're my favorite...",
-  "The sound of your voice makes me...",
-  "I promise to always...",
+const PROMPTS = {
+  gratitude: [
+    "Name one thing your partner did today that made you smile.",
+    "What is a quality of your partner you're grateful for?",
+    "What's a small moment together you treasure?",
+    "What does your partner bring to your life that nobody else does?",
+    "What's a challenge you faced together that made you stronger?",
+    "What's something your partner sacrificed for you?",
+    "What habit of your partner secretly makes you happy?",
+    "What do you appreciate most about your relationship?",
+    "When did your partner last make you feel truly seen?",
+    "What's a lesson you've learned from this relationship?",
+  ],
+  reflection: [
+    "How did I show love today?",
+    "When did I feel most connected to my partner today?",
+    "What was a difficult moment and how did we handle it?",
+    "What do I want to improve in how I show up?",
+    "What made me feel loved this week?",
+    "Did I miss an opportunity to be kinder?",
+    "What's one thing I want more of in our relationship?",
+    "How has my partner grown recently?",
+    "What boundaries do I need to communicate?",
+    "Am I spending enough quality time together?",
+  ],
+  appreciation: [
+    "I love how you...",
+    "I feel most connected when we...",
+    "I appreciate your...",
+    "You make me feel...",
+    "One thing I want to do more of with you is...",
+    "I'm proud of us for...",
+    "What I admire most about you is...",
+    "Thank you for...",
+    "I love our tradition of...",
+    "I feel safe when you...",
+  ],
+};
+
+const MOODS = [
+  { emoji: '😊', label: 'Happy', color: 'bg-yellow-100 border-yellow-300' },
+  { emoji: '😌', label: 'Peaceful', color: 'bg-blue-100 border-blue-300' },
+  { emoji: '💕', label: 'Loving', color: 'bg-pink-100 border-pink-300' },
+  { emoji: '🥰', label: 'Grateful', color: 'bg-purple-100 border-purple-300' },
+  { emoji: '🤗', label: 'Cuddly', color: 'bg-orange-100 border-orange-300' },
+  { emoji: '🥺', label: 'Vulnerable', color: 'bg-indigo-100 border-indigo-300' },
+  { emoji: '😤', label: 'Frustrated', color: 'bg-red-100 border-red-300' },
+  { emoji: '🥺', label: 'Needy', color: 'bg-teal-100 border-teal-300' },
 ];
 
-export default function LoveJournal() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [entries, setEntries] = useState<{ prompt: string; text: string; date: string }[]>([]);
-  const [currentPrompt, setCurrentPrompt] = useState(0);
-  const [currentEntry, setCurrentEntry] = useState('');
-  const [prompts, setPrompts] = useState<string[]>([]);
+type PromptType = 'gratitude' | 'reflection' | 'appreciation';
+type Phase = 'mood' | 'write' | 'entries' | 'insights';
+
+export default function LoveJournalEnhanced() {
+  const [phase, setPhase] = useState<Phase>('mood');
+  const [entries, setEntries] = useState<{ text: string; mood: typeof MOODS[0]; date: string; type: PromptType }[]>([]);
+  const [mood, setMood] = useState<typeof MOODS[0] | null>(null);
+  const [promptType, setPromptType] = useState<PromptType>('gratitude');
+  const [prompt, setPrompt] = useState('');
+  const [text, setText] = useState('');
 
   useEffect(() => {
-    setPrompts([...PROMPTS].sort(() => Math.random() - 0.5).slice(0, 8));
+    const saved = localStorage.getItem('love-journal-entries');
+    if (saved) { try { setEntries(JSON.parse(saved)); } catch {} }
   }, []);
 
-  const startGame = () => {
-    setGameState('playing');
-    setEntries([]);
-    setCurrentPrompt(0);
-    setCurrentEntry('');
-    setPrompts([...PROMPTS].sort(() => Math.random() - 0.5).slice(0, 8));
+  useEffect(() => {
+    if (entries.length > 0) localStorage.setItem('love-journal-entries', JSON.stringify(entries));
+  }, [entries]);
+
+  const getPrompt = () => {
+    const pool = PROMPTS[promptType];
+    setPrompt(pool[Math.floor(Math.random() * pool.length)]);
   };
 
+  useEffect(() => { if (phase === 'write') getPrompt(); }, [phase, promptType]);
+
   const saveEntry = () => {
-    if (!currentEntry.trim()) return;
-    setEntries(prev => [...prev, {
-      prompt: prompts[currentPrompt],
-      text: currentEntry.trim(),
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    }]);
-    setCurrentEntry('');
-    if (currentPrompt < prompts.length - 1) {
-      setCurrentPrompt(p => p + 1);
-    } else {
-      setGameState('finished');
-    }
+    if (!text.trim()) return;
+    setEntries(e => [...e, { text, mood: mood!, date: new Date().toLocaleDateString(), type: promptType }]);
+    setText('');
+    setMood(null);
+    setPhase('entries');
   };
+
+  const moodDistribution = entries.length === 0 ? [] :
+    Object.entries(entries.reduce<Record<string, number>>((acc, e) => { acc[e.mood.label] = (acc[e.mood.label] || 0) + 1; return acc; }, {}))
+      .sort((a, b) => b[1] - a[1]).slice(0, 3);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50">
-          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition-colors">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
-                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-                  </Link>
-                </div>
-                <Link href="/games" className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-rose-600 px-4 py-2 rounded-xl hover:bg-white/60 transition-colors">
-                  <ArrowLeft className="w-4 h-4 rotate-180" /> All Games
-                </Link>
-              </div>
-            </div>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games">
+              <button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button>
+            </Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1">
+              <BookOpen className="w-5 h-5 text-rose-500" /> Love Journal
+            </h1>
+            <button onClick={() => setPhase('mood')} className="p-2 hover:bg-white rounded-full transition-colors">
+              <RotateCcw className="w-6 h-6 text-gray-600" />
+            </button>
           </div>
-        </nav>
 
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-6xl mb-6">📖</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Journal</h1>
-              <p className="text-gray-600 mb-8 text-lg">Write daily love notes together!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-rose-100/60 p-6 mb-8 max-w-md mx-auto text-left">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Heart className="w-5 h-5 text-rose-500" /> How it works:</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>📝 Get a romantic writing prompt</li>
-                  <li>💕 Write from your heart</li>
-                  <li>💌 Share entries together</li>
-                  <li>📖 Build a collection of love notes</li>
-                </ul>
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
-                <Play className="w-5 h-5 inline mr-2" /> Start Writing
-              </button>
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {phase === 'mood' && (
+              <motion.div key="mood" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">📔</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">How are you feeling?</h2>
+                    <p className="text-gray-600">Check in with your emotions before writing.</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {MOODS.map(m => (
+                        <button key={m.label} onClick={() => { setMood(m); setPhase('write'); }}
+                          className={`p-3 rounded-2xl text-center border-2 transition-all hover:scale-105 ${m.color}`}>
+                          <span className="text-2xl block">{m.emoji}</span>
+                          <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </TiltCard>
+                {entries.length > 0 && (
+                  <Button onClick={() => setPhase('entries')} variant="outline" className="w-full mt-4">View Past Entries ({entries.length})</Button>
+                )}
+              </motion.div>
+            )}
 
-          {gameState === 'playing' && prompts[currentPrompt] && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-medium text-gray-600">Prompt {currentPrompt + 1}/{prompts.length}</span>
-                <span className="text-sm font-medium text-rose-600 font-bold">{entries.length} entries saved</span>
-              </div>
-              <div className="w-full h-2 bg-white/50 rounded-full mb-8 overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full"
-                  style={{ width: `${((currentPrompt + 1) / prompts.length) * 100}%` }} />
-              </div>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-rose-100/60 p-6 sm:p-8 mb-6">
-                <div className="text-4xl text-center mb-4">📝</div>
-                <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Writing Prompt</h2>
-                <p className="text-2xl font-display font-black text-rose-600 text-center">{prompts[currentPrompt]}</p>
-              </div>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-rose-100/60 p-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Your love note:</label>
-                <textarea
-                  value={currentEntry}
-                  onChange={e => setCurrentEntry(e.target.value)}
-                  placeholder="Write from your heart..."
-                  rows={5}
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all outline-none resize-none mb-4"
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <button onClick={saveEntry} disabled={!currentEntry.trim()}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
-                    Save Entry 💌
-                  </button>
+            {phase === 'write' && (
+              <motion.div key="write" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="text-center mb-3">
+                  <span className="text-3xl">{mood?.emoji}</span>
+                  <span className="text-sm text-gray-600 ml-2">{mood?.label}</span>
                 </div>
-              </div>
+                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.08)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 space-y-4">
+                    <div className="flex gap-2">
+                      {(['gratitude', 'reflection', 'appreciation'] as PromptType[]).map(t => (
+                        <button key={t} onClick={() => { setPromptType(t); }}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+                            promptType === t ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {t === 'gratitude' ? '🙏' : t === 'reflection' ? '🤔' : '💌'} {t}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="bg-pink-50 rounded-xl p-3">
+                      <p className="text-sm text-pink-700 italic">"{prompt}"</p>
+                    </div>
+                    <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Let your thoughts flow..."
+                      rows={5} className="w-full p-4 rounded-2xl border-2 border-gray-200 focus:border-pink-400 outline-none resize-none text-sm" />
+                    <Button onClick={saveEntry} variant="primary" className="w-full">Save Entry 💕</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
 
-              {entries.length > 0 && (
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-lg font-bold text-gray-800">📖 Your Journal</h3>
-                  {entries.map((entry, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-rose-100/60 p-4">
-                      <p className="text-xs text-gray-400 mb-2">{entry.date}</p>
-                      <p className="text-sm font-semibold text-rose-600 mb-1">{entry.prompt}</p>
-                      <p className="text-gray-700 text-sm">{entry.text}</p>
-                    </motion.div>
+            {phase === 'entries' && (
+              <motion.div key="entries" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                {moodDistribution.length > 0 && (
+                  <TiltCard intensity={3} glowColor="rgba(236, 72, 153, 0.05)">
+                    <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-4 mb-4">
+                      <h3 className="font-bold text-gray-800 text-sm mb-2 flex items-center gap-2"><Smile className="w-4 h-4 text-pink-500" /> Mood Patterns</h3>
+                      <div className="flex gap-2">
+                        {moodDistribution.map(([label, count]) => {
+                          const m = MOODS.find(m => m.label === label);
+                          return (
+                            <div key={label} className="flex-1 text-center p-2 rounded-xl bg-gray-50">
+                              <span className="text-xl">{m?.emoji}</span>
+                              <p className="text-[10px] font-bold text-gray-700">{label}</p>
+                              <p className="text-xs text-gray-500">{count}x</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </TiltCard>
+                )}
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                  {entries.map((e, i) => (
+                    <div key={i} className="p-4 bg-white/70 backdrop-blur-xl rounded-2xl border border-pink-100/60">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span>{e.mood.emoji}</span>
+                        <span className="text-xs text-gray-500">{e.date}</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-pink-100 rounded-full text-pink-700 capitalize">{e.type}</span>
+                      </div>
+                      <p className="text-sm text-gray-700">{e.text}</p>
+                    </div>
                   ))}
                 </div>
-              )}
-            </motion.div>
-          )}
-
-          {gameState === 'finished' && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-              <div className="text-6xl mb-6">📖</div>
-              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Journal Complete!</h2>
-              <p className="text-5xl font-black gradient-text mb-2">{entries.length}</p>
-              <p className="text-gray-600 mb-8">Beautiful love notes written! 💕</p>
-              <div className="flex gap-4 justify-center">
-                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold text-gray-700 shadow-lg">
-                  <RotateCcw className="w-5 h-5 inline mr-2" /> Write More
-                </button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold shadow-lg">
-                  More Games
-                </Link>
-              </div>
-            </motion.div>
-          )}
+                <Button onClick={() => setPhase('mood')} variant="primary" className="w-full mt-4">New Entry 💕</Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

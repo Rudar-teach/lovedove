@@ -1,272 +1,155 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-const EMOJI_SETS = [
-  '💕 🌅 🐚', '💖 🍷 🕯️', '💘 🌹 💋', '❤️ 🎂 🕊️', '💝 🌸 💐',
-  '💗 🍓 💌', '💓 ☕ 📖', '💞 🌙 🌟', '💟 🎁 💍', '💝 🏖️ 🥥',
-  '💕 🎵 🎶', '💖 🛁 🌹', '💘 🥂 💐', '❤️ 🍫 💌', '💗 🌷 💕',
-  '💓 🚗 🌅', '💞 📸 🌙', '💟 🎭 💘', '💝 🍕 ❤️', '💕 🌊 🐚',
-  '💖 🎠 🌹', '💋 🍦 ☀️', '💍 🌺 💐', '💕 🎪 🎡', '💗 🌈 🌸',
-  '💓 🍰 🕯️', '💘 🚲 🌳', '💖 🎹 🎵', '💝 🌻 🌞', '💕 🐶 💕',
-  '💖 🌙 💫', '💗 📷 🌷', '💞 🍷 💋', '💟 🦋 🌺', '💝 💌 💐',
-  '💕 ⛷️ 🏔️', '💖 🎬 🍿', '💘 🌮 💕', '❤️ 🛶 🌅', '💗 🏰 👑',
-  '💓 🌺 💕', '💞 🎁 💘', '💟 🌹 💖', '💝 🕊️ 💕', '💕 🐰 🌷',
-  '💖 🦢 💍', '💗 🌙 💫', '💘 ☕ 🍪', '💞 💐 🌷', '💟 💋 💖',
-  '💝 🎂 🕯️', '💕 🌟 💫', '💖 🎪 🎠', '💗 🍓 🍒', '💓 🥂 🍾',
+const STORIES = [
+  { title: 'The Proposal', sequence: ['💍', '💬', '😭', '😍', '💍', '👰', '💒'], emoji: '💒' },
+  { title: 'Date Night', sequence: ['💕', '💇', '🍝', '🎭', '😊', '💋', '🏠'], emoji: '🌃' },
+  { title: 'A Dream Vacation', sequence: ['✈️', '🏖️', '🌊', '🍹', '🌅', '🤸', '🌅'], emoji: '🏝️' },
+  { title: 'Cozy Night In', sequence: ['🏠', '🧸', '🍿', '📺', '😴', '💑', '😴'], emoji: '🛋️' },
+  { title: 'Our Future', sequence: ['👶', '🏡', '🐕', '🎂', '🎉', '👨‍👩‍👦', '❤️'], emoji: '🌟' },
 ];
 
-type Phase = 'pick1' | 'write1' | 'pick2' | 'write2' | 'reveal';
-
 export default function EmojiStoryPage() {
-  const [phase, setPhase] = useState<Phase>('pick1');
-  const [set1, setSet1] = useState('');
-  const [set2, setSet2] = useState('');
-  const [story1, setStory1] = useState('');
-  const [story2, setStory2] = useState('');
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [toast, setToast] = useState(false);
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'picking' | 'guessing' | 'finished'>('idle');
+  const [storyIndex, setStoryIndex] = useState(0);
+  const [target, setTarget] = useState<string[]>([]);
+  const [guess, setGuess] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [hints, setHints] = useState(0);
 
-  const generateEmojis = () => {
-    const shuffled = [...EMOJI_SETS].sort(() => Math.random() - 0.5);
-    return shuffled[0];
+  const start = () => {
+    setScore(0);
+    setHints(0);
+    setState('picking');
   };
 
-  const startPlayer1 = () => {
-    const newSet = generateEmojis();
-    setSet1(newSet);
-    setStory1('');
-    setTimeLeft(60);
-    setPhase('write1');
+  const pickStory = () => {
+    const s = STORIES[Math.floor(Math.random() * STORIES.length)];
+    setStoryIndex(STORIES.indexOf(s));
+    setTarget(s.sequence);
+    setGuess(new Array(s.sequence.length).fill(''));
+    setState('guessing');
   };
 
-  const startPlayer2 = () => {
-    const newSet = generateEmojis();
-    setSet2(newSet);
-    setStory2('');
-    setTimeLeft(60);
-    setPhase('write2');
+  const EMOJI_POOL = ['❤️', '💕', '💖', '💗', '💘', '💝', '💞', '💓', '💋', '😘', '😍', '🥰', '😊', '☕', '🍝', '🎁', '🏠', '🌅', '🌟', '💍'];
+
+  const place = (idx: number) => {
+    if (state !== 'guessing') return;
+    const emoji = EMOJI_POOL[Math.floor(Math.random() * EMOJI_POOL.length)];
+    const updated = [...guess];
+    updated[idx] = emoji;
+    setGuess(updated);
   };
 
-  useEffect(() => {
-    if ((phase !== 'write1' && phase !== 'write2') || timeLeft <= 0) {
-      if (timeLeft <= 0) {
-        if (phase === 'write1') {
-          setPhase('pick2');
-        } else if (phase === 'write2') {
-          setPhase('reveal');
-        }
-      }
-      return;
-    }
-    const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-    return () => clearInterval(timer);
-  }, [phase, timeLeft]);
-
-  const submitStory = () => {
-    if (phase === 'write1') {
-      if (!story1.trim()) return;
-      setPhase('pick2');
-    } else {
-      if (!story2.trim()) return;
-      setPhase('reveal');
-    }
+  const clearSlot = (idx: number) => {
+    const updated = [...guess];
+    updated[idx] = '';
+    setGuess(updated);
   };
 
-  const resetGame = () => {
-    setPhase('pick1');
-    setSet1('');
-    setSet2('');
-    setStory1('');
-    setStory2('');
-    setTimeLeft(60);
+  const submit = () => {
+    let s = 0;
+    guess.forEach((g, i) => {
+      if (g === target[i]) s += 20;
+    });
+    setScore((x) => x + s);
+    setState('finished');
   };
 
-  const inviteFriend = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setToast(true);
-    setTimeout(() => setToast(false), 2500);
-  };
-
-  const currentSet = phase === 'write1' ? set1 : phase === 'write2' ? set2 : '';
-  const currentStory = phase === 'write1' ? story1 : story2;
+  const current = STORIES[storyIndex];
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" />
-              Emoji Story
-            </h1>
-            <button onClick={inviteFriend} className="p-2 hover:bg-white rounded-full transition-colors">
-              <Share2 className="w-5 h-5 text-primary-500" />
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
+
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <div className="text-8xl mb-6">📖</div>
+            <h1 className="text-5xl font-bold text-white mb-4">Emoji Story</h1>
+            <p className="text-white/80 mb-8 text-lg">Guess the correct emoji for each part of the love story. Match the sequence to score.</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Start Story
             </button>
-          </div>
+          </motion.div>
+        )}
 
-          <AnimatePresence mode="wait">
-            {phase === 'pick1' && (
-              <motion.div key="pick1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center">
-                    <p className="text-6xl mb-4">🎭💭</p>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Player 1: Get Your Emojis!</h2>
-                    <p className="text-gray-600 mb-2">You&apos;ll get 5 emojis to weave into a romantic story</p>
-                    <p className="text-sm text-gray-500 mb-6">You have 60 seconds!</p>
-                    <Button onClick={startPlayer1} variant="primary" size="lg">Roll My Emojis! 🎲</Button>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            )}
+        {state === 'picking' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center mt-10">
+            <h2 className="text-3xl font-bold text-white mb-2">Choose a Story</h2>
+            <p className="text-white/70 mb-6">Score: {score} | Hints used: {hints}</p>
+            <div className="grid gap-3">
+              {STORIES.map((s, i) => (
+                <button key={i} onClick={() => { setStoryIndex(i); setTarget(s.sequence); setGuess(new Array(s.sequence.length).fill('')); setState('guessing'); }} className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-5 text-left">
+                  <span className="text-2xl mr-2">{s.emoji}</span>
+                  <span className="text-white font-semibold text-lg">{s.title}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-            {phase === 'write1' && (
-              <motion.div key="write1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                {/* Timer */}
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-semibold text-primary-600">Player 1 writing...</p>
-                  <p className={`text-2xl font-black ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-primary-600'}`}>⏱️ {timeLeft}s</p>
+        {state === 'guessing' && current && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-4 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">{current.emoji} {current.title}</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 mb-6 border border-white/20">
+              <h3 className="text-white font-semibold mb-4 text-center">Fill in the emoji story:</h3>
+              <div className="flex gap-2 justify-center flex-wrap mb-4">
+                {target.map((_, i) => (
+                  <button key={i} onClick={() => place(i)} className="w-14 h-14 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center text-2xl transition-all">
+                    {guess[i] || '+'}
+                  </button>
+                ))}
+              </div>
+              <p className="text-white/60 text-center text-sm">Click a slot, then it fills with a random love emoji. Match the target!</p>
+            </div>
+            <button onClick={submit} className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold mb-6">
+              Submit Story
+            </button>
+            {state === 'finished' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
+                <h3 className="text-white font-semibold mb-4">Target Story:</h3>
+                <div className="flex gap-2 justify-center mb-4">
+                  {target.map((e, i) => <span key={i} className="text-4xl">{e}</span>)}
                 </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
-                  <motion.div className="h-full bg-gradient-to-r from-primary-500 to-rose-500 rounded-full" animate={{ width: `${(timeLeft / 60) * 100}%` }} transition={{ duration: 0.5 }} />
-                </div>
-
-                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8">
-                    <p className="text-xs text-gray-500 mb-2 text-center">Your emojis:</p>
-                    <div className="flex justify-center gap-3 mb-6 text-4xl">
-                      {currentSet.split(' ').map((e, i) => <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }}>{e}</motion.span>)}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3 text-center">Write a romantic story using ALL these emojis:</p>
-                    <textarea
-                      value={currentStory}
-                      onChange={e => setStory1(e.target.value)}
-                      placeholder="Write your romantic story..."
-                      rows={6}
-                      className="w-full p-4 rounded-xl border-2 border-pink-200 focus:border-primary-500 focus:outline-none text-base resize-none"
-                    />
-                    <div className="text-center mt-4">
-                      <Button onClick={submitStory} variant="primary">Submit & Pass to Player 2 ➡️</Button>
-                    </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            )}
-
-            {phase === 'pick2' && (
-              <motion.div key="pick2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center">
-                    <p className="text-6xl mb-4">🎭💭</p>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Player 2: Your Turn!</h2>
-                    <p className="text-gray-600 mb-2">You&apos;ll get a NEW set of emojis</p>
-                    <p className="text-sm text-gray-500 mb-6">You have 60 seconds!</p>
-                    <Button onClick={startPlayer2} variant="primary" size="lg">Roll My Emojis! 🎲</Button>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            )}
-
-            {phase === 'write2' && (
-              <motion.div key="write2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-semibold text-rose-600">Player 2 writing...</p>
-                  <p className={`text-2xl font-black ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-rose-600'}`}>⏱️ {timeLeft}s</p>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
-                  <motion.div className="h-full bg-gradient-to-r from-primary-500 to-rose-500 rounded-full" animate={{ width: `${(timeLeft / 60) * 100}%` }} transition={{ duration: 0.5 }} />
-                </div>
-
-                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8">
-                    <p className="text-xs text-gray-500 mb-2 text-center">Your emojis:</p>
-                    <div className="flex justify-center gap-3 mb-6 text-4xl">
-                      {currentSet.split(' ').map((e, i) => <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.1 }}>{e}</motion.span>)}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3 text-center">Write a romantic story using ALL these emojis:</p>
-                    <textarea
-                      value={currentStory}
-                      onChange={e => setStory2(e.target.value)}
-                      placeholder="Write your romantic story..."
-                      rows={6}
-                      className="w-full p-4 rounded-xl border-2 border-pink-200 focus:border-primary-500 focus:outline-none text-base resize-none"
-                    />
-                    <div className="text-center mt-4">
-                      <Button onClick={submitStory} variant="primary">Reveal Stories! ✨</Button>
-                    </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            )}
-
-            {phase === 'reveal' && (
-              <motion.div key="reveal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                <p className="text-center text-2xl font-bold text-gray-700 mb-4">📖 The Stories...</p>
-                <div className="space-y-4">
-                  <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                    <TiltCard intensity={3} glowColor="rgba(236, 72, 153, 0.08)">
-                      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="px-3 py-1 rounded-full bg-primary-100 text-primary-700 text-sm font-bold">👤 Player 1</span>
-                          <span className="text-2xl">{set1}</span>
-                        </div>
-                        <p className="text-gray-800 italic whitespace-pre-wrap">{story1 || '(no story)'}</p>
-                      </div>
-                    </TiltCard>
-                  </motion.div>
-                  <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-                    <TiltCard intensity={3} glowColor="rgba(236, 72, 153, 0.08)">
-                      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-sm font-bold">👤 Player 2</span>
-                          <span className="text-2xl">{set2}</span>
-                        </div>
-                        <p className="text-gray-800 italic whitespace-pre-wrap">{story2 || '(no story)'}</p>
-                      </div>
-                    </TiltCard>
-                  </motion.div>
-                </div>
-                <div className="text-center mt-6">
-                  <Button onClick={resetGame} variant="primary" size="lg">New Stories 📝</Button>
+                <h3 className="text-white font-semibold mb-2">Your Story:</h3>
+                <div className="flex gap-2 justify-center">
+                  {guess.map((e, i) => <span key={i} className="text-4xl">{e}</span>)}
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </motion.div>
+        )}
 
-          <div className="text-center mt-6">
-            <Button onClick={inviteFriend} variant="outline" className="mb-3">
-              <Share2 className="w-4 h-4 mr-2" /> Invite Friend
-            </Button>
-            <br />
-            <Link href="/games">
-              <Button variant="ghost" size="sm">← Back to Games</Button>
-            </Link>
-          </div>
-
-          <AnimatePresence>
-            {toast && (
-              <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
-                Link copied! Share with your partner 💕
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-8">
+            <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Story Told!</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-purple-300">{score}</div>
+              <div className="text-white/80 mt-2">Total Score</div>
+              <p className="mt-6 text-white/80 italic">"An emoji says a thousand words — your story is priceless."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> New Story
+              </button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
-            <GameSharePanel gameSlug="emojistory" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

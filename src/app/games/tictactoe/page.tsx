@@ -1,228 +1,185 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Trophy, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
-import { supabase } from '@/lib/supabase';
 
-type CellValue = 'X' | 'O' | null;
+const GRID_SIZE = 3;
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
 
 export default function TicTacToePage() {
-  const [board, setBoard] = useState<CellValue[]>(Array(9).fill(null));
-  const [isXNext, setIsXNext] = useState(true);
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'p1name' | 'playing' | 'finished'>('idle');
+  const [board, setBoard] = useState<(string | null)[]>(Array(TOTAL_CELLS).fill(null));
+  const [turn, setTurn] = useState<'X' | 'O'>('X');
+  const [p1, setP1] = useState('Player 1');
+  const [p2, setP2] = useState('Player 2');
+  const [score, setScore] = useState({ p1: 0, p2: 0, ties: 0 });
   const [winner, setWinner] = useState<string | null>(null);
-  const [winningLine, setWinningLine] = useState<number[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [scores, setScores] = useState<{ X: number; O: number; draw: number; [k: string]: number }>({ X: 0, O: 0, draw: 0 });
+  const [winLine, setWinLine] = useState<number[]>([]);
+  const [round, setRound] = useState(1);
 
-  const WINNING_COMBOS = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6],
-  ];
-
-  const checkWinner = (currentBoard: CellValue[]): { winner: string | null; line: number[] } => {
-    for (const combo of WINNING_COMBOS) {
-      const [a, b, c] = combo;
-      if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-        return { winner: currentBoard[a]!, line: combo };
+  const checkWinner = (b: (string | null)[]): { winner: string | null; line: number[] } => {
+    const lines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6],
+    ];
+    for (const [a, bIdx, c] of lines) {
+      if (b[a] && b[a] === b[bIdx] && b[a] === b[c]) {
+        return { winner: b[a]!, line: [a, bIdx, c] };
       }
-    }
-    if (currentBoard.every(cell => cell !== null)) {
-      return { winner: 'draw', line: [] };
     }
     return { winner: null, line: [] };
   };
 
-  const createSession = async () => {
-    const { data: { session: authSession } } = await supabase.auth.getSession();
-    if (!authSession) return;
-    const { data } = await supabase.from('game_sessions').insert({
-      game_type: 'tictactoe',
-      players: [authSession.user.id],
-      game_state: { board: Array(9).fill(null), turn: 'X' },
-      status: 'waiting',
-      current_turn: 'X',
-    }).select('id').single();
-    if (data) setSessionId(data.id);
+  const startGame = () => {
+    setBoard(Array(TOTAL_CELLS).fill(null));
+    setTurn('X');
+    setWinner(null);
+    setWinLine([]);
+    setState('playing');
   };
 
-  useEffect(() => { createSession(); }, []);
-
-  const handleCellClick = (index: number) => {
-    if (board[index] || winner) return;
-
-    const newBoard = [...board];
-    newBoard[index] = isXNext ? 'X' : 'O';
-    setBoard(newBoard);
-
-    const result = checkWinner(newBoard);
+  const select = (idx: number) => {
+    if (board[idx] || state !== 'playing') return;
+    const updated = [...board];
+    updated[idx] = turn;
+    setBoard(updated);
+    const result = checkWinner(updated);
     if (result.winner) {
       setWinner(result.winner);
-      setWinningLine(result.line);
-      if (result.winner !== 'draw') {
-        const w = result.winner as 'X' | 'O';
-        setScores(prev => ({ ...prev, [w]: prev[w] + 1 }));
-        saveGame(result.winner);
-      } else {
-        setScores(prev => ({ ...prev, draw: prev.draw + 1 }));
-        saveGame('draw');
-      }
-    }
-    setIsXNext(!isXNext);
-  };
-
-  const saveGame = async (gameWinner: string) => {
-    const { data: { session: authSession } } = await supabase.auth.getSession();
-    if (!authSession) return;
-    if (sessionId) {
-      await supabase.from('game_sessions').update({
-        game_state: { board },
-        status: 'completed',
-        winner_id: gameWinner === 'X' ? authSession.user.id : null,
-      }).eq('id', sessionId);
-    }
-    const { data: existing } = await supabase.from('game_stats').select('*').eq('user_id', authSession.user.id).eq('game_type', 'tictactoe').single();
-    if (existing) {
-      await supabase.from('game_stats').update({
-        games_played: existing.games_played + 1,
-        wins: gameWinner === 'X' ? existing.wins + 1 : existing.wins,
-        total_time_played: existing.total_time_played + 30,
-        last_played: new Date().toISOString(),
-      }).eq('id', existing.id);
+      setWinLine(result.line);
+      setScore((s) => ({
+        ...s,
+        p1: s.p1 + (result.winner === 'X' ? 1 : 0),
+        p2: s.p2 + (result.winner === 'O' ? 1 : 0),
+      }));
+      setState('finished');
+    } else if (updated.every((c) => c !== null)) {
+      setWinner('tie');
+      setScore((s) => ({ ...s, ties: s.ties + 1 }));
+      setState('finished');
+    } else {
+      setTurn(turn === 'X' ? 'O' : 'X');
     }
   };
 
-  const resetGame = () => {
-    setBoard(Array(9).fill(null));
-    setIsXNext(true);
+  const resetBoard = () => {
+    setBoard(Array(TOTAL_CELLS).fill(null));
+    setTurn('X');
     setWinner(null);
-    setWinningLine([]);
+    setWinLine([]);
+    setRound((r) => r + 1);
+    setState('playing');
   };
 
-  const getCellStyle = (index: number) => {
-    if (winningLine.includes(index)) {
-      return 'bg-gradient-to-br from-primary-100 to-rose-100 border-primary-400 scale-105';
-    }
-    return 'bg-white border-pink-100 hover:border-primary-300 hover:bg-primary-50/50';
+  const resetAll = () => {
+    setScore({ p1: 0, p2: 0, ties: 0 });
+    setRound(1);
+    startGame();
   };
-
-  const isDraw = winner === 'draw';
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary-500" />
-              Tic-Tac-Toe
-            </h1>
-            <button onClick={resetGame} className="p-2 hover:bg-white rounded-full transition-colors">
-              <RefreshCw className="w-6 h-6 text-primary-500" />
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
+
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <div className="grid grid-cols-3 gap-2 max-w-[180px] mx-auto mb-6">
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
+              <div className="aspect-square bg-pink-500/50 rounded-xl flex items-center justify-center text-3xl">💖</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
+              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
+            </div>
+            <h1 className="text-5xl font-bold text-white mb-4">Love Tic Tac Toe</h1>
+            <p className="text-white/80 mb-8 text-lg">Play with X and O, but make it romantic. Race to three in a row.</p>
+            <div className="max-w-xs mx-auto mb-6 space-y-2">
+              <input value={p1} onChange={(e) => setP1(e.target.value)} placeholder="Player X name" className="w-full bg-white/10 text-white placeholder-white/50 rounded-2xl px-4 py-3 outline-none text-center" />
+              <input value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Player O name" className="w-full bg-white/10 text-white placeholder-white/50 rounded-2xl px-4 py-3 outline-none text-center" />
+            </div>
+            <button onClick={startGame} className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Start Game
             </button>
-          </div>
-
-          {/* Status */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-6">
-            {winner ? (
-              <div className="space-y-2">
-                {isDraw ? (
-                  <p className="text-2xl font-bold text-gray-700">It&apos;s a Draw! 🤝</p>
-                ) : (
-                  <p className="text-2xl font-bold text-primary-600">
-                    {winner} Wins! 🎉
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-xl font-semibold text-gray-700">
-                {isXNext ? "Your turn" : "Opponent's turn"} ({isXNext ? 'X' : 'O'})
-              </p>
-            )}
           </motion.div>
+        )}
 
-          {/* Score Board */}
-          <div className="flex justify-center gap-4 mb-6">
-            {Object.entries(scores).map(([player, score]) => (
-              <div
-                key={player}
-                className={`px-4 py-2 rounded-2xl font-bold text-lg ${
-                  player === 'X' ? 'bg-primary-100 text-primary-700' :
-                  player === 'O' ? 'bg-rose-100 text-rose-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {player === 'X' ? '❤️' : player === 'O' ? '💙' : '🤝'} {score}
+        {state === 'playing' && (
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-lg mx-auto text-center">
+            <div className="flex justify-between items-center mb-4 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">Round {round}</span>
+              <span className={`px-4 py-2 rounded-full font-semibold ${turn === 'X' ? 'bg-pink-500/50' : 'bg-rose-500/50'}`}>
+                {turn === 'X' ? p1 : p2}'s turn ({turn})
+              </span>
+            </div>
+            <div className="flex justify-center gap-4 mb-4">
+              <div className="bg-pink-500/30 px-4 py-2 rounded-full text-white">
+                <span className="font-bold">{p1}:</span> {score.p1}
               </div>
-            ))}
-          </div>
-
-          {/* Board */}
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
-              <div className="grid grid-cols-3 gap-2">
-                {board.map((cell, index) => (
-                  <motion.button
-                    key={index}
-                    whileHover={{ scale: cell ? 1 : 1.05 }}
-                    whileTap={{ scale: cell ? 1 : 0.95 }}
-                    onClick={() => handleCellClick(index)}
-                    disabled={!!cell || !!winner}
-                    className={`
-                      aspect-square rounded-2xl border-2 text-4xl font-bold
-                      flex items-center justify-center transition-all duration-300
-                      ${getCellStyle(index)}
-                      ${cell === 'X' ? 'text-primary-600' : 'text-blue-600'}
-                    `}
-                  >
-                    {cell && (
-                      <motion.span
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: 'spring', duration: 0.5 }}
-                      >
-                        {cell}
-                      </motion.span>
-                    )}
-                  </motion.button>
-                ))}
+              <div className="bg-white/10 px-4 py-2 rounded-full text-white">
+                Ties: {score.ties}
+              </div>
+              <div className="bg-rose-500/30 px-4 py-2 rounded-full text-white">
+                <span className="font-bold">{p2}:</span> {score.p2}
               </div>
             </div>
-          </TiltCard>
+            <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto mb-4">
+              {board.map((cell, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={() => select(idx)}
+                  whileTap={{ scale: 0.9 }}
+                  animate={{
+                    scale: winLine.includes(idx) ? 1.15 : 1,
+                    backgroundColor: cell ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                  }}
+                  className={`aspect-square rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold transition-all border-2 ${
+                    winLine.includes(idx) ? 'border-yellow-300' : 'border-white/20'
+                  }`}
+                >
+                  {cell === 'X' && <span className="text-pink-300">{cell}</span>}
+                  {cell === 'O' && <span className="text-rose-300">{cell}</span>}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-          {/* Play Again */}
-          {(winner || isDraw) && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 text-center">
-              <Button onClick={resetGame} variant="primary" size="lg">
-                Play Again 🎮
-              </Button>
-            </motion.div>
-          )}
-
-          <p className="text-center text-sm text-gray-400 mt-8">
-            Challenge your partner to play together!
-          </p>
-
-          <div className="text-center">
-            <Link href="/games">
-              <Button variant="outline" className="mt-4">← Back to Games</Button>
-            </Link>
-          </div>
-        </div>
+        {state === 'finished' && winner && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Heart className="w-20 h-20 text-pink-400 mx-auto mb-6" fill="currentColor" />
+            <h2 className="text-4xl font-bold text-white mb-2">
+              {winner === 'tie' ? "It's a Tie!" : `${winner === 'X' ? p1 : p2} Wins!`}
+            </h2>
+            {winner !== 'tie' && <Sparkles className="w-8 h-8 text-yellow-300 mx-auto mb-4" />}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-pink-300">
+                {winner === 'tie' ? '🤝' : '👑'}
+              </div>
+              <p className="text-white/80 mt-2">{winner === 'tie' ? 'Perfectly matched!' : 'Victory!'}</p>
+              <p className="text-white/80 mt-1">Score: {winner === 'X' ? score.p1 : score.p2} - {score.ties} - {winner === 'O' ? score.p2 : score.p1}</p>
+              <p className="mt-6 text-white/80 italic">"In love as in games — two can play, but only one can win the heart."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={resetBoard} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Next Round
+              </button>
+              <button onClick={resetAll} className="px-6 py-3 bg-white/20 text-white rounded-2xl">Reset Score</button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
-            <GameSharePanel gameSlug="tictactoe" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

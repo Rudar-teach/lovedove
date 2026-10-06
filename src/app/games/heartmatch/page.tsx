@@ -1,106 +1,168 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, RotateCcw, Trophy } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Flame } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
 
-const ICONS = ['💕','💖','💗','💓','💘','💝','❤️','🌹','💍','🎁','✨','🫶'];
-const PAIRS = [...ICONS, ...ICONS];
+type Phase = 'idle' | 'playing' | 'finished';
 
-export default function HeartMatchPage() {
-  const [cards, setCards] = useState<{id:number;icon:string;flipped:boolean;matched:boolean}[]>([]);
+interface CardData {
+  id: number;
+  emoji: string;
+  label: string;
+  flipped: boolean;
+  matched: boolean;
+}
+
+const PAIRS: { emoji: string; label: string }[] = [
+  { emoji: '💕', label: 'Love' },
+  { emoji: '💋', label: 'Kiss' },
+  { emoji: '🌹', label: 'Rose' },
+  { emoji: '🫂', label: 'Hug' },
+  { emoji: '💍', label: 'Ring' },
+  { emoji: '🌙', label: 'Date Night' },
+  { emoji: '✍️', label: 'Letter' },
+  { emoji: '🎵', label: 'Song' },
+];
+
+export default function HeartmatchPage() {
+  const router = useRouter();
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [cards, setCards] = useState<CardData[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
-  const [matches, setMatches] = useState(0);
-  const [done, setDone] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(90);
+  const [timerActive, setTimerActive] = useState(false);
+  const [matchedPairs, setMatchedPairs] = useState(0);
+  const [checking, setChecking] = useState(false);
 
-  const shuffle = () => {
-    const s = [...PAIRS].sort(() => Math.random() - 0.5).map((icon, i) => ({id: i, icon, flipped: false, matched: false}));
-    setCards(s); setFlipped([]); setMoves(0); setMatches(0); setDone(false); setTimer(0); setStarted(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+  useEffect(() => {
+    if (!timerActive) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      setPhase('finished');
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft, timerActive]);
+
+  const startGame = () => {
+    const shuffled = [...PAIRS, ...PAIRS]
+      .map((p, i) => ({ ...p, id: i }))
+      .sort(() => Math.random() - 0.5)
+      .map((p, idx) => ({ ...p, id: p.id, cardId: idx, flipped: false, matched: false }));
+    setCards(shuffled);
+    setFlipped([]);
+    setMoves(0);
+    setScore(0);
+    setMatchedPairs(0);
+    setTimeLeft(90);
+    setTimerActive(true);
+    setChecking(false);
+    setPhase('playing');
   };
 
-  const handleCard = (i: number) => {
-    if (cards[i].flipped || cards[i].matched || flipped.length === 2) return;
-    const f = [...flipped, i];
-    setFlipped(f);
-    setCards(c => c.map((card, idx) => idx === i ? {...card, flipped: true} : card));
-    if (f.length === 2) {
-      setMoves(m => m + 1);
-      const [i1, i2] = f;
-      if (cards[i1].icon === cards[i2].icon) {
-        setTimeout(() => { setCards(c => c.map((card, idx) => (idx === i1 || idx === i2) ? {...card, matched: true} : card)); setMatches(m => m + 1); setFlipped([]); if (matches + 1 === ICONS.length) { setDone(true); clearInterval(timerRef.current!); } }, 400);
+  const handleFlip = (idx: number) => {
+    if (checking) return;
+    if (cards[idx].flipped || cards[idx].matched) return;
+    if (flipped.length >= 2) return;
+
+    setCards(c => c.map((card, i) => i === idx ? { ...card, flipped: true } : card));
+    const newFlipped = [...flipped, idx];
+    setFlipped(newFlipped);
+
+    if (newFlipped.length === 2) {
+      setChecking(true);
+      const [first, second] = newFlipped;
+      if (cards[first].emoji === cards[second].emoji) {
+        setTimeout(() => {
+          setCards(c => c.map((card, i) => i === first || i === second ? { ...card, matched: true } : card));
+          setMatchedPairs(p => p + 1);
+          setScore(s => s + 15);
+          setFlipped([]);
+          setChecking(false);
+          if (matchedPairs + 1 >= PAIRS.length) {
+            setTimerActive(false);
+            setPhase('finished');
+          }
+        }, 500);
       } else {
-        setTimeout(() => { setCards(c => c.map((card, idx) => (idx === i1 || idx === i2) ? {...card, flipped: false} : card)); setFlipped([]); }, 1000);
+        setMoves(m => m + 1);
+        setTimeout(() => {
+          setCards(c => c.map((card, i) => i === first || i === second ? { ...card, flipped: false } : card));
+          setFlipped([]);
+          setChecking(false);
+        }, 1000);
       }
     }
   };
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
-  import('react').then(r => { const useRef = r.useRef; const timerRef = useRef(0); }); // this won't work inline, use proper import
-
-  const fmt = (t: number) => `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
-  const stars = moves <= 12 ? 3 : moves <= 18 ? 2 : 1;
-
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
-            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Sparkles className="w-4 h-4 text-primary-500" /> Heart Match</h1>
-            <div className="w-16" />
-          </div>
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
+            <ArrowLeft className="w-4 h-4" /> Back to Games
+          </Link>
 
-          {!started ? (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
-                  <div className="text-6xl mb-4">🏰</div>
-                  <h2 className="text-2xl font-display font-bold text-gray-800">Heart Match</h2>
-                  <p className="text-gray-600">Match all the love symbol pairs!</p>
-                  <div className="text-2xl">{stars >= 3 ? '⭐⭐⭐' : stars >= 2 ? '⭐⭐' : '⭐'}</div>
-                  <Button onClick={shuffle} variant="primary" size="lg" className="w-full">Start Game 🏰</Button>
+          <AnimatePresence mode="wait">
+            {phase === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="text-6xl mb-4">💞</div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Heart Match</h1>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Memory match with romantic cards! Match all 8 pairs of love symbols together.</p>
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Matching
+                </button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">⏱️ {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-rose-600 font-semibold">💞 {matchedPairs}/{PAIRS.length}</span>
                 </div>
-              </TiltCard>
-            </motion.div>
-          ) : (
-            <>
-              <div className="flex justify-center gap-4 mb-4">
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-4 py-2 shadow border border-pink-100"><p className="text-xs text-gray-500">Moves</p><p className="text-xl font-bold text-gray-800">{moves}</p></div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-4 py-2 shadow border border-pink-100"><p className="text-xs text-gray-500">Matches</p><p className="text-xl font-bold text-primary-600">{matches}/{ICONS.length}</p></div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-4 py-2 shadow border border-pink-100"><p className="text-xs text-gray-500">Time</p><p className="text-xl font-bold text-gray-800">{fmt(timer)}</p></div>
-              </div>
-              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-4">
-                  <div className="grid grid-cols-4 gap-2">
-                    {cards.map((card, i) => (
-                      <motion.button key={card.id} whileTap={{ scale: 1 }} onClick={() => handleCard(i)} disabled={card.flipped || card.matched}
-                        className={`aspect-square rounded-xl text-3xl flex items-center justify-center transition-all duration-300 ${card.flipped || card.matched ? 'bg-white shadow-md border-2 border-primary-200' : 'bg-gradient-to-br from-primary-400 to-rose-500 shadow-lg cursor-pointer hover:shadow-xl'}`}>
-                        {card.flipped || card.matched ? card.icon : '💕'}
-                      </motion.button>
-                    ))}
-                  </div>
+
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                  {cards.map((card, i) => (
+                    <motion.button
+                      key={card.cardId}
+                      onClick={() => handleFlip(i)}
+                      whileTap={{ scale: 0.95 }}
+                      className={`aspect-square rounded-xl flex items-center justify-center text-3xl sm:text-4xl shadow-lg ${card.flipped || card.matched ? 'bg-white rotate-0' : 'bg-gradient-to-br from-rose-400 to-pink-500 rotate-180'}`}
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      {card.flipped || card.matched ? card.emoji : '💕'}
+                    </motion.button>
+                  ))}
                 </div>
-              </TiltCard>
-              {done && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center space-y-3">
-                  <div className="text-4xl">🎉</div>
-                  <h2 className="text-2xl font-display font-bold text-primary-600">You Won!</h2>
-                  <p className="text-gray-600">{moves} moves · {fmt(timer)}</p>
-                  <div className="text-2xl">{stars >= 3 ? '⭐⭐⭐' : stars >= 2 ? '⭐⭐' : '⭐'}</div>
-                  <Button onClick={shuffle} variant="primary"><RotateCcw className="w-4 h-4 mr-1" /> Play Again</Button>
-                </motion.div>
-              )}
-            </>
-          )}
+              </motion.div>
+            )}
+
+            {phase === 'finished' && (
+              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
+                <Sparkles className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Matched!</h2>
+                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
+                <p className="text-xl text-pink-600 mb-2">{moves} moves</p>
+                <p className="text-gray-700 mb-6">
+                  {moves <= 8 ? 'Perfect memory, lovebirds! 🧠' : moves <= 15 ? 'Great teamwork! 💖' : 'Every pair counts! 💕'}
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Play Again
+                  </button>
+                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

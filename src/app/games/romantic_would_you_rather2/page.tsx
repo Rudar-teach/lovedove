@@ -1,75 +1,134 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Timer } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
 
-const WYR = [
-  { a: "Romantic dinner at home", b: "Fancy restaurant" }, { a: "Beach vacation", b: "Mountain retreat" },
-  { a: "Morning person", b: "Night owl" }, { a: "Cuddle movies", b: "Hold hands walk" },
-  { a: "Receiving gifts", b: "Doing things for you" }, { a: "Verbal compliments", b: "Physical touch" },
-  { a: "Small wedding", b: "Big wedding" }, { a: "City life", b: "Country life" },
+const QUESTIONS = [
+  { a: 'Share your phone password with me', b: 'Share your diary with me' },
+  { a: 'Go on a road trip with no destination', b: 'Fly to a city neither of us has been to' },
+  { a: 'Cook dinner for me every night', b: 'Surprise me with breakfast in bed' },
+  { a: 'Hold hands when we sleep', b: 'Cuddle on the couch every evening' },
+  { a: 'Whisper sweet nothings', b: 'Write little love notes' },
+  { a: 'Watch sunsets together', b: 'Watch sunrises together' },
+  { a: 'Have a picnic under the stars', b: 'Have dinner on a boat' },
+  { a: 'Adopt a kitten together', b: 'Adopt a bunny together' },
+  { a: 'Sing karaoke duets', b: 'Have a dance battle' },
+  { a: 'Make a scrapbook of us', b: 'Make a movie of our memories' },
 ];
 
-export default function WouldYouRather() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [current, setCurrent] = useState(0);
-  const [p1Ans, setP1Ans] = useState<string[]>([]);
-  const [p2Ans, setP2Ans] = useState<string[]>([]);
-  const [phase, setPhase] = useState<'p1' | 'p2'>('p1');
-  const [selected, setSelected] = useState<string | null>(null);
-  const [q, setQ] = useState<typeof WYR>([]);
+const TIME_PER_Q = 15;
 
-  useEffect(() => { setQ([...WYR].sort(() => Math.random() - 0.5)); }, []);
-  const handleSelect = (val: string) => {
-    setSelected(val);
-    setTimeout(() => {
-      if (phase === 'p1') { setP1Ans(prev => [...prev, val]); setPhase('p2'); setSelected(null); }
-      else { setP2Ans(prev => [...prev, val]); if (current < q.length - 1) { setCurrent(i => i + 1); setPhase('p1'); setSelected(null); } else setGameState('finished'); }
-    }, 500);
+export default function RomanticWouldYouRather2Page() {
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
+  const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [time, setTime] = useState(TIME_PER_Q);
+  const [totalTime, setTotalTime] = useState(0);
+
+  useEffect(() => {
+    if (state !== 'playing') return;
+    if (time <= 0) {
+      choose('a', true);
+      return;
+    }
+    const t = setTimeout(() => setTime((x) => x - 1), 1000);
+    return () => clearTimeout(t);
+  }, [time, state, index]);
+
+  useEffect(() => {
+    if (state !== 'playing') return;
+    const t = setInterval(() => setTotalTime((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [state]);
+
+  const start = () => {
+    setIndex(0);
+    setScore(0);
+    setStreak(0);
+    setTime(TIME_PER_Q);
+    setTotalTime(0);
+    setState('playing');
   };
-  const start = () => { setGameState('playing'); setCurrent(0); setP1Ans([]); setP2Ans([]); setPhase('p1'); setSelected(null); setQ([...WYR].sort(() => Math.random() - 0.5)); };
+
+  const choose = (_choice: 'a' | 'b', timeout = false) => {
+    let points = 0;
+    if (!timeout) {
+      points = Math.max(1, Math.ceil(time / 3));
+      if (time > 10) points += 2;
+    }
+    setScore((s) => s + points);
+    setStreak((s) => (timeout ? 0 : s + 1));
+    if (index + 1 >= QUESTIONS.length) setState('finished');
+    else {
+      setIndex((i) => i + 1);
+      setTime(TIME_PER_Q);
+    }
+  };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3"><button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div><span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span></Link>
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
+
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <Heart className="w-20 h-20 text-rose-400 mx-auto mb-6" fill="currentColor" />
+            <h1 className="text-5xl font-bold text-white mb-4">Would You Rather 2</h1>
+            <p className="text-white/80 mb-2 text-lg">Race the 15-second timer and build the longest love streak.</p>
+            <p className="text-pink-200 mb-8 italic">Faster answers earn more sparks!</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Begin Sprint
+            </button>
+          </motion.div>
+        )}
+
+        {state === 'playing' && (
+          <motion.div key={index} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl mx-auto mt-8">
+            <div className="flex justify-between items-center mb-4 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2"><Timer size={16} /> {time}s</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Streak: {streak}</span>
             </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-6xl mb-6">🤷</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Would You Rather 2</h1><p className="text-gray-600 mb-8 text-lg">Tough romantic choices!</p>
-            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-orange-400 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
-          </motion.div>)}
-          {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="text-center mb-4"><span className="px-3 py-1 rounded-full bg-white/70 text-sm font-semibold">{phase === 'p1' ? '💕 Partner 1' : '💖 Partner 2'}</span></div>
-            <p className="text-center text-sm font-medium text-gray-600 mb-6">Q {current + 1}/{q.length}</p>
-            <div className="w-full h-2 bg-white/50 rounded-full mb-8 overflow-hidden"><motion.div className="h-full bg-gradient-to-r from-orange-400 to-pink-500 rounded-full" style={{ width: `${((current + 1) / q.length) * 100}%` }} /></div>
-            <div className="grid grid-cols-1 gap-4">
-              {[q[current]?.a, q[current]?.b].map((opt, i) => (
-                <button key={i} onClick={() => handleSelect(opt || '')} className={`p-8 rounded-2xl font-bold text-xl transition-all ${selected === opt ? 'bg-green-500 text-white scale-95' : 'bg-white/70 text-gray-800 hover:bg-white'}`}>
-                  {opt}
-                </button>
-              ))}
+            <div className="w-full bg-white/10 rounded-full h-2 mb-6 overflow-hidden">
+              <div className="bg-gradient-to-r from-rose-400 to-orange-400 h-full transition-all" style={{ width: `${(time / TIME_PER_Q) * 100}%` }} />
             </div>
-          </motion.div>)}
-          {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-6xl mb-6">💕</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Complete!</h2>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-8 text-left">
-              <h3 className="font-bold mb-4">Your choices:</h3>
-              {q.map((q2, i) => (<div key={i} className="mb-3"><p className="text-sm text-gray-600 mb-1">Q{i+1}: A or B?</p><p className="text-sm">💕 P1: {p1Ans[i]}</p><p className="text-sm">💖 P2: {p2Ans[i]}</p></div>))}
+            <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8">{QUESTIONS[index].a} — OR — {QUESTIONS[index].b}</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <button onClick={() => choose('a')} className="bg-gradient-to-br from-pink-500/40 to-purple-500/40 hover:from-pink-500/60 hover:to-purple-500/60 border-2 border-pink-400/50 rounded-3xl p-6 text-white text-lg font-semibold transition-all hover:scale-105 min-h-[160px]">
+                {QUESTIONS[index].a}
+              </button>
+              <button onClick={() => choose('b')} className="bg-gradient-to-br from-rose-500/40 to-orange-500/40 hover:from-rose-500/60 hover:to-orange-500/60 border-2 border-rose-400/50 rounded-3xl p-6 text-white text-lg font-semibold transition-all hover:scale-105 min-h-[160px]">
+                {QUESTIONS[index].b}
+              </button>
             </div>
-            <button onClick={start} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-          </motion.div>)}
-        </div>
+          </motion.div>
+        )}
+
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Sprint Complete!</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-yellow-300">{score}</div>
+              <div className="text-white/80 mt-2">Longest love streak: {streak}</div>
+              <div className="text-white/60 mt-2 text-sm">Total time: {totalTime}s</div>
+              <p className="mt-6 text-white/80 italic">"Every choice is a chance to fall deeper in love."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Play Again
+              </button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
     </PremiumBackground>
   );

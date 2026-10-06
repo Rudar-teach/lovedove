@@ -1,106 +1,143 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles, RotateCcw, Trophy } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
 
-const ITEMS = ['💋','🍕','🎬','🌹','💏','🛁','🌅','🎵','📱','🎁','✈️','🌙'];
+type Phase = 'idle' | 'playing' | 'finished';
+type Cell = { text: string; emoji: string; marked: boolean };
 
-export default function LoveBingoPage(){
-  const [board,setBoard]=useState<string[][]>([]);
-  const [marked,setMarked]=useState<Set<number>>(new Set());
-  const [phase,setPhase]=useState<'start'|'playing'|'result'>('start');
-  const [hasWon,setHasWon]=useState(false);
+const BINGO_PHRASES = [
+  'Says "I love you"', 'Makes you laugh', 'Steals the blanket', 'Cooks for you',
+  'Surprises you', 'Plans a date', 'Sends a sweet text', 'Gives a forehead kiss',
+  'Dances with you', 'Sings to you', 'Plans a future trip', 'Brings you coffee',
+  'Remembers an anniversary', 'Writes a love note', 'Holds your hand in public', 'Cuddles on the couch',
+  'Cooks breakfast in bed', 'Shares their food', 'Plays with your hair', 'Whispers "I miss you"',
+  'Surprise gift', 'Plans movie night', 'Stays up to talk', 'Drops everything for you',
+  'Says sorry first', 'Dreams out loud', 'Gives a back rub',
+];
 
-  const newBoard = () => {
-    const s = [...ITEMS].sort(() => Math.random() - 0.5);
-    const b = [s.slice(0,5), s.slice(5,10), s.slice(10,15)];
-    setBoard(b);
-    setMarked(new Set());
-    setHasWon(false);
-  };
+const BINGO_LINES = [
+  [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
+  [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
+  [0, 6, 12, 18, 24], [4, 8, 12, 16, 20],
+];
 
-  const checkWin = () => {
-    if (marked.size === 0 || board.length === 0) return;
-    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    for (const w of wins) {
-      if (w.every((i: number) => marked.has(i)) && !hasWon) {
-        setHasWon(true);
-        setTimeout(() => setPhase('result'), 1500);
-        break;
-      }
+export default function LoveBingoPage() {
+  const router = useRouter();
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [board, setBoard] = useState<Cell[]>([]);
+  const [timeLeft, setTimeLeft] = useState(120);
+  const [timerActive, setTimerActive] = useState(false);
+  const [bingoCount, setBingoCount] = useState(0);
+
+  useEffect(() => {
+    if (!timerActive) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      setPhase('finished');
+      return;
     }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft, timerActive]);
+
+  const startGame = () => {
+    const emoji = ['💕', '✨', '💋', '🌹', '💖', '🥰', '💝', '🌸', '☕', '🎁'];
+    const shuffled = [...BINGO_PHRASES].sort(() => Math.random() - 0.5);
+    const cells: Cell[] = shuffled.map((text, i) => ({
+      text, emoji: emoji[i % emoji.length], marked: false,
+    }));
+    setBoard(cells);
+    setTimeLeft(120);
+    setBingoCount(0);
+    setTimerActive(true);
+    setPhase('playing');
   };
 
-  const cellClick = (r: number, c: number) => {
-    if (hasWon) return;
-    const n = new Set(marked);
-    n.add(r * 3 + c);
-    setMarked(n);
+  const toggle = (idx: number) => {
+    setBoard(b => b.map((c, i) => i === idx ? { ...c, marked: !c.marked } : c));
   };
 
-  useEffect(() => { if (board.length > 0) checkWin(); }, [marked, board]);
+  useEffect(() => {
+    let count = 0;
+    BINGO_LINES.forEach(line => {
+      if (line.every(i => board[i]?.marked)) count++;
+    });
+    setBingoCount(count);
+  }, [board]);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700"/></button></Link>
-            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Sparkles className="w-4 h-4 text-primary-500"/> Love Bingo</h1>
-            <div className="w-16"/>
-          </div>
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
+            <ArrowLeft className="w-4 h-4" /> Back to Games
+          </Link>
 
-          {phase === 'start' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <TiltCard intensity={5} glowColor="rgba(236,72,153,0.1)">
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
-                  <div className="text-6xl mb-4">🎯</div>
-                  <h2 className="text-2xl font-display font-bold text-gray-800">Love Bingo</h2>
-                  <p className="text-gray-600">Match 3 in a row to win!</p>
-                  <Button onClick={() => { newBoard(); setPhase('playing'); }} variant="primary" size="lg" className="w-full">Play 🎯</Button>
-                </div>
-              </TiltCard>
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {phase === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="text-6xl mb-4">🎯</div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Bingo</h1>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Watch your partner through the day. Mark the squares as they do sweet things. Get a BINGO to win!</p>
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Watching
+                </button>
+              </motion.div>
+            )}
 
-          {phase === 'playing' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-              <div className="text-center text-sm text-gray-500">Tap to mark! Match 3 in a row.</div>
-              <TiltCard intensity={5}>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-4">
-                  <div className="grid grid-cols-5 gap-2">
-                    {[0,1,2,3,4,5,6,7,8].map(i => {
-                      const r = Math.floor(i/5), c = i%5;
-                      const m = marked.has(r * 3 + c);
-                      return (
-                        <button key={i} onClick={() => cellClick(r,c)} className={"aspect-square rounded-xl text-3xl flex items-center justify-center transition-all " + (m ? 'bg-pink-100 border-2 border-primary-400 scale-95' : 'bg-white border-2 border-gray-200 hover:border-primary-300')}>
-                          {board[r]?.[c]}{m ? ' ✨' : ''}
-                        </button>
-                      );
-                    })}
-                  </div>
+            {phase === 'playing' && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">⏱️ {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>
+                  <span className="text-pink-600 font-semibold">🎯 {bingoCount} BINGO{bingoCount !== 1 ? 's' : ''}</span>
                 </div>
-              </TiltCard>
-            </motion.div>
-          )}
+                <div className="grid grid-cols-5 gap-2">
+                  {board.map((cell, i) => {
+                    const isPart = BINGO_LINES.some(line => line.includes(i) && line.every(j => board[j]?.marked));
+                    return (
+                      <motion.button
+                        key={i}
+                        layout
+                        onClick={() => toggle(i)}
+                        whileTap={{ scale: 0.9 }}
+                        className={`aspect-square rounded-lg text-xs sm:text-sm p-1 flex flex-col items-center justify-center text-center font-medium border-2 transition ${cell.marked ? (isPart ? 'bg-gradient-to-br from-rose-500 to-pink-500 text-white border-rose-600 shadow-lg' : 'bg-rose-200 text-rose-700 border-rose-300') : 'bg-white text-gray-700 border-rose-200 hover:border-rose-400'}`}
+                      >
+                        <span className="text-lg sm:text-xl mb-0.5">{cell.emoji}</span>
+                        <span className="leading-tight">{cell.text}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                {bingoCount > 0 && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-4 text-center bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 rounded-xl font-bold text-xl">
+                    🎉 BINGO! {bingoCount} line{bingoCount !== 1 ? 's' : ''}!
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
 
-          {phase === 'result' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <TiltCard intensity={5} glowColor="rgba(236,72,153,0.1)">
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
-                  <div className="text-6xl">🏆</div>
-                  <h2 className="text-3xl font-display font-bold text-gray-800">BINGO!</h2>
-                  <p className="text-xl text-gray-700">You matched 3 in a row!</p>
-                  <Button onClick={() => { newBoard(); setPhase('playing'); }} variant="primary" className="w-full"><RotateCcw className="w-4 h-4 mr-1"/> Play Again</Button>
+            {phase === 'finished' && (
+              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
+                <Trophy className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Bingo Champion!</h2>
+                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{bingoCount}</div>
+                <p className="text-xl text-pink-600 mb-2">Bingo lines completed</p>
+                <p className="text-gray-700 mb-6">
+                  {bingoCount >= 3 ? 'Love Master! 💖' : bingoCount >= 1 ? 'Sweet partner detected! 💕' : 'Try again - watch closely! 👀'}
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Play Again
+                  </button>
+                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
                 </div>
-              </TiltCard>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

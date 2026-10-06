@@ -1,106 +1,197 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Timer, Award } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Sparkles, RotateCcw, Music, Play, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const achievements = [
-  { id: 'first_date', name: 'First Date', desc: 'Play your first game together', icon: '🌹', check: () => true },
-  { id: 'quiz_master', name: 'Quiz Master', desc: 'Score 100% on any quiz', icon: '🧠', check: () => true },
-  { id: 'word_finder', name: 'Word Finder', desc: 'Complete a word search', icon: '🔍', check: () => true },
-  { id: 'storyteller', name: 'Storyteller', desc: 'Write a story together', icon: '📖', check: () => true },
-  { id: 'bingo_winner', name: 'Bingo Winner', desc: 'Win a bingo round', icon: '🎯', check: () => true },
-  { id: 'dare_devil', name: 'Dare Devil', desc: 'Complete 5 dares', icon: '😈', check: () => true },
-  { id: 'truth_teller', name: 'Truth Teller', desc: 'Share 5 truths', icon: '💬', check: () => true },
-  { id: 'wheel_spinner', name: 'Wheel Spinner', desc: 'Spin the love wheel', icon: '🎡', check: () => true },
-];
+const DEFAULT_SONGS: Record<string, { name: string; artist: string; emoji: string }[]> = {
+  romance: [
+    { name: 'All of Me', artist: 'John Legend', emoji: '🎹' },
+    { name: 'Perfect', artist: 'Ed Sheeran', emoji: '🎸' },
+    { name: 'At Last', artist: 'Etta James', emoji: '🎷' },
+  ],
+  passion: [
+    { name: 'Crazy in Love', artist: 'Beyoncé', emoji: '🔥' },
+    { name: 'Love on the Brain', artist: 'Rihanna', emoji: '💜' },
+  ],
+  vibes: [
+    { name: 'Lover', artist: 'Taylor Swift', emoji: '💕' },
+    { name: 'Just the Two of Us', artist: 'Bill Withers', emoji: '☀️' },
+  ],
+  roadtrip: [
+    { name: 'Shut Up and Drive', artist: 'Rihanna', emoji: '🚗' },
+    { name: 'Life is a Highway', artist: 'Tom Cochrane', emoji: '🛣️' },
+  ],
+};
 
-export default function LoveAchievements() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [score, setScore] = useState(0);
-  const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
-  const [selected, setSelected] = useState<string | null>(null);
+type Mood = 'romance' | 'passion' | 'vibes' | 'roadtrip';
+type Phase = 'start' | 'add' | 'playlist' | 'playing';
 
-  const startGame = () => {
-    const newUnlocked = new Set<string>();
-    achievements.forEach(a => { if (a.check()) newUnlocked.add(a.id); });
-    setUnlocked(newUnlocked);
-    setScore(newUnlocked.size * 25);
-    setSelected(null);
-    setGameState('playing');
+export default function CouplePlaylistPage() {
+  const [phase, setPhase] = useState<Phase>('start');
+  const [mood, setMood] = useState<Mood>('romance');
+  const [songs, setSongs] = useState<Record<string, typeof DEFAULT_SONGS['romance']>>(DEFAULT_SONGS);
+  const [songName, setSongName] = useState('');
+  const [artist, setArtist] = useState('');
+  const [playing, setPlaying] = useState<{ name: string; artist: string; emoji: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<'player1' | 'player2'>('player1');
+  const [totalAdded, setTotalAdded] = useState(0);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('couple-playlist');
+    if (saved) { try { setSongs(JSON.parse(saved)); } catch {} }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('couple-playlist', JSON.stringify(songs));
+  }, [songs]);
+
+  const addSong = () => {
+    if (!songName.trim()) return;
+    setSongs(s => ({
+      ...s,
+      [mood]: [...s[mood], { name: songName, artist: artist || 'Unknown', emoji: '🎵' }]
+    }));
+    setSongName('');
+    setArtist('');
+    setTotalAdded(t => t + 1);
+    setCurrentUser(currentUser === 'player1' ? 'player2' : 'player1');
   };
 
-  const viewAchievement = (id: string) => {
-    setSelected(id);
+  const removeSong = (m: Mood, idx: number) => {
+    setSongs(s => ({ ...s, [m]: s[m].filter((_, i) => i !== idx) }));
   };
+
+  const allSongs = Object.values(songs).flat();
+  const moodLabels: Record<Mood, string> = { romance: '💕 Romance', passion: '🔥 Passion', vibes: '✨ Good Vibes', roadtrip: '🚗 Road Trip' };
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <nav className="flex items-center justify-between mb-8">
-          <button onClick={() => router.back()} className="p-2 rounded-full bg-white/70 hover:bg-white transition">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-pink-500 fill-pink-500" />
-            <span className="font-bold">Love Dove</span>
-          </Link>
-          <Link href="/games" className="text-sm text-gray-600 hover:text-pink-500 transition">All Games</Link>
-        </nav>
-
-        {gameState === 'idle' && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-7xl mb-4">🏆</div>
-            <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">Achievements</h1>
-            <p className="text-gray-600 mb-8 text-lg">Unlock achievements as you play games together! How many can you collect?</p>
-            <button onClick={startGame} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-white font-bold hover:shadow-lg hover:shadow-yellow-500/30 transition transform hover:scale-105">
-              <Play className="inline mr-2" /> View Achievements
+    <PremiumBackground>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games">
+              <button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button>
+            </Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1">
+              <Music className="w-5 h-5 text-rose-500" /> Couple Playlist
+            </h1>
+            <button onClick={() => { setPhase('start'); setCurrentUser('player1'); }} className="p-2 hover:bg-white rounded-full transition-colors">
+              <RotateCcw className="w-6 h-6 text-gray-600" />
             </button>
-          </motion.div>
-        )}
+          </div>
 
-        {gameState === 'playing' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/70 p-6 rounded-3xl shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-amber-600">Score: {score}</span>
-              <span className="text-sm text-gray-500">{unlocked.size}/{achievements.length} unlocked</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-              <div className="bg-gradient-to-r from-yellow-500 to-amber-500 h-2 rounded-full transition-all" style={{ width: `${(unlocked.size / achievements.length) * 100}%` }} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {achievements.map(a => (
-                <button key={a.id} onClick={() => viewAchievement(a.id)} className={`p-4 rounded-xl text-left transition ${unlocked.has(a.id) ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-2 border-yellow-300' : 'bg-gray-100 opacity-60'}`}>
-                  <span className="text-3xl block mb-1">{a.icon}</span>
-                  <p className="font-bold text-sm">{a.name}</p>
-                  <p className="text-xs text-gray-500">{a.desc}</p>
-                </button>
-              ))}
-            </div>
-            {selected && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 p-4 bg-yellow-50 rounded-xl text-center">
-                <span className="text-4xl">{achievements.find(a => a.id === selected)?.icon}</span>
-                <p className="font-bold mt-2">{achievements.find(a => a.id === selected)?.name}</p>
-                <p className="text-sm text-gray-600">{achievements.find(a => a.id === selected)?.desc}</p>
-                <p className="text-yellow-600 font-semibold mt-2">✓ Unlocked!</p>
+          <AnimatePresence mode="wait">
+            {phase === 'start' && (
+              <motion.div key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">🎧</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">Couple Playlist</h2>
+                    <p className="text-gray-600">Build the perfect soundtrack for your relationship together — add songs that mean something to you both.</p>
+                    <div className="bg-pink-50 rounded-2xl p-3 text-sm text-pink-700">
+                      <p className="font-bold">Total songs: {allSongs.length}</p>
+                      <p className="text-xs">from {Object.keys(songs).length} moods</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button onClick={() => setPhase('playlist')} variant="primary" size="lg" className="w-full">View Playlist 🎵</Button>
+                      <Button onClick={() => setPhase('add')} variant="outline" className="w-full">Add Songs ➕</Button>
+                    </div>
+                  </div>
+                </TiltCard>
               </motion.div>
             )}
-          </motion.div>
-        )}
 
-        {gameState === 'finished' && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-7xl mb-4">🏆</div>
-            <h2 className="text-3xl font-bold mb-4">Achievement Review!</h2>
-            <p className="text-5xl font-black bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent mb-2">{unlocked.size}/{achievements.length}</p>
-            <p className="text-gray-600 mb-8">{unlocked.size === achievements.length ? 'Achievement unlocked: Champion! 🏆' : 'Keep playing to unlock more badges!'}</p>
-            <button onClick={startGame} className="px-8 py-3 bg-white/70 font-bold rounded-full hover:bg-white transition"><RotateCcw className="inline mr-2" /> Again</button>
-            <Link href="/games" className="block mt-4 text-amber-500 font-semibold hover:underline">More Games</Link>
-          </motion.div>
-        )}
+            {phase === 'playlist' && (
+              <motion.div key="playlist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+                  {(Object.keys(songs) as Mood[]).map(m => (
+                    <button key={m} onClick={() => setMood(m)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold ${
+                        mood === m ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                      }`}>
+                      {moodLabels[m]}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                  {songs[mood].map((s, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-pink-100/60">
+                      <button onClick={() => { setPlaying(s); setPhase('playing'); }}
+                        className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center hover:bg-pink-200 transition-colors">
+                        <Play className="w-4 h-4 text-pink-600" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-gray-800 truncate">{s.name}</p>
+                        <p className="text-xs text-gray-500">{s.artist}</p>
+                      </div>
+                      <span className="text-xl">{s.emoji}</span>
+                      <button onClick={() => removeSong(mood, i)} className="text-red-300 hover:text-red-500 text-xs">×</button>
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={() => setPhase('start')} variant="outline" className="w-full mt-4">Back</Button>
+              </motion.div>
+            )}
+
+            {phase === 'add' && (
+              <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="text-center mb-3">
+                  <span className="text-sm text-gray-600">
+                    {currentUser === 'player1' ? '👤 Player 1' : '💖 Player 2'} — Add a song!
+                  </span>
+                </div>
+                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.08)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 space-y-3">
+                    <div className="flex gap-2">
+                      {(Object.keys(songs) as Mood[]).map(m => (
+                        <button key={m} onClick={() => setMood(m)}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold ${
+                            mood === m ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {moodLabels[m].split(' ')[1]}
+                        </button>
+                      ))}
+                    </div>
+                    <input value={songName} onChange={e => setSongName(e.target.value)} placeholder="Song name"
+                      className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-pink-400 outline-none text-sm" />
+                    <input value={artist} onChange={e => setArtist(e.target.value)} placeholder="Artist"
+                      className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-pink-400 outline-none text-sm" />
+                    <Button onClick={addSong} variant="primary" className="w-full">
+                      <Plus className="w-4 h-4 mr-2" /> Add Song
+                    </Button>
+                  </div>
+                </TiltCard>
+                <Button onClick={() => setPhase('playlist')} variant="outline" className="w-full mt-4">View Playlist</Button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && playing && (
+              <motion.div key="playing" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <TiltCard intensity={6} glowColor="rgba(236, 72, 153, 0.2)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="text-6xl">
+                      {playing.emoji}
+                    </motion.div>
+                    <h3 className="text-xl font-bold text-gray-800">{playing.name}</h3>
+                    <p className="text-gray-500">{playing.artist}</p>
+                    <div className="flex items-center justify-center gap-1">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <motion.div key={i} animate={{ height: [8, 20, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}
+                          className="w-1 bg-rose-500 rounded-full" />
+                      ))}
+                    </div>
+                    <Button onClick={() => setPhase('playlist')} variant="outline">Stop ⏹️</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </PremiumBackground>
   );
 }

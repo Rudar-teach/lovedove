@@ -1,422 +1,287 @@
 'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, RefreshCw, Share2, Sparkles, Copy, Check, Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
-import { supabase } from '@/lib/supabase';
 
-const CANVAS_WIDTH = 400;
-const CANVAS_HEIGHT = 600;
-const PIPE_WIDTH = 60;
-const PIPE_GAP = 180;
-const HEART_SIZE = 36;
-const GRAVITY = 0.4;
-const JUMP_FORCE = -7;
-const PIPE_SPEED = 2;
-const PIPE_INTERVAL = 90;
-
-interface Pipe {
-  x: number;
-  topHeight: number;
-  scored: boolean;
-}
+const GAME_WIDTH = 320;
+const GAME_HEIGHT = 480;
+const HEART_W = 40;
+const HEART_H = 40;
+const GRAVITY = 0.35;
+const PIPE_W = 60;
+const PIPE_GAP = 160;
+const PIPE_SPEED = 2.5;
+const PIPE_INTERVAL = 1800;
 
 export default function FlappyHeartPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [heartY, setHeartY] = useState(CANVAS_HEIGHT / 2);
-  const [velocity, setVelocity] = useState(0);
-  const [pipes, setPipes] = useState<Pipe[]>([]);
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [inviteCopied, setInviteCopied] = useState(false);
-
-  const gameLoopRef = useRef<number | null>(null);
-  const heartYRef = useRef(heartY);
-  const velocityRef = useRef(velocity);
-  const pipesRef = useRef(pipes);
-  const scoreRef = useRef(score);
-  const isRunningRef = useRef(isRunning);
-  const gameOverRef = useRef(gameOver);
-
-  const createSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const { data } = await supabase.from('game_sessions').insert({
-      game_type: 'flappyheart',
-      players: [session.user.id],
-      game_state: { score: 0 },
-      status: 'active',
-      current_turn: session.user.id,
-    }).select('id').single();
-    if (data) setSessionId(data.id);
-  };
+  const [best, setBest] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    createSession();
-    const stored = localStorage.getItem('flappyHeartHighScore');
-    if (stored) setHighScore(parseInt(stored));
+    const b = localStorage.getItem('flappyheart_best');
+    if (b) setBest(Number(b));
   }, []);
 
-  useEffect(() => {
-    heartYRef.current = heartY;
-  }, [heartY]);
-
-  useEffect(() => {
-    velocityRef.current = velocity;
-  }, [velocity]);
-
-  useEffect(() => {
-    pipesRef.current = pipes;
-  }, [pipes]);
-
-  useEffect(() => {
-    scoreRef.current = score;
-  }, [score]);
-
-  useEffect(() => {
-    isRunningRef.current = isRunning;
-  }, [isRunning]);
-
-  useEffect(() => {
-    gameOverRef.current = gameOver;
-  }, [gameOver]);
-
-  const reset = useCallback(() => {
-    setHeartY(CANVAS_HEIGHT / 2);
-    setVelocity(0);
-    setPipes([]);
-    setScore(0);
-    setGameOver(false);
-    setIsRunning(false);
-    if (gameLoopRef.current) {
-      cancelAnimationFrame(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
-  }, []);
-
-  const spawnPipe = useCallback((x: number): Pipe => {
-    const topHeight = Math.random() * (CANVAS_HEIGHT - PIPE_GAP - 100) + 50;
-    return { x, topHeight, scored: false };
-  }, []);
-
-  const jump = useCallback(() => {
-    if (gameOver) {
-      reset();
-      return;
-    }
-    if (!isRunning) {
-      setIsRunning(true);
-    }
-    setVelocity(JUMP_FORCE);
-  }, [gameOver, isRunning, reset]);
-
-  // Main game loop
-  useEffect(() => {
-    let lastPipe = 0;
-
-    const loop = () => {
-      if (!isRunningRef.current || gameOverRef.current) {
-        return;
-      }
-
-      // Apply gravity
-      velocityRef.current += GRAVITY;
-      heartYRef.current += velocityRef.current;
-
-      // Bounds check
-      if (heartYRef.current >= CANVAS_HEIGHT - HEART_SIZE) {
-        heartYRef.current = CANVAS_HEIGHT - HEART_SIZE;
-        setGameOver(true);
-        setIsRunning(false);
-        return;
-      }
-      if (heartYRef.current < 0) {
-        heartYRef.current = 0;
-        velocityRef.current = 0;
-      }
-
-      // Spawn pipes
-      if (lastPipe >= PIPE_INTERVAL) {
-        pipesRef.current = [...pipesRef.current, spawnPipe(CANVAS_WIDTH)];
-        lastPipe = 0;
-      } else {
-        lastPipe += 1;
-      }
-
-      // Move pipes
-      let newScore = scoreRef.current;
-      const updatedPipes = pipesRef.current
-        .map(p => {
-          const newPipe = { ...p, x: p.x - PIPE_SPEED };
-          if (!newPipe.scored && newPipe.x + PIPE_WIDTH < 100 - HEART_SIZE / 2) {
-            newPipe.scored = true;
-            newScore += 1;
-          }
-          return newPipe;
-        })
-        .filter(p => p.x + PIPE_WIDTH > 0);
-
-      // Collision with pipes
-      for (const pipe of updatedPipes) {
-        const heartLeft = 100 - HEART_SIZE / 2;
-        const heartRight = 100 + HEART_SIZE / 2;
-        const heartTop = heartYRef.current;
-        const heartBottom = heartYRef.current + HEART_SIZE;
-
-        if (heartRight > pipe.x && heartLeft < pipe.x + PIPE_WIDTH) {
-          if (heartTop < pipe.topHeight || heartBottom > pipe.topHeight + PIPE_GAP) {
-            setGameOver(true);
-            setIsRunning(false);
-            return;
-          }
-        }
-      }
-
-      pipesRef.current = updatedPipes;
-      scoreRef.current = newScore;
-
-      setHeartY(heartYRef.current);
-      setVelocity(velocityRef.current);
-      setPipes([...updatedPipes]);
-      setScore(newScore);
-
-      gameLoopRef.current = requestAnimationFrame(loop);
-    };
-
-    if (isRunning) {
-      gameLoopRef.current = requestAnimationFrame(loop);
-    }
-
-    return () => {
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-    };
-  }, [isRunning, spawnPipe]);
-
-  // Draw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Sky gradient
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-    skyGrad.addColorStop(0, '#ffd6e7');
-    skyGrad.addColorStop(0.5, '#fce7f3');
-    skyGrad.addColorStop(1, '#fbcfe8');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    const W = GAME_WIDTH;
+    const H = GAME_HEIGHT;
 
-    // Clouds
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.beginPath();
-    ctx.arc(80, 100, 25, 0, Math.PI * 2);
-    ctx.arc(110, 100, 30, 0, Math.PI * 2);
-    ctx.arc(140, 105, 25, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(280, 180, 20, 0, Math.PI * 2);
-    ctx.arc(310, 185, 28, 0, Math.PI * 2);
-    ctx.arc(345, 185, 22, 0, Math.PI * 2);
-    ctx.fill();
+    let heartY = H / 2;
+    let heartVel = 0;
+    let pipes: { x: number; gapY: number; scored: boolean }[] = [];
+    let frameCount = 0;
+    let gameScore = 0;
+    let animId: number;
+    let lastPipe = 0;
+    let running = false;
 
-    // Pipes
-    pipes.forEach(pipe => {
-      // Top pipe
-      const topGrad = ctx.createLinearGradient(pipe.x, 0, pipe.x + PIPE_WIDTH, 0);
-      topGrad.addColorStop(0, '#ec4899');
-      topGrad.addColorStop(0.5, '#f472b6');
-      topGrad.addColorStop(1, '#db2777');
-      ctx.fillStyle = topGrad;
-      ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
-      // Top pipe cap
-      ctx.fillStyle = '#be185d';
-      ctx.fillRect(pipe.x - 4, pipe.topHeight - 24, PIPE_WIDTH + 8, 24);
+    const drawHeart = (x: number, y: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = '#ec4899';
+      ctx.shadowColor = '#ec4899';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      const s = HEART_W / 30;
+      ctx.moveTo(0, 5 * s);
+      ctx.bezierCurveTo(-15 * s, -10 * s, -25 * s, 5 * s, 0, 20 * s);
+      ctx.moveTo(0, 5 * s);
+      ctx.bezierCurveTo(15 * s, -10 * s, 25 * s, 5 * s, 0, 20 * s);
+      ctx.fill();
+      ctx.restore();
+    };
 
-      // Bottom pipe
-      const botGrad = ctx.createLinearGradient(pipe.x, 0, pipe.x + PIPE_WIDTH, 0);
-      botGrad.addColorStop(0, '#ec4899');
-      botGrad.addColorStop(0.5, '#f472b6');
-      botGrad.addColorStop(1, '#db2777');
-      ctx.fillStyle = botGrad;
-      ctx.fillRect(pipe.x, pipe.topHeight + PIPE_GAP, PIPE_WIDTH, CANVAS_HEIGHT - (pipe.topHeight + PIPE_GAP));
-      ctx.fillStyle = '#be185d';
-      ctx.fillRect(pipe.x - 4, pipe.topHeight + PIPE_GAP, PIPE_WIDTH + 8, 24);
-    });
+    const drawPipe = (x: number, gapY: number) => {
+      const topH = gapY - PIPE_GAP / 2;
+      const botY = gapY + PIPE_GAP / 2;
+      const botH = H - botY;
 
-    // Heart
-    const heartX = 100 - HEART_SIZE / 2;
-    const heartYC = heartY;
-    ctx.save();
-    ctx.translate(heartX + HEART_SIZE / 2, heartYC + HEART_SIZE / 2);
-    ctx.rotate(Math.min(Math.PI / 8, velocityRef.current * 0.04));
+      const grad1 = ctx.createLinearGradient(x, 0, x + PIPE_W, 0);
+      grad1.addColorStop(0, '#4c1d95');
+      grad1.addColorStop(1, '#7c3aed');
+      ctx.fillStyle = grad1;
+      ctx.fillRect(x, 0, PIPE_W, topH);
 
-    // Heart glow
-    ctx.shadowColor = '#ec4899';
-    ctx.shadowBlur = 20;
+      ctx.fillStyle = '#8b5cf6';
+      ctx.fillRect(x - 4, topH - 12, PIPE_W + 8, 12);
 
-    const hs = HEART_SIZE / 2;
-    ctx.fillStyle = '#ff1493';
-    ctx.beginPath();
-    ctx.moveTo(0, hs / 3);
-    ctx.bezierCurveTo(0, -hs / 3, -hs, -hs / 3, -hs, hs / 4);
-    ctx.bezierCurveTo(-hs, hs * 2 / 3, -hs / 2, hs, 0, hs * 1.3);
-    ctx.bezierCurveTo(hs / 2, hs, hs, hs * 2 / 3, hs, hs / 4);
-    ctx.bezierCurveTo(hs, -hs / 3, 0, -hs / 3, 0, hs / 3);
-    ctx.fill();
+      const grad2 = ctx.createLinearGradient(x, 0, x + PIPE_W, 0);
+      grad2.addColorStop(0, '#4c1d95');
+      grad2.addColorStop(1, '#7c3aed');
+      ctx.fillStyle = grad2;
+      ctx.fillRect(x, botY, PIPE_W, botH);
 
-    // Highlight
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.beginPath();
-    ctx.arc(-hs / 3, 0, hs / 6, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = '#8b5cf6';
+      ctx.fillRect(x - 4, botY, PIPE_W + 8, 12);
+    };
 
-    ctx.restore();
+    const loop = () => {
+      if (!running) return;
 
-    // Ground
-    const groundGrad = ctx.createLinearGradient(0, CANVAS_HEIGHT - 30, 0, CANVAS_HEIGHT);
-    groundGrad.addColorStop(0, '#ec4899');
-    groundGrad.addColorStop(1, '#be185d');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, CANVAS_HEIGHT - 30, CANVAS_WIDTH, 30);
-    ctx.fillStyle = '#9d174d';
-    ctx.fillRect(0, CANVAS_HEIGHT - 30, CANVAS_WIDTH, 4);
+      heartVel += GRAVITY;
+      heartY += heartVel;
 
-    // Score
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#be185d';
-    ctx.lineWidth = 4;
-    ctx.font = 'bold 48px "Comic Sans MS", cursive';
-    ctx.textAlign = 'center';
-    ctx.strokeText(score.toString(), CANVAS_WIDTH / 2, 70);
-    ctx.fillText(score.toString(), CANVAS_WIDTH / 2, 70);
-  }, [heartY, pipes, score]);
+      frameCount++;
+      if (frameCount - lastPipe > PIPE_INTERVAL / (PIPE_SPEED * 3)) {
+        const minGap = 80;
+        const maxGap = H - 80 - PIPE_GAP;
+        const gapY = Math.random() * (maxGap - minGap) + minGap + PIPE_GAP / 2;
+        pipes.push({ x: W, gapY, scored: false });
+        lastPipe = frameCount;
+      }
 
-  // Input handlers
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
-        e.preventDefault();
-        jump();
+      pipes.forEach((p) => (p.x -= PIPE_SPEED));
+
+      pipes = pipes.filter((p) => {
+        if (!p.scored && p.x + PIPE_W < 60) {
+          p.scored = true;
+          gameScore++;
+          setScore(gameScore);
+        }
+        return p.x > -PIPE_W;
+      });
+
+      // collision
+      const cx = 60;
+      for (const p of pipes) {
+        if (cx + HEART_W / 2 > p.x && cx - HEART_W / 2 < p.x + PIPE_W) {
+          const topPipeBottom = p.gapY - PIPE_GAP / 2;
+          const botPipeTop = p.gapY + PIPE_GAP / 2;
+          if (heartY - HEART_H / 2 < topPipeBottom || heartY + HEART_H / 2 > botPipeTop) {
+            running = false;
+            setState('finished');
+            if (gameScore > best) {
+              setBest(gameScore);
+              localStorage.setItem('flappyheart_best', String(gameScore));
+            }
+            return;
+          }
+        }
+      }
+
+      if (heartY < 0 || heartY > H) {
+        running = false;
+        setState('finished');
+        if (gameScore > best) {
+          setBest(gameScore);
+          localStorage.setItem('flappyheart_best', String(gameScore));
+        }
+        return;
+      }
+
+      // draw
+      ctx.clearRect(0, 0, W, H);
+
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+      bgGrad.addColorStop(0, '#1e1b4b');
+      bgGrad.addColorStop(1, '#4c1d95');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // stars
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      for (let i = 0; i < 30; i++) {
+        const sx = (i * 47 + frameCount * 0.3) % W;
+        const sy = (i * 31) % H;
+        const sz = ((i * 13) % 3) + 1;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      pipes.forEach((p) => drawPipe(p.x, p.gapY));
+      drawHeart(cx, heartY);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(gameScore), W / 2, 50);
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    const startGame = () => {
+      heartY = H / 2;
+      heartVel = 0;
+      pipes = [];
+      gameScore = 0;
+      frameCount = 0;
+      lastPipe = 0;
+      running = true;
+      setScore(0);
+      setState('playing');
+      loop();
+    };
+
+    const flap = () => {
+      if (state === 'idle') {
+        startGame();
+      } else if (state === 'playing') {
+        heartVel = -7;
       }
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [jump]);
 
-  // Update high score
-  useEffect(() => {
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem('flappyHeartHighScore', score.toString());
-    }
-  }, [score, highScore]);
+    (window as any).__flappyFlap = flap;
 
-  const copyInvite = () => {
-    const url = `${window.location.origin}/games/flappyheart?session=${sessionId || 'demo'}`;
-    navigator.clipboard.writeText(url);
-    setInviteCopied(true);
-    setTimeout(() => setInviteCopied(false), 2000);
-  };
+    return () => {
+      running = false;
+      cancelAnimationFrame(animId);
+      delete (window as any).__flappyFlap;
+    };
+  }, [best, state]);
+
+  const restart = useCallback(() => {
+    setState('idle');
+    setScore(0);
+  }, []);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
+      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-md">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+              <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary-500" />
-              Flappy Heart
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Heart className="text-pink-400" /> Flappy Heart
             </h1>
-            <button onClick={reset} className="p-2 hover:bg-white rounded-full transition-colors">
-              <RefreshCw className="w-6 h-6 text-primary-500" />
-            </button>
+            <div className="w-16" />
           </div>
 
-          {/* Invite Button */}
-          <div className="flex justify-center mb-4">
-            <Button onClick={copyInvite} variant="outline" size="sm">
-              {inviteCopied ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Link Copied!
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Invite Friend
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* High Score */}
-          <div className="flex justify-center mb-4">
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-pink-100/60 px-5 py-2 text-center">
-              <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-1">
-                <Trophy className="w-3 h-3 text-yellow-500" /> Best: <span className="font-bold text-yellow-600">{highScore}</span>
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <div className="text-center">
+                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-xl font-bold text-white">{score}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-white/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-300">{best}</div>
+              </div>
             </div>
-          </div>
 
-          {/* Game Canvas */}
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-3 md:p-4 flex justify-center cursor-pointer"
-              onClick={jump}
-            >
+            <div className="relative">
               <canvas
                 ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
-                className="rounded-2xl max-w-full h-auto touch-none"
-                style={{ maxWidth: '100%' }}
+                width={GAME_WIDTH}
+                height={GAME_HEIGHT}
+                className="w-full rounded-2xl cursor-pointer"
+                style={{ aspectRatio: `${GAME_WIDTH}/${GAME_HEIGHT}` }}
+                onClick={() => (window as any).__flappyFlap?.()}
               />
+
+              {state === 'idle' && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl"
+                >
+                  <Heart className="text-pink-400 mb-2" size={48} />
+                  <p className="text-white text-lg font-bold">Tap or Space to Fly</p>
+                  <p className="text-white/60 text-sm">Avoid the purple pipes!</p>
+                </motion.div>
+              )}
+
+              {state === 'finished' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl"
+                >
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {score >= 20 ? '🏆 Amazing!' : score >= 10 ? '💖 Great!' : '💕 Good Try!'}
+                  </h2>
+                  <p className="text-white/80 mb-4">Score: {score}</p>
+                  <button
+                    onClick={restart}
+                    className="px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
+                  >
+                    <RotateCcw size={18} /> Play Again
+                  </button>
+                </motion.div>
+              )}
             </div>
-          </TiltCard>
 
-          {/* Controls */}
-          <div className="text-center mt-4">
-            {!isRunning && !gameOver && (
-              <Button onClick={jump} variant="primary" size="lg" className="w-full">
-                Tap to Fly 💕
-              </Button>
+            {state === 'playing' && (
+              <p className="text-center text-white/50 text-sm mt-2">Tap / Space to flap</p>
             )}
-            {gameOver && (
-              <Button onClick={reset} variant="primary" size="lg" className="w-full">
-                Play Again 🎮
-              </Button>
-            )}
-            {isRunning && !gameOver && (
-              <p className="text-sm text-gray-500">
-                Tap or press SPACE to fly!
-              </p>
-            )}
-          </div>
-
-          <div className="text-center">
-            <Link href="/games">
-              <Button variant="outline" className="mt-6">← Back to Games</Button>
-            </Link>
-          </div>
+          </motion.div>
         </div>
       </div>
-            <GameSharePanel gameSlug="flappyheart" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

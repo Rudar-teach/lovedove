@@ -1,59 +1,142 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const PREDICTIONS = [
-  "You will travel to Paris together by 2026", "A surprise proposal is coming soon!", "You'll adopt a pet together next year",
-  "Your next vacation will be magical", "You'll celebrate your 5th anniversary in style", "A surprise gift is in your future",
-  "You'll learn to dance together", "Your love story will be a movie someday", "You'll build a home together",
-  "A romantic road trip is in your future", "You'll recreate your first date", "A surprise dinner date awaits you",
+const SCENARIOS = [
+  { title: "Our First Date", scenario: "You're on your first date. Where do you take them?", answers: ["A fancy restaurant", "A cozy coffee shop", "A sunset picnic", "An adventure activity"] },
+  { title: "Moving In Together", scenario: "You're about to move in together. What's the first thing you do?", answers: ["Argue about furniture", "Paint the walls together", "Have a housewarming party", "Set up the bedroom first"] },
+  { title: "Sunday Morning", scenario: "It's a lazy Sunday morning. What do you do together?", answers: ["Cook breakfast in bed", "Go for a morning walk", "Watch movies all day", "Plan the week ahead"] },
+  { title: "Unexpected Surprise", scenario: "Your partner surprises you with a spontaneous gift. What is it?", answers: ["A handwritten letter", "A weekend getaway", "Your favorite flowers", "A surprise date night"] },
+  { title: "Future Home", scenario: "You're designing your dream home. What's the must-have feature?", answers: ["A giant walk-in closet", "A cozy fireplace", "A home theater", "A beautiful garden"] },
+  { title: "Adventure Time", scenario: "You have a free week together. What do you do?", answers: ["Road trip across the country", "Beach vacation", "Staycation with luxury", "Visit both families"] },
+  { title: "Anniversary Gift", scenario: "What's the perfect anniversary gift from your partner?", answers: ["Something handmade", "Something expensive", "An experience together", "A heartfelt letter"] },
+  { title: "Rainy Day", scenario: "It's pouring rain. What do you do indoors?", answers: ["Board games and hot cocoa", "Movie marathon", "Cook a fancy meal", "Dance in the living room"] },
+  { title: "Big Decision", scenario: "You need to make a big life decision together. How do you approach it?", answers: ["List pros and cons", "Trust your gut", "Ask friends for advice", "Sleep on it"] },
+  { title: "Sweet Gesture", scenario: "What's the sweetest thing your partner could do for you?", answers: ["Leave surprise notes", "Plan a surprise date", "Do my chores", "Give me a massage"] },
 ];
 
-export default function FutureTogether() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [predictions, setPredictions] = useState<string[]>([]);
-  const [current, setCurrent] = useState(0);
+export default function FutureTogetherPage() {
+  const [phase, setPhase] = useState<'start' | 'p1' | 'p2' | 'result'>('start');
+  const [scenarios, setScenarios] = useState<typeof SCENARIOS>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [p1Answers, setP1Answers] = useState<number[]>([]);
+  const [p2Answers, setP2Answers] = useState<number[]>([]);
+  const [p1Turn, setP1Turn] = useState(true);
+  const [score, setScore] = useState(0);
 
-  const reveal = () => {
-    const shuffled = [...PREDICTIONS].sort(() => Math.random() - 0.5).slice(0, 5);
-    setPredictions(shuffled);
-    setCurrent(0);
-    setGameState('playing');
+  const startGame = () => {
+    const shuffled = [...SCENARIOS].sort(() => Math.random() - 0.5).slice(0, 6);
+    setScenarios(shuffled);
+    setCurrentIdx(0);
+    setP1Answers([]);
+    setP2Answers([]);
+    setP1Turn(true);
+    setScore(0);
+    setPhase('p1');
   };
+
+  const handleAnswer = (idx: number) => {
+    if (p1Turn) {
+      setP1Answers(a => [...a, idx]);
+      setP1Turn(false);
+    } else {
+      setP2Answers(a => [...a, idx]);
+      if (currentIdx + 1 < scenarios.length) {
+        setCurrentIdx(i => i + 1);
+        setP1Turn(true);
+      } else {
+        setPhase('result');
+      }
+    }
+  };
+
+  const calculate = () => {
+    let matches = 0;
+    for (let i = 0; i < p1Answers.length; i++) {
+      if (p1Answers[i] === p2Answers[i]) matches++;
+    }
+    setScore(Math.round((matches / p1Answers.length) * 100));
+  };
+
+  useEffect(() => {
+    if (phase === 'result') calculate();
+  }, [phase]);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3"><button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div><span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span></Link>
-            </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-6xl mb-6">🔮</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Future Together</h1><p className="text-gray-600 mb-8 text-lg">See what the future holds for you two!</p>
-            <button onClick={reveal} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Reveal Future</button>
-          </motion.div>)}
-          {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="text-center mb-4"><span className="text-sm font-medium text-gray-600">Prediction {current + 1}/{predictions.length}</span></div>
-            <div className="w-full h-2 bg-white/50 rounded-full mb-8 overflow-hidden"><motion.div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${((current + 1) / predictions.length) * 100}%` }} /></div>
-            <div className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2rem] shadow-2xl p-12 mb-6 text-center text-white">
-              <p className="text-3xl font-black leading-relaxed">{predictions[current]}</p>
-            </div>
-            <button onClick={() => current < predictions.length - 1 ? setCurrent(i => i + 1) : setGameState('finished')} className="w-full px-6 py-4 bg-white/70 rounded-2xl font-bold">Next Prediction →</button>
-          </motion.div>)}
-          {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-            <div className="text-6xl mb-6">🔮</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Your Future!</h2><p className="text-gray-600 mb-8">A bright future awaits you two!</p>
-            <button onClick={reveal} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-          </motion.div>)}
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Calendar className="w-5 h-5 text-primary-500" /> Future Together</h1>
+            <div className="w-16" />
+          </div>
+
+          {phase === 'start' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">🔮</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Future Together</h2>
+                  <p className="text-gray-600">How well do you see the same future? Answer 6 life scenarios!</p>
+                  <p className="text-sm text-pink-500 font-medium">Both players answer, then compare visions!</p>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">See the Future 🔮</Button>
+                </div>
+              </TiltCard>
+            </motion.div>
+          )}
+
+          {(phase === 'p1' || phase === 'p2') && scenarios[currentIdx] && (
+            <motion.div initial={{ opacity: 0, x: p1Turn ? 40 : -40 }} animate={{ opacity: 1, x: 0 }}>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-600">{p1Turn ? '💙 Player 1' : '💗 Player 2'} answers</span>
+                <span className="text-sm text-gray-500">Q {currentIdx + 1}/{scenarios.length}</span>
+              </div>
+              <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                <motion.div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full" animate={{ width: `${((currentIdx + 1) / scenarios.length) * 100}%` }} />
+              </div>
+
+              <TiltCard intensity={4}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+                  <p className="text-sm font-bold text-primary-600 mb-2">{scenarios[currentIdx].title}</p>
+                  <p className="text-lg font-bold text-gray-800 mb-6 text-center">{scenarios[currentIdx].scenario}</p>
+                  <div className="space-y-3">
+                    {scenarios[currentIdx].answers.map((ans, i) => (
+                      <motion.button key={i} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleAnswer(i)}
+                        className="w-full p-4 rounded-2xl text-left font-semibold bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-100 hover:border-primary-300 hover:from-pink-100 hover:to-rose-100 transition-all text-gray-700">
+                        {String.fromCharCode(65 + i)}. {ans}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </TiltCard>
+            </motion.div>
+          )}
+
+          {phase === 'result' && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+              <TiltCard intensity={5}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">{score >= 80 ? '🔮' : score >= 50 ? '💫' : '🌈'}</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Future Vision Match!</h2>
+                  <div className="text-5xl font-black gradient-text">{score}%</div>
+                  <p className="text-lg font-semibold text-primary-600">
+                    {score >= 80 ? 'Perfect vision! You see the same future!' : score >= 50 ? 'Good alignment! Great conversations ahead!' : 'Different visions - that\'s what makes life interesting!'}
+                  </p>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Future Again 🔮</Button>
+                </div>
+              </TiltCard>
+            </motion.div>
+          )}
+
+          <div className="text-center mt-6">
+            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
+          </div>
         </div>
       </div>
     </PremiumBackground>

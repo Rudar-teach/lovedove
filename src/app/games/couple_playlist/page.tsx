@@ -1,158 +1,237 @@
 'use client';
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Music, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Sparkles, RotateCcw, Music, Play, Plus } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const DEFAULT_SONGS = [
-  { id: 1, title: "Perfect", artist: "Ed Sheeran", reason: "Our wedding song" },
-  { id: 2, title: "All of Me", artist: "John Legend", reason: "For when you feel loved" },
-  { id: 3, title: "Thinking Out Loud", artist: "Ed Sheeran", reason: "Dancing slow" },
-  { id: 4, title: "At Last", artist: "Etta James", reason: "Classic romance" },
-  { id: 5, title: "A Thousand Years", artist: "Christina Perri", reason: "Forever together" },
-  { id: 6, title: "Latch", artist: "Sam Smith", reason: "Romantic vibes" },
-];
+const SUGGESTED: Record<string, { name: string; artist: string; emoji: string }[]> = {
+  romantic: [
+    { name: 'All of Me', artist: 'John Legend', emoji: '🎹' },
+    { name: 'Perfect', artist: 'Ed Sheeran', emoji: '🎸' },
+    { name: 'At Last', artist: 'Etta James', emoji: '🎷' },
+    { name: 'A Thousand Years', artist: 'Christina Perri', emoji: '💒' },
+  ],
+  dance: [
+    { name: 'Shut Up and Dance', artist: 'Walk the Moon', emoji: '🕺' },
+    { name: 'Uptempo Funk', artist: 'Bruno Mars', emoji: '🎤' },
+  ],
+  cozy: [
+    { name: 'Lover', artist: 'Taylor Swift', emoji: '💕' },
+    { name: 'Just the Two of Us', artist: 'Bill Withers', emoji: '☀️' },
+  ],
+  adventure: [
+    { name: 'Life is a Highway', artist: 'Tom Cochrane', emoji: '🛣️' },
+    { name: 'On Top of the World', artist: 'Imagine Dragons', emoji: '🏔️' },
+  ],
+  passion: [
+    { name: 'Crazy in Love', artist: 'Beyoncé', emoji: '🔥' },
+    { name: 'Love on the Brain', artist: 'Rihanna', emoji: '💜' },
+  ],
+};
 
-export default function CouplePlaylist() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [playlist, setPlaylist] = useState<typeof DEFAULT_SONGS>([]);
-  const [newTitle, setNewTitle] = useState('');
-  const [newArtist, setNewArtist] = useState('');
-  const [newReason, setNewReason] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
+type Mood = 'romantic' | 'dance' | 'cozy' | 'adventure' | 'passion';
+type Phase = 'start' | 'add' | 'playlist' | 'playing';
 
-  const startGame = () => {
-    setGameState('playing');
-    setPlaylist(DEFAULT_SONGS.map(s => ({ ...s })));
-  };
+export default function CouplePlaylistPage() {
+  const [phase, setPhase] = useState<Phase>('start');
+  const [mood, setMood] = useState<Mood>('romantic');
+  const [playlist, setPlaylist] = useState<Record<string, { name: string; artist: string; emoji: string; addedBy: 'p1' | 'p2' }[]>>(
+    { romantic: [], dance: [], cozy: [], adventure: [], passion: [] }
+  );
+  const [songName, setSongName] = useState('');
+  const [artist, setArtist] = useState('');
+  const [turn, setTurn] = useState<'p1' | 'p2'>('p1');
+  const [nowPlaying, setNowPlaying] = useState<{ name: string; artist: string; emoji: string } | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('couple-playlist-v2');
+    if (saved) { try { setPlaylist(JSON.parse(saved)); } catch {} }
+  }, []);
+
+  useEffect(() => {
+    if (Object.values(playlist).some(p => p.length > 0)) {
+      localStorage.setItem('couple-playlist-v2', JSON.stringify(playlist));
+    }
+  }, [playlist]);
 
   const addSong = () => {
-    if (!newTitle.trim() || !newArtist.trim()) return;
-    setPlaylist(prev => [...prev, {
-      id: Date.now(),
-      title: newTitle.trim(),
-      artist: newArtist.trim(),
-      reason: newReason.trim() || 'Our song'
-    }]);
-    setNewTitle('');
-    setNewArtist('');
-    setNewReason('');
-    setShowAdd(false);
+    if (!songName.trim()) return;
+    setPlaylist(p => ({ ...p, [mood]: [...p[mood], { name: songName, artist: artist || 'Unknown', emoji: '🎵', addedBy: turn }] }));
+    setSongName('');
+    setArtist('');
+    setTurn(t => t === 'p1' ? 'p2' : 'p1');
   };
 
-  const removeSong = (id: number) => {
-    setPlaylist(prev => prev.filter(s => s.id !== id));
+  const addSuggested = (s: typeof SUGGESTED['romantic'][0]) => {
+    setPlaylist(p => ({ ...p, [mood]: [...p[mood], { ...s, addedBy: turn }] }));
+    setTurn(t => t === 'p1' ? 'p2' : 'p1');
+  };
+
+  const remove = (m: Mood, i: number) => setPlaylist(p => ({ ...p, [m]: p[m].filter((_, idx) => idx !== i) }));
+
+  const allSongs = Object.values(playlist).flat();
+  const total = allSongs.length;
+  const moodLabels: Record<Mood, { label: string; emoji: string; color: string }> = {
+    romantic: { label: 'Romantic', emoji: '💕', color: 'from-pink-400 to-rose-500' },
+    dance: { label: 'Dance Party', emoji: '💃', color: 'from-purple-400 to-pink-500' },
+    cozy: { label: 'Cozy Night', emoji: '🕯️', color: 'from-orange-400 to-red-500' },
+    adventure: { label: 'Adventure', emoji: '🌄', color: 'from-green-400 to-teal-500' },
+    passion: { label: 'Passionate', emoji: '🔥', color: 'from-red-500 to-purple-600' },
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50">
-          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition-colors">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
-                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-                  </Link>
-                </div>
-                <Link href="/games" className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-purple-600 px-4 py-2 rounded-xl hover:bg-white/60 transition-colors">
-                  <ArrowLeft className="w-4 h-4 rotate-180" /> All Games
-                </Link>
-              </div>
-            </div>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games">
+              <button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button>
+            </Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1">
+              <Music className="w-5 h-5 text-rose-500" /> Our Playlist
+            </h1>
+            <button onClick={() => setPhase('start')} className="p-2 hover:bg-white rounded-full transition-colors">
+              <RotateCcw className="w-6 h-6 text-gray-600" />
+            </button>
           </div>
-        </nav>
 
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-6xl mb-6">🎧</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Couple Playlist</h1>
-              <p className="text-gray-600 mb-8 text-lg">Build your shared love playlist!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-purple-100/60 p-6 mb-8 max-w-md mx-auto text-left">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Heart className="w-5 h-5 text-purple-500" /> How it works:</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>🎵 Start with romantic classics</li>
-                  <li>➕ Add your own favorite songs</li>
-                  <li>💕 Write why each song matters</li>
-                  <li>🎧 Build your couple's anthem list!</li>
-                </ul>
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
-                <Play className="w-5 h-5 inline mr-2" /> Start
-              </button>
-            </motion.div>
-          )}
-
-          {gameState === 'playing' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-display font-black text-gray-900">Our Playlist</h2>
-                <span className="text-sm font-medium text-purple-600 font-bold">{playlist.length} songs</span>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                {playlist.map((song, i) => (
-                  <motion.div key={song.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-purple-100/60 p-4 flex items-start gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-500 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {i + 1}
+          <AnimatePresence mode="wait">
+            {phase === 'start' && (
+              <motion.div key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">🎵</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">Couple's Playlist</h2>
+                    <p className="text-gray-600">Build the perfect soundtrack together — add songs for every mood and moment.</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="bg-pink-50 rounded-xl p-2">
+                        <p className="text-xl font-black text-rose-500">{total}</p>
+                        <p className="text-[10px] text-gray-600">Songs</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl p-2">
+                        <p className="text-xl font-black text-blue-500">{allSongs.filter(s => s.addedBy === 'p1').length}</p>
+                        <p className="text-[10px] text-gray-600">By P1</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-xl p-2">
+                        <p className="text-xl font-black text-purple-500">{allSongs.filter(s => s.addedBy === 'p2').length}</p>
+                        <p className="text-[10px] text-gray-600">By P2</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900">{song.title}</p>
-                      <p className="text-sm text-gray-500">{song.artist}</p>
-                      <p className="text-xs text-purple-600 mt-1 italic">"{song.reason}"</p>
-                    </div>
-                    <button onClick={() => removeSong(song.id)} className="text-gray-400 hover:text-red-500 text-sm flex-shrink-0">
-                      Remove
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-
-              {!showAdd ? (
-                <button onClick={() => setShowAdd(true)}
-                  className="w-full py-4 border-2 border-dashed border-purple-300 rounded-2xl text-purple-600 font-semibold hover:bg-purple-50 transition-colors flex items-center justify-center gap-2">
-                  <Plus className="w-5 h-5" /> Add a Song
-                </button>
-              ) : (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-purple-100/60 p-6">
-                  <h3 className="font-bold text-gray-900 mb-3">Add a Song</h3>
-                  <div className="space-y-3">
-                    <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)}
-                      placeholder="Song title..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white outline-none focus:border-purple-500" />
-                    <input type="text" value={newArtist} onChange={e => setNewArtist(e.target.value)}
-                      placeholder="Artist..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white outline-none focus:border-purple-500" />
-                    <input type="text" value={newReason} onChange={e => setNewReason(e.target.value)}
-                      placeholder="Why this song matters..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white outline-none focus:border-purple-500" />
-                    <div className="flex gap-2">
-                      <button onClick={addSong} disabled={!newTitle.trim() || !newArtist.trim()}
-                        className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-violet-500 text-white font-semibold rounded-xl disabled:opacity-50">
-                        Add to Playlist
-                      </button>
-                      <button onClick={() => setShowAdd(false)}
-                        className="px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600">
-                        Cancel
-                      </button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button onClick={() => setPhase('add')} variant="primary" className="w-full">Add Songs ➕</Button>
+                      <Button onClick={() => setPhase('playlist')} variant="outline" className="w-full">View All 🎧</Button>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {phase === 'add' && (
+              <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="text-center mb-3">
+                  <span className="text-sm text-gray-600">
+                    {turn === 'p1' ? '👤 Player 1' : '💖 Player 2'} — your turn!
+                  </span>
+                </div>
+                <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.05)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 space-y-3">
+                    <div className="flex gap-1 overflow-x-auto">
+                      {(Object.keys(playlist) as Mood[]).map(m => {
+                        const ml = moodLabels[m];
+                        return (
+                          <button key={m} onClick={() => setMood(m)}
+                            className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold ${
+                              mood === m ? `bg-gradient-to-r ${ml.color} text-white` : 'bg-gray-100 text-gray-600'
+                            }`}>
+                            {ml.emoji} {ml.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <input value={songName} onChange={e => setSongName(e.target.value)} placeholder="Song name..."
+                      className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-pink-400 outline-none text-sm" />
+                    <input value={artist} onChange={e => setArtist(e.target.value)} placeholder="Artist (optional)..."
+                      className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-pink-400 outline-none text-sm" />
+                    <Button onClick={addSong} variant="primary" className="w-full">
+                      <Plus className="w-4 h-4 mr-2" /> Add Song
+                    </Button>
+                    <div className="pt-2 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 mb-1">Quick picks for {moodLabels[mood].label}:</p>
+                      <div className="grid grid-cols-2 gap-1">
+                        {SUGGESTED[mood].map((s, i) => (
+                          <button key={i} onClick={() => addSuggested(s)}
+                            className="text-left text-xs p-2 rounded-lg hover:bg-pink-50 text-gray-600 transition-colors">
+                            <span className="font-bold">{s.name}</span>
+                            <p className="text-[10px] text-gray-400">{s.artist}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TiltCard>
+                <Button onClick={() => setPhase('playlist')} variant="outline" className="w-full mt-4">View Playlist</Button>
+              </motion.div>
+            )}
+
+            {phase === 'playlist' && (
+              <motion.div key="playlist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+                  {(Object.keys(playlist) as Mood[]).map(m => {
+                    const ml = moodLabels[m];
+                    return playlist[m].length > 0 && (
+                      <div key={m}>
+                        <h3 className={`text-sm font-bold bg-gradient-to-r ${ml.color} text-white inline-block px-3 py-1 rounded-full mb-2`}>
+                          {ml.emoji} {ml.label}
+                        </h3>
+                        <div className="space-y-1.5">
+                          {playlist[m].map((s, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2.5 bg-white/70 backdrop-blur-xl rounded-xl border border-pink-100/60">
+                              <button onClick={() => { setNowPlaying(s); setPhase('playing'); }}
+                                className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center hover:bg-pink-200">
+                                <Play className="w-3 h-3 text-pink-600" />
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
+                                <p className="text-[10px] text-gray-500">{s.artist} • {s.addedBy === 'p1' ? '👤' : '💖'}</p>
+                              </div>
+                              <span>{s.emoji}</span>
+                              <button onClick={() => remove(m, i)} className="text-red-300 text-xs">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button onClick={() => setPhase('start')} variant="primary" className="w-full mt-4">Back</Button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && nowPlaying && (
+              <motion.div key="playing" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <TiltCard intensity={6} glowColor="rgba(236, 72, 153, 0.2)">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="text-6xl">
+                      {nowPlaying.emoji}
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-gray-800">{nowPlaying.name}</h3>
+                    <p className="text-gray-500">{nowPlaying.artist}</p>
+                    <div className="flex items-center justify-center gap-1.5 h-8">
+                      {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                        <motion.div key={i} animate={{ height: ['20%', '100%', '20%'] }}
+                          transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.08 }}
+                          className="w-1 bg-rose-500 rounded-full" />
+                      ))}
+                    </div>
+                    <Button onClick={() => setPhase('playlist')} variant="outline">Stop ⏹️</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

@@ -1,213 +1,203 @@
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-interface Question {
-  question: string;
-  options: string[];
-  hint: string;
-}
-
-const QUESTIONS: Question[] = [
-  { question: 'What is your partner\'s favorite color?', options: ['Red', 'Blue', 'Pink', 'Purple'], hint: 'Pink is the favorite of 70% of couples 💕' },
-  { question: 'What is your favorite memory together?', options: ['First date', 'First kiss', 'Vacation', 'Cooking together'], hint: 'The little moments matter most 🌟' },
-  { question: 'What does your partner love most about you?', options: ['Your smile', 'Your humor', 'Your kindness', 'Your eyes'], hint: 'Inside job! 🎭' },
-  { question: 'Where do you want to travel next?', options: ['Paris', 'Beach', 'Mountains', 'Tokyo'], hint: 'The City of Love is always romantic 💝' },
-  { question: 'What\'s your partner\'s favorite food?', options: ['Pizza', 'Pasta', 'Sushi', 'Chocolate'], hint: 'Sweet tooth win 🍫' },
-  { question: 'How do you say "I love you" most often?', options: ['In words', 'In hugs', 'In gifts', 'In actions'], hint: 'Love languages! 💬' },
-  { question: 'What makes you both laugh?', options: ['Inside jokes', 'Movies', 'Songs', 'Memes'], hint: 'Inside jokes are unique 🗣️' },
-  { question: 'What is the best part of your relationship?', options: ['Trust', 'Fun', 'Communication', 'Everything'], hint: 'All of the above! 💖' },
+const QUESTIONS = [
+  { q: 'What was our first date?', options: ['Movie', 'Dinner', 'Coffee', 'Park'], answer: 2 },
+  { q: 'My favorite food is?', options: ['Sushi', 'Pizza', 'Pasta', 'Burgers'], answer: 1 },
+  { q: 'What makes me smile?', options: ['Money', 'Your texts', 'Good weather', 'Shopping'], answer: 1 },
+  { q: 'My dream vacation?', options: ['Beach', 'Mountains', 'City', 'Desert'], answer: 0 },
+  { q: 'What color do I love?', options: ['Blue', 'Green', 'Pink', 'Purple'], answer: 2 },
+  { q: 'My biggest fear?', options: ['Heights', 'Spiders', 'Dark', 'Loneliness'], answer: 3 },
+  { q: 'My go-to comfort food?', options: ['Ice cream', 'Chocolate', 'Noodles', 'All of the above'], answer: 3 },
+  { q: 'How do I like to relax?', options: ['Read', 'Watch shows', 'Sleep', 'Music'], answer: 1 },
+  { q: 'My morning routine starts with?', options: ['Coffee', 'Exercise', 'Shower', 'Checking phone'], answer: 0 },
+  { q: 'What gift would I love?', options: ['Jewelry', 'Flowers', 'Handwritten note', 'Experience'], answer: 3 },
+  { q: 'My pet peeve?', options: ['Lateness', 'Messiness', 'Loud chewing', 'All'], answer: 3 },
+  { q: 'I could eat this every day?', options: ['Salad', 'Tacos', 'Rice', 'Soup'], answer: 1 },
+  { q: 'My favorite season?', options: ['Spring', 'Summer', 'Autumn', 'Winter'], answer: 2 },
+  { q: 'What makes me cry?', options: ['Sad movies', 'Onions', 'Karaoke', 'All of the above'], answer: 3 },
+  { q: 'My hidden talent?', options: ['Singing', 'Cooking', 'Drawing', 'Dancing'], answer: 0 },
 ];
 
-export default function QuizPage() {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [partnerAnswer, setPartnerAnswer] = useState<string | null>(null);
-  const [yourAnswer, setYourAnswer] = useState<string | null>(null);
-  const [scoreState, setScoreState] = useState({ match: 0, total: 0 });
+export default function CoupleQuizPage() {
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [best, setBest] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [phase, setPhase] = useState<'partner' | 'you' | 'compare'>('partner');
+  const [questions, setQuestions] = useState<typeof QUESTIONS>([]);
 
-  const handleAnswer = (answer: string) => {
-    if (phase === 'partner') {
-      setPartnerAnswer(answer);
-      setPhase('you');
-    } else if (phase === 'you') {
-      setYourAnswer(answer);
-      setPhase('compare');
-    }
-  };
+  const generateQuestions = useCallback(() => {
+    setQuestions([...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10));
+  }, []);
 
-  const checkAnswer = () => {
-    const isMatch = yourAnswer === partnerAnswer;
-    setScoreState({ match: scoreState.match + (isMatch ? 1 : 0), total: scoreState.total + 1 });
-    setTimeout(() => {
-      if (currentQuestion + 1 < QUESTIONS.length) {
-        setCurrentQuestion(currentQuestion + 1);
-        setPartnerAnswer(null);
-        setYourAnswer(null);
-        setPhase('partner');
-      } else {
-        setShowResult(true);
-      }
-    }, 1500);
-  };
+  useEffect(() => {
+    const b = localStorage.getItem('couplequiz_best');
+    if (b) setBest(Number(b));
+  }, []);
 
-  const restart = () => {
-    setCurrentQuestion(0);
-    setPartnerAnswer(null);
-    setYourAnswer(null);
+  const startGame = useCallback(() => {
+    generateQuestions();
+    setCurrentQ(0);
+    setSelected(null);
+    setScore(0);
+    setAnswers([]);
     setShowResult(false);
-    setPhase('partner');
-    setScoreState({ match: 0, total: 0 });
-  };
+    setState('playing');
+  }, [generateQuestions]);
 
-  if (showResult) {
-    return (
-      <PremiumBackground>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 max-w-md w-full text-center">
-            <div className="text-6xl mb-4">💕</div>
-            <h2 className="text-3xl font-display font-bold gradient-text mb-4">Quiz Complete!</h2>
-            <p className="text-5xl font-bold text-gray-900 mb-2">{scoreState.match}/{scoreState.total}</p>
-            <p className="text-gray-600 mb-6">You matched on {scoreState.match} out of {scoreState.total} questions!</p>
-            <p className="text-lg mb-6">
-              {scoreState.match >= 6 ? '💖 Perfect Match! You know each other well!' :
-                scoreState.match >= 4 ? '💕 Great Match! Pretty good compatibility!' :
-                  '💛 Keep learning about each other!'}
-            </p>
-            <Button onClick={restart} variant="primary" size="lg">Play Again</Button>
-            <div className="mt-4">
-              <Link href="/games">
-                <Button variant="outline">← Back to Games</Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-        <GameSharePanel gameSlug="quiz" />
-      </PremiumBackground>
-    );
-  }
-
-  const question = QUESTIONS[currentQuestion];
+  useEffect(() => {
+    if (state !== 'playing' || selected === null) return;
+    if (!showResult) return;
+    if (currentQ >= questions.length - 1) {
+      setTimeout(() => {
+        setState('finished');
+        const finalScore = score + (selected === questions[currentQ].answer ? 10 : 0);
+        if (finalScore > best) {
+          setBest(finalScore);
+          localStorage.setItem('couplequiz_best', String(finalScore));
+        }
+      }, 1200);
+    } else {
+      setTimeout(() => {
+        setCurrentQ((q) => q + 1);
+        setSelected(null);
+        setShowResult(false);
+      }, 1200);
+    }
+  }, [showResult, currentQ, questions, selected, score, best, state]);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
+      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <div className="w-full max-w-lg">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+              <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-3xl md:text-4xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary-500" />
-              Couple Quiz
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Heart className="text-pink-400" /> Couple Quiz
             </h1>
-            <button onClick={restart} className="p-2 hover:bg-white rounded-full transition-colors">
-              <RefreshCw className="w-6 h-5 text-primary-500" />
-            </button>
+            <div className="w-16" />
           </div>
 
-          <div className="flex justify-between items-center mb-6">
-            <div className="text-sm font-medium text-gray-600">
-              Question {currentQuestion + 1} / {QUESTIONS.length}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-xl font-bold text-white">{score}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Question</div>
+                <div className="text-xl font-bold text-white">{questions.length > 0 ? `${currentQ + 1}/${questions.length}` : '-'}</div>
+              </div>
+              <div>
+                <div className="text-white/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-300">{best}</div>
+              </div>
             </div>
-            <div className="text-sm font-bold text-primary-600">
-              Score: {scoreState.match}/{scoreState.total}
-            </div>
-          </div>
 
-          <div className="bg-gray-200 h-2 rounded-full mb-8">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${((currentQuestion + 1) / QUESTIONS.length) * 100}%` }} className="bg-gradient-to-r from-primary-500 to-rose-500 h-2 rounded-full" />
-          </div>
+            {state === 'idle' && (
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="text-center"
+              >
+                <Heart className="text-pink-400 mx-auto mb-4" size={48} />
+                <p className="text-white text-lg mb-2">How well do you know each other?</p>
+                <p className="text-white/60 text-sm mb-4">
+                  {QUESTIONS.length} questions about each other
+                </p>
+                <button
+                  onClick={startGame}
+                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg mx-auto"
+                >
+                  <Play size={20} /> Start Quiz
+                </button>
+              </motion.div>
+            )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestion + phase}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
-                  {phase === 'partner' && (
-                    <div className="text-center mb-6">
-                      <span className="inline-block px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-4">
-                        Round 1: Partner&apos;s Turn
-                      </span>
-                    </div>
-                  )}
-                  {phase === 'you' && (
-                    <div className="text-center mb-6">
-                      <span className="inline-block px-4 py-1 rounded-full bg-pink-100 text-pink-700 text-sm font-medium mb-4">
-                        Round 2: Your Turn
-                      </span>
-                    </div>
-                  )}
-                  {phase === 'compare' && (
-                    <div className="text-center mb-6">
-                      <span className="inline-block px-4 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium mb-4">
-                        Compare!
-                      </span>
-                    </div>
-                  )}
+            {state === 'playing' && questions[currentQ] && (
+              <motion.div
+                key={currentQ}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-4"
+              >
+                <h3 className="text-xl font-bold text-white">{questions[currentQ].q}</h3>
 
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">{question.question}</h2>
-
-                  {phase === 'compare' ? (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-blue-50 rounded-2xl border-2 border-blue-200">
-                        <p className="text-sm text-blue-600 font-medium mb-1">Partner said:</p>
-                        <p className="text-xl font-bold text-blue-900">{partnerAnswer}</p>
-                      </div>
-                      <div className="p-4 bg-pink-50 rounded-2xl border-2 border-pink-200">
-                        <p className="text-sm text-pink-600 font-medium mb-1">You said:</p>
-                        <p className="text-xl font-bold text-pink-900">{yourAnswer}</p>
-                      </div>
-                      <div className="text-center pt-4">
-                        <p className="text-2xl font-bold mb-2">
-                          {yourAnswer === partnerAnswer ? '💕 You Matched!' : '💛 Different answers!'}
-                        </p>
-                        <p className="text-sm text-gray-500 italic">{question.hint}</p>
-                        <Button onClick={checkAnswer} variant="primary" className="mt-4">
-                          Next Question <ChevronRight className="inline w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {question.options.map((option) => (
-                        <Button
-                          key={option}
-                          onClick={() => handleAnswer(option)}
-                          variant="outline"
-                          className="w-full justify-start text-left py-4"
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  {questions[currentQ].options.map((opt, idx) => {
+                    let bg = 'bg-white/10 hover:bg-white/20';
+                    if (showResult) {
+                      if (idx === questions[currentQ].answer) bg = 'bg-green-500/30 border border-green-400';
+                      else if (idx === selected && idx !== questions[currentQ].answer) bg = 'bg-red-500/30 border border-red-400';
+                      else bg = 'bg-white/5 opacity-50';
+                    }
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (selected === null) {
+                            setSelected(idx);
+                            setShowResult(true);
+                            const correct = idx === questions[currentQ].answer;
+                            if (correct) setScore((s) => s + 10);
+                            setAnswers((a) => [...a, correct]);
+                          }
+                        }}
+                        disabled={selected !== null}
+                        className={`w-full p-4 rounded-xl text-left text-white font-medium transition-all ${bg}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">
+                            {String.fromCharCode(65 + idx)}
+                          </span>
+                          <span>{opt}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-              </TiltCard>
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            )}
 
-          <div className="text-center">
-            <Link href="/games">
-              <Button variant="outline" className="mt-8">← Back to Games</Button>
-            </Link>
-          </div>
+            <AnimatePresence>
+              {state === 'finished' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-3"
+                >
+                  <div className="text-center">
+                    <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                      {score >= 80 ? '🏆 Soulmates!' : score >= 50 ? '💖 Great Match!' : '💕 Getting There!'}
+                    </h2>
+                    <p className="text-white/70">
+                      {answers.filter((a) => a).length}/{answers.length} correct
+                    </p>
+                  </div>
+                  <button
+                    onClick={startGame}
+                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <RotateCcw size={20} /> Play Again
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </div>
     </PremiumBackground>

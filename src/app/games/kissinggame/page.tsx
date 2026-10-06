@@ -1,241 +1,141 @@
 'use client';
-
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2, RotateCcw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Timer } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-const OPTIONS = [
-  "Kiss on the forehead 💋", "Hug for 10 seconds 🤗", "Say something sweet 💝",
-  "Dance to your favorite song 💃", "Whisper in their ear 🎶", "Rub their shoulders 💆",
-  "Trace a heart on their back ✏️", "Hold hands for 1 minute 🖐️", "Feed them a treat 🍫",
-  "Write a love note 📝", "Play with their hair 💇", "Give a foot massage 🦶",
-  "Sing their favorite song 🎤", "Do their voice imitation 🎭", "Share a drink 👄",
-  "Nuzzle their neck 😘", "Make a funny face 😜", "Whisper what you love about them 💕",
-  "Stare into their eyes 👀", "Do 5 push-ups 🏋️", "Give a piggyback ride 🐷",
-  "Draw on their face 🎨", "Say 3 things you adore ❤️", "Blindfold them 👁️",
-  "Give a surprise kiss 😚", "Recite a poem 📖", "Plan a date night 📅",
-  "Tell them a secret 🤫", "Cuddle and watch a show 📺", "Wink and say 'nice' 😏",
-  "Hug from behind 🫂", "Make a flower crown 🌸", "Whisper a secret wish 🌟",
-  "Do a handstand challenge 🤸", "Share your favorite memory 🧠",
-  "Sniff their shirt 👕", "Let them pick a song 💿", "Tell an embarrassing story 😳",
-  "Make up a song about them 🎵", "Do a romantic pose 📸",
+const MISSIONS = [
+  { name: 'Peck on the Cheek', emoji: '😘', points: 10, time: 5 },
+  { name: 'Peck on the Lips', emoji: '💋', points: 20, time: 8 },
+  { name: 'Eskimo Kiss', emoji: '🐽', points: 15, time: 6 },
+  { name: 'Forehead Kiss', emoji: '💕', points: 15, time: 5 },
+  { name: 'Nose Kiss', emoji: '👃', points: 12, time: 4 },
+  { name: 'Hand Kiss', emoji: '🤌', points: 18, time: 6 },
+  { name: 'Neck Kiss', emoji: '💞', points: 25, time: 8 },
+  { name: 'Surprise Kiss', emoji: '😚', points: 30, time: 10 },
 ];
 
+const SPIN_TIME = 8;
+
 export default function KissingGamePage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const animRef = useRef(0);
-
-  const spin = useCallback(() => {
-    setResult(null);
-    setShowResult(false);
-    setSpinning(true);
-    const start = performance.now();
-    const duration = 4000;
-    const fromRotation = rotation;
-    const extraSpins = 5 + Math.floor(Math.random() * 5);
-    const targetRotation = fromRotation + 360 * extraSpins + Math.random() * 360;
-
-    const animate = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setRotation(fromRotation + (targetRotation - fromRotation) * eased);
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(animate);
-      } else {
-        setSpinning(false);
-        setRotation(targetRotation);
-        const finalAngle = ((targetRotation % 360) + 360) % 360;
-        const segmentAngle = 360 / OPTIONS.length;
-        const index = Math.floor(((360 - finalAngle) % 360) / segmentAngle) % OPTIONS.length;
-        setResult(OPTIONS[index]);
-        setTimeout(() => setShowResult(true), 300);
-      }
-    };
-    animRef.current = requestAnimationFrame(animate);
-  }, [rotation]);
-
-  const drawWheel = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const r = Math.min(cx, cy) - 20;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Background
-    ctx.fillStyle = '#fdf2f8';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Outer ring
-    ctx.strokeStyle = '#ec4899';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Segments
-    const segAngle = (Math.PI * 2) / OPTIONS.length;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate((rotation * Math.PI) / 180);
-
-    for (let i = 0; i < OPTIONS.length; i++) {
-      const a0 = i * segAngle;
-      const a1 = a0 + segAngle;
-
-      // Segment fill
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, r, a0, a1);
-      ctx.closePath();
-
-      const hue = (i / OPTIONS.length) * 60 + 340;
-      ctx.fillStyle = `hsl(${hue}, 80%, 75%)`;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Text
-      ctx.save();
-      ctx.rotate(a0 + segAngle / 2);
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#7f1d1d';
-      ctx.font = 'bold 11px Inter, sans-serif';
-      const words = OPTIONS[i].split(' ');
-      if (words.length <= 2) {
-        ctx.fillText(OPTIONS[i].replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim(), r * 0.6, 4);
-      } else {
-        ctx.fillText(words.slice(0, 2).join(' ').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim(), r * 0.55, -3);
-        ctx.fillText(words.slice(2).join(' ').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim(), r * 0.55, 10);
-      }
-      ctx.restore();
-    }
-
-    ctx.restore();
-
-    // Center circle
-    const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
-    centerGrad.addColorStop(0, '#fce7f3');
-    centerGrad.addColorStop(1, '#ec4899');
-    ctx.fillStyle = centerGrad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💕', cx, cy);
-
-    // Pointer
-    ctx.fillStyle = '#be185d';
-    ctx.beginPath();
-    ctx.moveTo(cx + r + 10, cy);
-    ctx.lineTo(cx + r - 8, cy - 8);
-    ctx.lineTo(cx + r - 8, cy + 8);
-    ctx.closePath();
-    ctx.fill();
-  }, [rotation]);
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'spinning' | 'mission' | 'finished'>('idle');
+  const [current, setCurrent] = useState<typeof MISSIONS[0] | null>(null);
+  const [missionTime, setMissionTime] = useState(0);
+  const [score, setScore] = useState(0);
+  const [round, setRound] = useState(0);
+  const [spin, setSpin] = useState(0);
 
   useEffect(() => {
-    drawWheel();
-  }, [rotation, drawWheel]);
+    if (state === 'spinning') {
+      const t = setTimeout(() => {
+        const m = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+        setCurrent(m);
+        setMissionTime(m.time);
+        setState('mission');
+      }, SPIN_TIME * 1000);
+      return () => clearTimeout(t);
+    }
+  }, [state]);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+  useEffect(() => {
+    if (state !== 'mission' || missionTime <= 0) return;
+    const t = setTimeout(() => setMissionTime((x) => x - 1), 1000);
+    return () => clearTimeout(t);
+  }, [missionTime, state]);
+
+  const start = () => {
+    setScore(0);
+    setRound(0);
+    setState('spinning');
+    setSpin((x) => x + 1);
+  };
+
+  const complete = () => {
+    if (!current) return;
+    setScore((s) => s + current.points);
+    if (round + 1 >= 6) setState('finished');
+    else {
+      setRound((r) => r + 1);
+      setState('spinning');
+    }
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" />
-              Kissing Game
-            </h1>
-            <div className="w-10" />
-          </div>
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
 
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 flex flex-col items-center">
-              <canvas
-                ref={canvasRef}
-                width={340}
-                height={340}
-                className="rounded-2xl"
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <div className="text-8xl mb-6">💋</div>
+            <h1 className="text-5xl font-bold text-white mb-4">The Kissing Game</h1>
+            <p className="text-white/80 mb-8 text-lg">Spin to discover your next kiss mission. Complete 6 rounds for a perfect love score.</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Start Game
+            </button>
+          </motion.div>
+        )}
 
-              <Button
-                onClick={spin}
-                disabled={spinning}
-                variant="primary"
-                size="lg"
-                className="mt-5 px-10"
-              >
-                {spinning ? 'Spinning... ✨' : 'Spin the Wheel! 🎡'}
-              </Button>
-            </div>
-          </TiltCard>
-
-          {/* Result */}
-          <AnimatePresence>
-            {showResult && result && (
+        {state === 'spinning' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center mt-20">
+            <div className="text-7xl mb-8 animate-pulse">💖</div>
+            <h2 className="text-3xl font-bold text-white mb-4">Choosing your kiss...</h2>
+            <div className="w-64 mx-auto bg-white/10 rounded-full h-3 overflow-hidden">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mt-6 bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 text-center space-y-3"
-              >
-                <div className="text-4xl">🎲</div>
-                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Your Romantic Activity</p>
-                <p className="text-2xl font-display font-bold text-primary-600">{result}</p>
-                <p className="text-sm text-gray-500">Time to make some memories! 💕</p>
-                <div className="flex justify-center gap-2">
-                  <Button onClick={spin} variant="primary" size="sm">
-                    Spin Again 🔄
-                  </Button>
-                  <Button onClick={() => setShowResult(false)} variant="outline" size="sm">
-                    Close
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                key={spin}
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                transition={{ duration: SPIN_TIME }}
+                className="h-full bg-gradient-to-r from-rose-400 to-pink-500"
+              />
+            </div>
+            <p className="text-white/60 mt-4">{SPIN_TIME}s</p>
+          </motion.div>
+        )}
 
-          <div className="flex justify-center gap-3 mt-4">
-            <Button onClick={copyLink} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-1" /> Invite Friend
-            </Button>
-          </div>
-        </div>
+        {state === 'mission' && current && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center mt-12">
+            <div className="flex justify-between items-center mb-6 text-white">
+              <span className="bg-white/10 px-4 py-2 rounded-full">Round {round + 1}/6</span>
+              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
+            </div>
+            <div className="bg-gradient-to-br from-rose-500/40 to-pink-500/40 backdrop-blur-md rounded-3xl p-10 border-2 border-rose-300/50">
+              <div className="text-9xl mb-4">{current.emoji}</div>
+              <h2 className="text-3xl font-bold text-white mb-3">{current.name}</h2>
+              <div className="flex items-center justify-center gap-2 text-rose-200 text-lg">
+                <Timer size={20} /> <span className="text-3xl font-bold">{missionTime}s</span>
+              </div>
+              <div className="mt-3 text-pink-200">Worth {current.points} points</div>
+            </div>
+            <button onClick={complete} className="mt-8 px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl font-semibold text-lg">
+              Completed! (+{current.points})
+            </button>
+          </motion.div>
+        )}
+
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Sweet Kisses! 💋</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-7xl font-bold text-rose-300">{score}</div>
+              <div className="text-white/80 mt-2">Total Love Points</div>
+              <p className="mt-6 text-white/80 italic">"Every kiss is a love letter written with lips."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Play Again
+              </button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+            </div>
+          </motion.div>
+        )}
       </div>
-            <GameSharePanel gameSlug="kissinggame" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

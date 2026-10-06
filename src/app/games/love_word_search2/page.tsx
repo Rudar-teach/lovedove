@@ -1,170 +1,266 @@
 'use client';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
 
+type Phase = 'idle' | 'playing' | 'finished';
+
+type WordItem {
+  word: string;
+  emoji: string;
+  found: boolean;
+}
+
 const GRID_SIZE = 10;
-const WORDS_TO_FIND = ['LOVE', 'KISS', 'HUG', 'DATE', 'HEART', 'SOUL', 'DREAM', 'PASSION', 'ROMANCE', 'CHERISH'];
+const WORDS_DATA: WordItem[] = [
+  { word: 'LOVE', emoji: '❤️', found: false },
+  { word: 'KISS', emoji: '💋', found: false },
+  { word: 'HEART', emoji: '💖', found: false },
+  { word: 'ROSE', emoji: '🌹', found: false },
+  { word: 'MUSIC', emoji: '🎵', found: false },
+  { word: 'DATE', emoji: '🌙', found: false },
+  { word: 'HUG', emoji: '🫂', found: false },
+  { word: 'SOUL', emoji: '✨', found: false },
+  { word: 'FLOWER', emoji: '🌸', found: false },
+  { word: 'SMILE', emoji: '😊', found: false },
+];
 
-function generateWordSearch(): { grid: string[][]; wordPositions: Record<string, {row: number; col: number; dir: string}[]> } {
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function generateGrid() {
   const grid: string[][] = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
-  const wordPositions: Record<string, {row: number; col: number; dir: string}[]> = {};
-
-  const directions = [
-    { dr: 0, dc: 1, name: 'right' },
-    { dr: 1, dc: 0, name: 'down' },
-    { dr: 1, dc: 1, name: 'diagonal' },
-    { dr: 0, dc: -1, name: 'left' },
-    { dr: -1, dc: 0, name: 'up' },
-  ];
-
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-  for (const word of WORDS_TO_FIND) {
+  const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+  for (const { word } of WORDS_DATA) {
     let placed = false;
-    for (let attempt = 0; attempt < 100 && !placed; attempt++) {
-      const dir = directions[Math.floor(Math.random() * directions.length)];
-      const row = Math.floor(Math.random() * GRID_SIZE);
-      const col = Math.floor(Math.random() * GRID_SIZE);
-
-      if (dir.dr !== 0 && row + dir.dr * (word.length - 1) < 0) continue;
-      if (dir.dr !== 0 && row + dir.dr * (word.length - 1) >= GRID_SIZE) continue;
-      if (dir.dc !== 0 && col + dir.dc * (word.length - 1) < 0) continue;
-      if (dir.dc !== 0 && col + dir.dc * (word.length - 1) >= GRID_SIZE) continue;
-
-      let fits = true;
-      for (let i = 0; i < word.length; i++) {
-        const r = row + dir.dr * i;
-        const c = col + dir.dc * i;
-        if (grid[r][c] !== '' && grid[r][c] !== word[i]) { fits = false; break; }
+    while (!placed) {
+      const dir = dirs[Math.floor(Math.random() * dirs.length)];
+      const [dr, dc] = dir;
+      const r = Math.floor(Math.random() * GRID_SIZE);
+      const c = Math.floor(Math.random() * GRID_SIZE);
+      let ok = true;
+      for (let k = 0; k < word.length; k++) {
+        const nr = r + k * dr, nc = c + k * dc;
+        if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) { ok = false; break; }
+        if (grid[nr][nc] && grid[nr][nc] !== word[k]) { ok = false; break; }
       }
-
-      if (fits) {
-        wordPositions[word] = wordPositions[word] || [];
-        for (let i = 0; i < word.length; i++) {
-          const r = row + dir.dr * i;
-          const c = col + dir.dc * i;
-          grid[r][c] = word[i];
-          wordPositions[word].push({ row: r, col: c, dir: dir.name });
+      if (ok) {
+        for (let k = 0; k < word.length; k++) {
+          grid[r + k * dr][c + k * dc] = word[k];
         }
         placed = true;
       }
     }
-    if (!placed) {
-      const r = Math.floor(Math.random() * GRID_SIZE);
-      const c = Math.floor(Math.random() * GRID_SIZE);
-      if (grid[r][c] === '') grid[r][c] = word[0] || letters[Math.floor(Math.random() * 26)];
-    }
   }
-
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
-      if (grid[r][c] === '') grid[r][c] = letters[Math.floor(Math.random() * 26)];
+      if (!grid[r][c]) grid[r][c] = LETTERS[Math.floor(Math.random() * LETTERS.length)];
     }
   }
-
-  return { grid, wordPositions };
+  return grid;
 }
 
-export default function LoveWordSearch2() {
+function findWord(grid: string[][], word: string): [number, number][] | null {
+  const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      for (const [dr, dc] of dirs) {
+        let ok = true;
+        for (let k = 0; k < word.length; k++) {
+          const nr = r + k*dr, nc = c + k*dc;
+          if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE || grid[nr][nc] !== word[k]) { ok = false; break; }
+        }
+        if (ok) {
+          const cells: [number, number][] = [];
+          for (let k = 0; k < word.length; k++) cells.push([r + k*dr, c + k*dc]);
+          return cells;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+export default function LoveWordSearch2Page() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
+  const [phase, setPhase] = useState<Phase>('idle');
   const [grid, setGrid] = useState<string[][]>([]);
+  const [foundCells, setFoundCells] = useState<Set<string>>(new Set());
   const [foundWords, setFoundWords] = useState<Set<string>>(new Set());
-  const [searchData, setSearchData] = useState<{ grid: string[][]; wordPositions: Record<string, {row: number; col: number; dir: string}[]> }>({ grid: [], wordPositions: {} });
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(180);
+  const [timerActive, setTimerActive] = useState(false);
+  const [hintCooldown, setHintCooldown] = useState(false);
+  const [hintsShown, setHintsShown] = useState(0);
+
+  useEffect(() => {
+    if (!timerActive) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      setPhase('finished');
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft, timerActive]);
 
   const startGame = () => {
-    const data = generateWordSearch();
-    setSearchData(data);
-    setGrid(data.grid);
+    setGrid(generateGrid());
+    setFoundCells(new Set());
     setFoundWords(new Set());
-    setGameState('playing');
+    setScore(0);
+    setTimeLeft(180);
+    setTimerActive(true);
+    setHintCooldown(false);
+    setHintsShown(0);
+    setPhase('playing');
   };
 
-  const foundCount = foundWords.size;
-  const allFound = foundCount === WORDS_TO_FIND.length;
+  const handleCellClick = (r: number, c: number) => {
+    const key = `${r}-${c}`;
+    if (foundCells.has(key)) return;
+    setFoundCells(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
+      return next;
+    });
+  };
+
+  const checkSelection = () => {
+    const cells = Array.from(foundCells).map(k => k.split('-').map(Number) as [number, number]);
+    if (cells.length < 3) return;
+    const word = cells.map(([r, c]) => grid[r][c]).sort((a, b) => a.localeCompare(b)).join('');
+    const targetWord = WORDS_DATA.find(w => w.word === word && !foundWords.has(w.word));
+    if (targetWord) {
+      setFoundWords(p => new Set([...p, targetWord.word]));
+      setScore(s => s + targetWord.word.length * 10);
+      setFoundCells(new Set());
+      if (foundWords.size + 1 >= WORDS_DATA.length) {
+        setTimerActive(false);
+        setPhase('finished');
+      }
+    } else {
+      setFoundCells(new Set());
+    }
+  };
+
+  const checkWord = (w: string) => {
+    const cells = findWord(grid, w);
+    if (cells) {
+      cells.forEach(([r, c]) => {
+        const key = `${r}-${c}`;
+        setFoundCells(prev => new Set([...prev, key]));
+      });
+      setFoundWords(p => new Set([...p, w]));
+      setScore(s => s + w.length * 10);
+      if (foundWords.size + 1 >= WORDS_DATA.length) {
+        setTimerActive(false);
+        setPhase('finished');
+      }
+    }
+  };
+
+  const showHint = () => {
+    if (hintCooldown) return;
+    const remaining = WORDS_DATA.filter(w => !foundWords.has(w.word));
+    if (remaining.length > 0) {
+      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      checkWord(pick.word);
+      setHintsShown(h => h + 1);
+      setHintCooldown(true);
+      setTimeout(() => setHintCooldown(false), 20000);
+    }
+  };
+
+  const isFound = (r: number, c: number) => foundCells.has(`${r}-${c}`);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div>
-                <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-              </Link>
-            </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-7xl mb-6">🔎</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Word Search 2</h1>
-              <p className="text-gray-600 mb-8 text-lg">Find all 10 love words hidden in the grid!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-2">Words to Find:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {WORDS_TO_FIND.map(w => (<span key={w} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">{w}</span>))}
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
+            <ArrowLeft className="w-4 h-4" /> Back to Games
+          </Link>
+
+          <AnimatePresence mode="wait">
+            {phase === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="text-6xl mb-4">🔍</div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Word Search</h1>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Find 10 romantic words hidden in the letter grid. Click cells to select, then check your answers!</p>
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Searching
+                </button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">⏱️ {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-green-600 font-semibold">{foundWords.size}/{WORDS_DATA.length} found</span>
                 </div>
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Play className="w-5 h-5 inline mr-2" /> Start Search</button>
-            </motion.div>
-          )}
-          {gameState === 'playing' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="text-center mb-4">
-                <span className="text-sm font-medium text-gray-600">Found: {foundCount} / {WORDS_TO_FIND.length}</span>
-              </div>
-              <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
-                <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-4 shadow-lg">
-                  <div className="grid grid-cols-10 gap-1">
-                    {grid.map((row, ri) => row.map((letter, ci) => (
-                      <div key={`${ri}-${ci}`} className="w-8 h-8 flex items-center justify-center bg-blue-50 rounded text-sm font-bold text-blue-800">{letter}</div>
-                    )))}
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2">
+                    <div className="bg-white/90 rounded-2xl p-2 shadow-xl inline-block mx-auto block">
+                      {grid.map((row, r) => (
+                        <div key={r} className="flex">
+                          {row.map((letter, c) => (
+                            <button
+                              key={`${r}-${c}`}
+                              onClick={() => handleCellClick(r, c)}
+                              className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-sm sm:text-base font-bold rounded m-px transition ${isFound(r, c) ? 'bg-green-100 text-green-600' : foundCells.has(`${r}-${c}`) ? 'bg-rose-500 text-white scale-110' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'}`}
+                            >
+                              {letter}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex justify-center">
+                      <button onClick={checkSelection} className="bg-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:scale-105 transition">🔍 Check Selection</button>
+                    </div>
                   </div>
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-6 shadow-lg min-w-[200px]">
-                  <h3 className="font-bold text-gray-900 mb-3">Word List:</h3>
-                  <div className="space-y-2">
-                    {WORDS_TO_FIND.map(word => (
-                      <div key={word} className={`text-sm font-medium ${foundWords.has(word) ? 'text-green-600 line-through' : 'text-gray-700'}`}>
-                        {foundWords.has(word) ? '✓' : '○'} {word}
+
+                  <div>
+                    <div className="bg-white/90 rounded-2xl p-4 shadow-xl">
+                      <h3 className="font-semibold text-rose-700 mb-3">Words to Find</h3>
+                      <div className="space-y-2">
+                        {WORDS_DATA.map(({ word, emoji }) => (
+                          <div key={word} className={`flex items-center gap-2 p-2 rounded ${foundWords.has(word) ? 'bg-green-100 text-green-600 line-through' : 'bg-rose-50 text-rose-700'}`}>
+                            <span>{emoji}</span>
+                            <span className="font-medium">{word}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                      <button onClick={showHint} disabled={hintCooldown} className="w-full mt-4 bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm disabled:opacity-50">
+                        {hintCooldown ? '💡 Cooldown...' : '💡 Auto Find'}
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-4 italic">Look for words horizontally, vertically, and diagonally!</p>
                 </div>
-              </div>
-              <div className="text-center mt-6">
-                <p className="text-sm text-gray-500 mb-3">Found all the words? Click below!</p>
-                <button onClick={() => allFound && setGameState('finished')} disabled={!allFound} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl text-white font-bold disabled:opacity-50">Finish Game</button>
-              </div>
-            </motion.div>
-          )}
-          {gameState === 'finished' && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-              <div className="text-6xl mb-6">🔎</div>
-              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Amazing Detective!</h2>
-              <p className="text-gray-600 mb-8">You found all {WORDS_TO_FIND.length} words!</p>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-blue-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-4">Found Words:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {WORDS_TO_FIND.map(w => (<span key={w} className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">✓ {w}</span>))}
+              </motion.div>
+            )}
+
+            {phase === 'finished' && (
+              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
+                <Search className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Search Complete!</h2>
+                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{foundWords.size}/{WORDS_DATA.length}</div>
+                <p className="text-xl text-pink-600 mb-6">words found • {score} points</p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Play Again
+                  </button>
+                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
                 </div>
-              </div>
-              <div className="flex gap-4 justify-center">
-                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> New Puzzle</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl text-white font-bold">More Games</Link>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

@@ -1,372 +1,192 @@
 'use client';
-
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-type FallingItem = {
-  x: number; y: number; vy: number; type: 'heart' | 'rose' | 'bomb' | 'diamond';
-  size: number; id: number;
-};
+const GAME_DURATION = 30;
+const SPAWN_INTERVAL = 800;
+
+type Item = { id: number; x: number; y: number; type: 'heart' | 'sparkle' | 'bomb'; points: number; emoji: string };
 
 export default function HeartCatcherPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter();
+  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [gameOver, setGameOver] = useState(false);
-  const [level, setLevel] = useState(1);
+  const [time, setTime] = useState(GAME_DURATION);
+  const [items, setItems] = useState<Item[]>([]);
+  const [catcher, setCatcher] = useState({ x: 50 });
   const [combo, setCombo] = useState(0);
-  const [highestCombo, setHighestCombo] = useState(0);
-  const animRef = useRef(0);
-  const itemsRef = useRef<FallingItem[]>([]);
-  const basketXRef = useRef(180);
-  const basketTargetRef = useRef(180);
-  const gameOverRef = useRef(false);
-  const levelRef = useRef(1);
-  const comboRef = useRef(0);
-  const touchRef = useRef<{ active: boolean; x: number } | null>(null);
+  const [lives, setLives] = useState(3);
+  const idRef = useRef(0);
 
-  const W = 380;
-  const H = 520;
-  const BASKET_W = 60;
-  const BASKET_H = 30;
+  const useRef = (v: number) => ({ current: v });
 
-  const resetGame = useCallback(() => {
-    setScore(0);
-    setLives(3);
-    setGameOver(false);
-    setLevel(1);
-    setCombo(0);
-    setHighestCombo(0);
-    gameOverRef.current = false;
-    levelRef.current = 1;
-    comboRef.current = 0;
-    itemsRef.current = [];
-    basketXRef.current = W / 2;
-    basketTargetRef.current = W / 2;
+  const spawnItem = useCallback(() => {
+    if (state !== 'playing') return;
+    const types: { type: Item['type']; points: number; emoji: string }[] = [
+      { type: 'heart', points: 10, emoji: '❤️' },
+      { type: 'heart', points: 10, emoji: '💕' },
+      { type: 'sparkle', points: 25, emoji: '✨' },
+      { type: 'bomb', points: 0, emoji: '💣' },
+    ];
+    const weights = [0.5, 0.25, 0.15, 0.1];
+    let r = Math.random();
+    let typeIndex = 0;
+    let sum = 0;
+    for (let i = 0; i < weights.length; i++) { sum += weights[i]; if (r <= sum) { typeIndex = i; break; } }
+    const t = types[typeIndex];
+    const item: Item = { id: Date.now() + Math.random(), x: 5 + Math.random() * 85, y: -5, type: t.type, points: t.points, emoji: t.emoji };
+    setItems((prev) => [...prev.slice(-30), item]);
+  }, [state]);
+
+  const moveCatcher = (e: React.KeyboardEvent | KeyboardEvent) => {
+    setCatcher((c) => {
+      if ((e as KeyboardEvent).key === 'ArrowLeft') return { x: Math.max(0, c.x - 10) };
+      if ((e as KeyboardEvent).key === 'ArrowRight') return { x: Math.min(90, c.x + 10) };
+      return c;
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', moveCatcher);
+    return () => window.removeEventListener('keydown', moveCatcher);
   }, []);
 
-  // Keyboard
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
-        basketTargetRef.current = Math.max(0, basketTargetRef.current - 30);
-        e.preventDefault();
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        basketTargetRef.current = Math.min(W - BASKET_W, basketTargetRef.current + 30);
-        e.preventDefault();
-      }
-    };
-    window.addEventListener('keydown', down);
-    return () => window.removeEventListener('keydown', down);
-  }, []);
+    if (state !== 'playing') return;
+    if (time <= 0) { setState('finished'); return; }
+    const t = setTimeout(() => setTime((x) => x - 1), 1000);
+    return () => clearTimeout(t);
+  }, [time, state]);
 
-  // Game loop
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (state !== 'playing') return;
+    const interval = setInterval(spawnItem, SPAWN_INTERVAL);
+    return () => clearInterval(interval);
+  }, [state, spawnItem]);
 
-    let frame = 0;
-    let lastSpawn = 0;
-
-    const spawn = () => {
-      const types: FallingItem['type'][] = ['heart', 'heart', 'heart', 'rose', 'diamond', 'bomb'];
-      if (levelRef.current >= 3) types.push('bomb');
-      const type = types[Math.floor(Math.random() * types.length)];
-      const size = type === 'bomb' ? 22 : 20;
-      itemsRef.current.push({
-        x: 20 + Math.random() * (W - 40),
-        y: -size,
-        vy: 1.5 + levelRef.current * 0.3 + Math.random() * 0.5,
-        type,
-        size,
-        id: Date.now() + Math.random(),
+  useEffect(() => {
+    if (state !== 'playing') return;
+    const fall = setInterval(() => {
+      setItems((prev) => {
+        const updated = prev.map((item) => ({ ...item, y: item.y + 5 })).filter((item) => item.y <= 100);
+        return updated;
       });
-    };
+    }, 300);
+    return () => clearInterval(fall);
+  }, [state]);
 
-    const drawHeart = (x: number, y: number, size: number, color: string) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(size / 20, size / 20);
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(0, -4);
-      ctx.bezierCurveTo(5, -10, 12, -4, 0, 8);
-      ctx.bezierCurveTo(-12, -4, -5, -10, 0, -4);
-      ctx.fill();
-      ctx.restore();
-    };
-
-    const drawRose = (x: number, y: number, size: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = '#fb7185';
-      ctx.beginPath();
-      ctx.arc(0, -3, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#e11d48';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#16a34a';
-      ctx.fillRect(-1, 4, 2, 8);
-      ctx.restore();
-    };
-
-    const drawBomb = (x: number, y: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = '#1f2937';
-      ctx.beginPath();
-      ctx.arc(0, 2, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#6b7280';
-      ctx.beginPath();
-      ctx.arc(0, -8, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.arc(0, -10, 1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    };
-
-    const drawDiamond = (x: number, y: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = '#22d3ee';
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(6, 0);
-      ctx.lineTo(0, 8);
-      ctx.lineTo(-6, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#a5f3fc';
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(6, 0);
-      ctx.lineTo(-6, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    };
-
-    const draw = () => {
-      // Smooth basket movement
-      const dx = basketTargetRef.current - basketXRef.current;
-      basketXRef.current += dx * 0.2;
-
-      // Background
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#fdf2f8');
-      bg.addColorStop(1, '#fbcfe8');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
-
-      // Basket
-      const bx = basketXRef.current;
-      const by = H - 50;
-      const grad = ctx.createLinearGradient(0, by, 0, by + BASKET_H);
-      grad.addColorStop(0, '#a78bfa');
-      grad.addColorStop(1, '#7c3aed');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(bx - 4, by);
-      ctx.lineTo(bx + BASKET_W + 4, by);
-      ctx.lineTo(bx + BASKET_W - 6, by + BASKET_H);
-      ctx.lineTo(bx + 6, by + BASKET_H);
-      ctx.closePath();
-      ctx.fill();
-      // Weave pattern
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 5; i++) {
-        const x = bx + 6 + i * ((BASKET_W - 12) / 4);
-        ctx.beginPath();
-        ctx.moveTo(x, by + 2);
-        ctx.lineTo(x + 2, by + BASKET_H - 2);
-        ctx.stroke();
-      }
-
-      // Spawn logic
-      if (frame - lastSpawn > Math.max(40, 100 - levelRef.current * 8) && !gameOverRef.current) {
-        spawn();
-        lastSpawn = frame;
-      }
-
-      // Items
-      itemsRef.current = itemsRef.current.filter(item => {
-        item.y += item.vy;
-
-        if (item.type === 'heart') drawHeart(item.x, item.y, item.size, '#ec4899');
-        else if (item.type === 'rose') drawRose(item.x, item.y, item.size);
-        else if (item.type === 'bomb') drawBomb(item.x, item.y);
-        else if (item.type === 'diamond') drawDiamond(item.x, item.y);
-
-        // Catch detection
-        if (item.y > by && item.y < by + BASKET_H && item.x > bx && item.x < bx + BASKET_W) {
-          if (item.type === 'heart') {
-            const pts = 10 + comboRef.current * 2;
-            setScore(s => s + pts);
-            comboRef.current += 1;
-            setCombo(comboRef.current);
-            setHighestCombo(hc => Math.max(hc, comboRef.current));
-            if (comboRef.current % 8 === 0) {
-              levelRef.current += 1;
-              setLevel(levelRef.current);
+  useEffect(() => {
+    if (state !== 'playing') return;
+    const check = setInterval(() => {
+      const catcherLeft = catcher.x;
+      const catcherRight = catcher.x + 12;
+      setItems((prev) => {
+        const remaining: Item[] = [];
+        prev.forEach((item) => {
+          if (item.y >= 80 && item.y <= 95 && item.x >= catcherLeft && item.x <= catcherRight) {
+            if (item.type === 'heart') {
+              setCombo((c) => { const nc = c + 1; return nc; });
+              setScore((s) => s + item.points * (combo > 2 ? 2 : 1));
+            } else if (item.type === 'sparkle') {
+              setScore((s) => s + item.points);
+              setCombo((c) => c + 1);
+            } else if (item.type === 'bomb') {
+              setCombo(0);
+              setLives((l) => l - 1);
             }
-          } else if (item.type === 'rose') {
-            setScore(s => s + 5);
-            comboRef.current = 0;
-            setCombo(0);
-          } else if (item.type === 'diamond') {
-            setScore(s => s + 25);
-            comboRef.current += 2;
-            setCombo(comboRef.current);
-            setHighestCombo(hc => Math.max(hc, comboRef.current));
-          } else if (item.type === 'bomb') {
-            setLives(l => {
-              const nl = l - 1;
-              if (nl <= 0 && !gameOverRef.current) {
-                gameOverRef.current = true;
-                setGameOver(true);
-              }
-              return Math.max(0, nl);
-            });
-            comboRef.current = 0;
-            setCombo(0);
+          } else {
+            remaining.push(item);
           }
-          return false;
-        }
-
-        if (item.y > H + 30) {
-          if (item.type === 'heart' && !gameOverRef.current) {
-            comboRef.current = 0;
-            setCombo(0);
-          }
-          return false;
-        }
-        return true;
+        });
+        return remaining;
       });
+    }, 500);
+    return () => clearInterval(check);
+  }, [state, catcher, combo]);
 
-      frame++;
-      animRef.current = requestAnimationFrame(draw);
-    };
+  const comboCount = combo;
+  useEffect(() => { setCombo(comboCount); }, [comboCount]);
 
-    animRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [lives]);
-
-  const handleTouch = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent, start: boolean) => {
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const x = (clientX - rect.left) * scaleX;
-    if (start) {
-      touchRef.current = { active: true, x };
-    }
-    basketTargetRef.current = Math.max(0, Math.min(W - BASKET_W, x - BASKET_W / 2));
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => handleTouch(e as any, false);
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (touchRef.current?.active) handleTouch(e as any, false);
-  };
-  const handleEnd = () => {
-    if (touchRef.current) touchRef.current.active = false;
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+  const start = () => {
+    setScore(0);
+    setTime(GAME_DURATION);
+    setItems([]);
+    setCatcher({ x: 44 });
+    setCombo(0);
+    setLives(3);
+    setState('playing');
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
+      <div className="min-h-screen p-4 md:p-8">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+          <ArrowLeft size={20} /> Back to Games
+        </button>
+
+        {state === 'idle' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
+            <Heart className="w-20 h-20 text-pink-400 mx-auto mb-6" fill="currentColor" />
+            <h1 className="text-5xl font-bold text-white mb-4">Heart Catcher</h1>
+            <p className="text-white/80 mb-4 text-lg">Catch falling hearts with your basket. Use Arrow keys to move. Avoid bombs!</p>
+            <p className="text-white/60 mb-8 text-sm">Build a combo for double points. Catch sparkles for bonus rewards.</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
+              <Play size={20} /> Start Game
+            </button>
+          </motion.div>
+        )}
+
+        {state === 'playing' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-lg mx-auto">
+            <div className="flex justify-between items-center mb-3 text-white">
+              <span className="bg-white/10 px-3 py-1 rounded-full">Score: {score}</span>
+              <span className="bg-white/10 px-3 py-1 rounded-full">Time: {time}s</span>
+              <span className="bg-white/10 px-3 py-1 rounded-full">Lives: {'❤️'.repeat(lives)}</span>
+              {combo > 2 && <span className="bg-pink-500/50 px-3 py-1 rounded-full animate-pulse">Combo {combo}x!</span>}
+            </div>
+            <div className="relative bg-gradient-to-b from-indigo-900/50 to-purple-900/50 rounded-3xl h-[400px] border-2 border-white/20 overflow-hidden">
+              {items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  animate={{ y: item.y + '%', opacity: item.y > 95 ? 0 : 1 }}
+                  className="absolute text-2xl pointer-events-none"
+                  style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                >
+                  {item.emoji}
+                </motion.div>
+              ))}
+              <div className="absolute bottom-4 transition-all duration-200" style={{ left: `${catcher.x}%`, transform: 'translateX(-50%)' }}>
+                <div className="w-12 h-8 bg-gradient-to-r from-pink-400 to-rose-500 rounded-full border-2 border-white/60 shadow-lg flex items-center justify-center">
+                  <Heart size={14} className="text-white" fill="currentColor" />
+                </div>
+              </div>
+            </div>
+            <p className="text-white/50 text-center mt-3 text-sm">Use ← → arrow keys to move</p>
+          </motion.div>
+        )}
+
+        {state === 'finished' && (
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
+            <Trophy className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
+            <h2 className="text-4xl font-bold text-white mb-6">Game Over!</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-pink-300">{score}</div>
+              <div className="text-white/80 mt-2">Final Score</div>
+              <p className="mt-6 text-white/80 italic">"Catch every heart, dodge every bomb — just like real love."</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl flex items-center gap-2">
+                <RotateCcw size={18} /> Play Again
               </button>
-            </Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" />
-              Heart Catcher
-            </h1>
-            <div className="w-10" />
-          </div>
-
-          {/* HUD */}
-          <div className="flex justify-center gap-2 mb-3 text-sm font-bold flex-wrap">
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-primary-600 shadow border border-pink-100">
-              ❤️ x{lives}
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
             </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-pink-600 shadow border border-pink-100">
-              Score: {score}
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-rose-600 shadow border border-pink-100">
-              Lv.{level}
-            </div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-orange-600 shadow border border-pink-100">
-              🔥 {combo}x
-            </div>
-          </div>
-
-          <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-3 flex justify-center overflow-hidden">
-              <canvas
-                ref={canvasRef}
-                width={W}
-                height={H}
-                onTouchStart={(e) => handleTouch(e as any, true)}
-                onTouchMove={(e) => handleTouch(e as any, false)}
-                onTouchEnd={handleEnd}
-                onMouseDown={(e) => handleTouch(e as any, true)}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleEnd}
-                onMouseLeave={handleEnd}
-                className="rounded-2xl cursor-pointer touch-none"
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
-            </div>
-          </TiltCard>
-
-          <p className="text-center text-sm text-gray-500 mt-3">
-            Use arrow keys, touch, or drag mouse to move basket. Catch hearts, avoid bombs! 💣
-          </p>
-
-          {gameOver && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 text-center space-y-3">
-              <p className="text-2xl font-bold text-primary-600">Game Over! 💔</p>
-              <p className="text-gray-600">Score: {score} | Best Combo: {highestCombo}x | Level: {level}</p>
-              <Button onClick={resetGame} variant="primary"><RotateCcw className="w-4 h-4 mr-1" /> Play Again</Button>
-            </motion.div>
-          )}
-
-          <div className="flex justify-center gap-3 mt-4">
-            <Button onClick={copyLink} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-1" /> Invite Friend
-            </Button>
-            <Button onClick={resetGame} variant="ghost" size="sm">
-              <RotateCcw className="w-4 h-4 mr-1" /> Reset
-            </Button>
-          </div>
-        </div>
+          </motion.div>
+        )}
       </div>
-            <GameSharePanel gameSlug="heartcatcher" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

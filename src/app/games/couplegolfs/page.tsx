@@ -1,405 +1,260 @@
 'use client';
-
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Share2, RotateCcw, Trophy, Star, Zap } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Target } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
-import GameSharePanel from '@/components/GameSharePanel';
 
-const HOLE_COUNT = 9;
+type Player = 1 | 2;
+type Phase = 'start' | 'p1turn' | 'p2turn' | 'result';
 
-function calcScore(distance: number): number {
-  if (distance < 10) return 50;
-  if (distance < 30) return 40;
-  if (distance < 60) return 30;
-  if (distance < 100) return 20;
-  if (distance < 160) return 10;
-  return 0;
+interface BallState {
+  x: number;
+  y: number;
+  power: number;
+  angle: number;
+  moving: boolean;
 }
 
-function distFromCenter(cx: number, cy: number, tx: number, ty: number): number {
-  return Math.sqrt((cx - tx) ** 2 + (cy - ty) ** 2);
-}
+const HOLES = [
+  { x: 20, y: 30, par: 2 }, { x: 70, y: 55, par: 3 }, { x: 40, y: 75, par: 2 }, { x: 80, y: 25, par: 3 },
+  { x: 15, y: 60, par: 2 }, { x: 55, y: 40, par: 3 }, { x: 90, y: 70, par: 2 }, { x: 35, y: 15, par: 3 },
+  { x: 65, y: 80, par: 2 }, { x: 10, y: 45, par: 3 }, { x: 50, y: 60, par: 2 }, { x: 75, y: 35, par: 3 },
+];
 
-const RATING_NAME = (score: number): string => {
-  const s = score * 5;
-  if (s >= 200) return 'Mini Golf Pro!';
-  if (s >= 160) return 'Expert Golfer!';
-  if (s >= 120) return 'Great Player!';
-  if (s >= 80) return 'Good Swing!';
-  if (s >= 40) return 'Getting There!';
-  return 'Keep Practicing!';
-};
+const ROMANTIC_COMMENTS = [
+  "💕 Like Cupid's arrow, straight to the hole!", "🌹 Beautiful shot, Romeo!", "💖 Perfect aim, Juliet!", "✨ What a swing!",
+  "💘 Love this precision!", "🌸 Elegant like a dance!", "💝 Shot of the heart!", "🕊️ Smooth as a dove!",
+  "💓 You're a natural!", "🌟 Almost perfect!", "💗 Close enough to feel the love!", "💖 Great try, lovebird!",
+];
 
 export default function CoupleGolfsPage() {
-  const [playing, setPlaying] = useState(false);
-  const [hole, setHole] = useState(1);
+  const [phase, setPhase] = useState<Phase>('start');
+  const [holes, setHoles] = useState<typeof HOLES>([]);
+  const [currentHole, setCurrentHole] = useState(0);
+  const [p1Score, setP1Score] = useState(0);
+  const [p2Score, setP2Score] = useState(0);
+  const [currentPlayer, setCurrentPlayer] = useState<Player>(1);
+  const [p1HoleScores, setP1HoleScores] = useState<number[]>([]);
+  const [p2HoleScores, setP2HoleScores] = useState<number[]>([]);
+  const [power, setPower] = useState(50);
+  const [angle, setAngle] = useState(45);
   const [shots, setShots] = useState(0);
-  const [score, setScore] = useState(0);
-  const [par, setPar] = useState(3);
-  const [wind, setWind] = useState(0);
-  const [target, setTarget] = useState({ x: 0.5, y: 0.3 });
-  const [ball, setBall] = useState({ x: 0.5, y: 0.8 });
-  const [power, setPower] = useState(0);
-  const [phase, setPhase] = useState<'aim' | 'shoot' | 'result'>('aim');
-  const [lastHit, setLastHit] = useState<{ dist: number; pts: number } | null>(null);
-  const [done, setDone] = useState(false);
-  const [totalShots, setTotalShots] = useState(0);
-  const targetAnimRef = useRef(0);
-  const targetTimeRef = useRef(0);
+  const [comment, setComment] = useState('');
+  const [round, setRound] = useState(1);
+  const [totalShots, setTotalShots] = useState({ 1: 0, 2: 0 });
 
-  const boardRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const startHole = useCallback(() => {
-    const hPar = Math.floor(Math.random() * 3) + 2;
-    setPar(hPar);
-    setShots(0);
-    setPhase('aim');
-    setLastHit(null);
-    const newWind = Math.round((Math.random() - 0.5) * 2 * 10) / 10;
-    setWind(newWind);
-    setBall({ x: 0.5 + (Math.random() - 0.5) * 0.2, y: 0.8 });
-    setPower(0);
-  }, []);
+  const ballRef = useRef<BallState>({ x: 10, y: 85, power: 50, angle: 45, moving: false });
+  const animRef = useRef<number | null>(null);
 
   const startGame = () => {
-    setPlaying(true);
-    setHole(1);
-    setScore(0);
-    setTotalShots(0);
-    setDone(false);
-    startHole();
+    const shuffled = [...HOLES].sort(() => Math.random() - 0.5).slice(0, 6);
+    setHoles(shuffled);
+    setCurrentHole(0);
+    setP1Score(0);
+    setP2Score(0);
+    setP1HoleScores([]);
+    setP2HoleScores([]);
+    setCurrentPlayer(1);
+    setPower(50);
+    setAngle(45);
+    setShots(0);
+    setTotalShots({ 1: 0, 2: 0 });
+    setComment('');
+    ballRef.current = { x: 10, y: 85, power: 50, angle: 45, moving: false };
+    setPhase('p1turn');
   };
 
-  // Target drift
-  useEffect(() => {
-    if (!playing || phase !== 'aim') return;
-    targetTimeRef.current = Date.now() + 2000;
-    const animate = () => {
-      if (!playing || phase !== 'aim') return;
-      const elapsed = (Date.now() - targetTimeRef.current) / 1000;
-      const nx = 0.3 + Math.sin(elapsed * 0.7 + hole) * 0.25;
-      const ny = 0.2 + Math.cos(elapsed * 0.5 + hole * 2) * 0.15;
-      setTarget({ x: Math.max(0.15, Math.min(0.85, nx)), y: Math.max(0.15, Math.min(0.5, ny)) });
-      targetAnimRef.current = requestAnimationFrame(animate);
-    };
-    targetAnimRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(targetAnimRef.current);
-  }, [playing, phase, hole]);
-
-  // Draw course
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const board = boardRef.current;
-    if (!canvas || !board) return;
-    const rect = board.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const W = canvas.width;
-    const H = canvas.height;
-    const tx = target.x * W;
-    const ty = target.y * H;
-    const bx = ball.x * W;
-    const by = ball.y * H;
-
-    // Background
-    ctx.fillStyle = '#dcfce7';
-    ctx.fillRect(0, 0, W, H);
-
-    // Grid lines
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.15)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 30) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-    }
-    for (let y = 0; y < H; y += 30) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
-
-    // Concentric target rings
-    const rings = [
-      { r: 50, color: 'rgba(34, 197, 94, 0.3)', pts: '50 pts' },
-      { r: 40, color: 'rgba(34, 197, 94, 0.5)', pts: '40 pts' },
-      { r: 30, color: 'rgba(22, 163, 74, 0.6)', pts: '30 pts' },
-      { r: 20, color: 'rgba(22, 163, 74, 0.8)', pts: '20 pts' },
-      { r: 10, color: 'rgba(21, 128, 61, 0.9)', pts: '10 pts' },
-    ];
-    rings.forEach(ring => {
-      ctx.beginPath();
-      ctx.arc(tx, ty, ring.r, 0, Math.PI * 2);
-      ctx.fillStyle = ring.color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    });
-
-    // Bullseye
-    ctx.beginPath();
-    ctx.arc(tx, ty, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#15803d';
-    ctx.fill();
-
-    // Wind indicator
-    if (phase === 'aim') {
-      ctx.save();
-      ctx.translate(W / 2, H - 25);
-      ctx.rotate(wind * 0.05);
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.7)';
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(15, 0);
-      ctx.lineTo(0, 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.font = '10px sans-serif';
-      ctx.fillStyle = '#1e40af';
-      ctx.textAlign = 'center';
-      ctx.fillText(`Wind: ${wind > 0 ? '→' : wind < 0 ? '←' : '–'} ${Math.abs(wind).toFixed(1)}`, 0, 20);
-      ctx.restore();
-    }
-
-    // Ball
-    ctx.beginPath();
-    ctx.arc(bx, by, 12, 0, Math.PI * 2);
-    ctx.fillStyle = '#ef4444';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Ball highlight
-    ctx.beginPath();
-    ctx.arc(bx - 3, by - 3, 4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fill();
-
-    // Power bar (during aim)
-    if (phase === 'aim') {
-      const p = power;
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(W / 2 - 40, H - 55, 80, 12);
-      const gradient = ctx.createLinearGradient(W / 2 - 40, 0, W / 2 - 40 + 80 * p, 0);
-      gradient.addColorStop(0, '#22c55e');
-      gradient.addColorStop(0.5, '#eab308');
-      gradient.addColorStop(1, '#ef4444');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(W / 2 - 40, H - 55, 80 * p, 12);
-    }
-
-  }, [target, ball, wind, power, phase]);
-
-  const handleBoardClick = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (phase !== 'aim') return;
-    e.preventDefault();
-    const board = boardRef.current;
-    if (!board) return;
-    const rect = board.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = (clientX - rect.left) / rect.width;
-    const y = (clientY - rect.top) / rect.height;
-
-    if (y > 0.7) {
-      // Power control area
-      const p = Math.max(0.1, Math.min(1, 1 - (y - 0.7) / 0.3));
-      setPower(p);
-      return;
-    }
-    // Direction click
-    const dx = x - ball.x;
-    const dy = y - ball.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > 0.01) {
-      const powerUsed = power || 0.5;
-      const newX = Math.max(0.1, Math.min(0.9, ball.x + (dx / dist) * powerUsed * 0.3));
-      const newY = Math.max(0.1, Math.min(0.9, ball.y + (dy / dist) * powerUsed * 0.3));
-      setBall({ x: newX, y: newY });
-      setPower(0);
-    }
-  };
-
-  const shoot = () => {
-    setPhase('shoot');
-    const tx = target.x;
-    const ty = target.y;
-    const bx = ball.x;
-    const by = ball.y;
-    const d = distFromCenter(bx, by, tx, ty);
-    // Add wind effect
-    const windEffect = wind * 0.02;
-    const finalDist = Math.max(0, distFromCenter(
-      bx + windEffect, by,
-      tx, ty
-    ));
-    const pts = calcScore(finalDist);
+  const swing = () => {
+    if (ballRef.current.moving) return;
+    ballRef.current.moving = true;
+    ballRef.current.power = power;
+    ballRef.current.angle = angle;
     setShots(s => s + 1);
-    setScore(sc => sc + pts);
-    setTotalShots(ts => ts + 1);
-    setLastHit({ dist: Math.round(finalDist), pts });
+    setTotalShots(t => ({ ...t, [currentPlayer]: t[currentPlayer] + 1 }));
+
+    let bx = 10, by = 85;
+    const target = holes[currentHole];
+    const rad = (angle * Math.PI) / 180;
+    const speed = power * 0.3;
+    const dx = Math.cos(rad) * speed;
+    const dy = -Math.sin(rad) * speed;
+    let dist = 0;
+    const maxDist = 200;
+
+    const animate = () => {
+      bx += dx * 0.05;
+      by += dy * 0.05;
+      dist += Math.sqrt(dx * dx + dy * dy) * 0.05;
+      ballRef.current.x = bx;
+      ballRef.current.y = by;
+
+      if (dist > maxDist || bx < 0 || bx > 100 || by < 0 || by > 100) {
+        ballRef.current.moving = false;
+        ballRef.current.x = Math.max(5, Math.min(95, bx));
+        ballRef.current.y = Math.max(5, Math.min(95, by));
+        finishHole();
+        return;
+      }
+
+      const hx = target.x, hy = target.y;
+      if (Math.abs(bx - hx) < 5 && Math.abs(by - hy) < 5) {
+        ballRef.current.moving = false;
+        ballRef.current.x = hx;
+        ballRef.current.y = hy;
+        finishHole();
+        return;
+      }
+
+      animRef.current = requestAnimationFrame(animate);
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+  };
+
+  const finishHole = () => {
+    const hole = holes[currentHole];
+    const dist = Math.sqrt((ballRef.current.x - hole.x) ** 2 + (ballRef.current.y - hole.y) ** 2);
+    let holeScore = dist < 5 ? 1 : dist < 15 ? 2 : dist < 25 ? 3 : 4;
+    holeScore = Math.max(1, Math.min(6, holeScore));
+
+    if (currentPlayer === 1) {
+      setP1Score(s => s + holeScore);
+      setP1HoleScores(s => [...s, holeScore]);
+    } else {
+      setP2Score(s => s + holeScore);
+      setP2HoleScores(s => [...s, holeScore]);
+    }
+
+    setComment(ROMANTIC_COMMENTS[Math.floor(Math.random() * ROMANTIC_COMMENTS.length)]);
 
     setTimeout(() => {
-      if (hole >= HOLE_COUNT) {
-        setDone(true);
-        setPlaying(false);
+      setComment('');
+      if (currentPlayer === 2) {
+        if (currentHole + 1 < holes.length) {
+          setCurrentHole(h => h + 1);
+          setCurrentPlayer(1);
+          setShots(0);
+          ballRef.current = { x: 10, y: 85, power: 50, angle: 45, moving: false };
+        } else {
+          setPhase('result');
+        }
       } else {
-        setHole(h => h + 1);
-        startHole();
+        setCurrentPlayer(2);
+        setShots(0);
+        ballRef.current = { x: 10, y: 85, power: 50, angle: 45, moving: false };
       }
     }, 1500);
   };
 
-  const shareLink = () => {
-    if (typeof navigator !== 'undefined' && (navigator as any).share) {
-      (navigator as any).share({ title: 'Couple Golf', url: typeof window !== 'undefined' ? window.location.href : '' });
-    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
-    }
-  };
+  const ballX = ballRef.current.x;
+  const ballY = ballRef.current.y;
 
   return (
     <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games">
-              <button className="p-2 hover:bg-white rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-            </Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500" /> Couple Golf
-            </h1>
-            <div className="w-10" />
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Target className="w-5 h-5 text-amber-500" /> Couple Golf</h1>
+            <div className="w-16" />
           </div>
 
-          {!playing && !done && (
+          {phase === 'start' && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <TiltCard>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 text-center space-y-4">
-                  <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                    <span className="text-7xl">⛳</span>
-                  </motion.div>
-                  <p className="text-gray-700 font-semibold text-lg">9 Holes of Love! 🏌️</p>
-                  <p className="text-sm text-gray-500">Tap to aim, power-up at bottom, and shoot! Wind affects your ball!</p>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="bg-pink-50 rounded-xl p-2">🏆 50 pts: Bullseye</div>
-                    <div className="bg-pink-50 rounded-xl p-2">💚 30 pts: Great</div>
-                    <div className="bg-pink-50 rounded-xl p-2">🌱 10 pts: Near</div>
-                  </div>
-                  <Button onClick={startGame} variant="primary">Tee Off! ⛳</Button>
+              <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">⛳</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Couple Golf</h2>
+                  <p className="text-gray-600">6 romantic holes! Set power & angle, then swing! Lower score wins!</p>
+                  <p className="text-sm text-pink-500 font-medium">Player 1 goes first on each hole</p>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Tee Off! ⛳</Button>
                 </div>
               </TiltCard>
             </motion.div>
           )}
 
-          {playing && (
-            <>
-              <div className="flex justify-center gap-2 mb-3 text-sm font-bold flex-wrap">
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-primary-600 shadow border border-pink-100">
-                  Hole {hole}/{HOLE_COUNT}
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-rose-600 shadow border border-pink-100">
-                  Score: {score}
-                </div>
-                <div className="bg-white/70 backdrop-blur-xl rounded-xl px-3 py-1.5 text-pink-600 shadow border border-pink-100">
-                  Par {par}: {shots}/{par}
-                </div>
-                {wind !== 0 && (
-                  <div className="bg-blue-50 backdrop-blur-xl rounded-xl px-3 py-1.5 text-blue-600 shadow border border-blue-200">
-                    💨 Wind: {wind.toFixed(1)}
-                  </div>
-                )}
+          {(phase === 'p1turn' || phase === 'p2turn') && holes[currentHole] && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="flex justify-between mb-2 text-sm font-bold">
+                <span className={currentPlayer === 1 ? 'text-blue-600' : 'text-rose-600'}>
+                  {currentPlayer === 1 ? '💙 Player 1' : '💗 Player 2'}
+                </span>
+                <span className="text-gray-600">Hole {currentHole + 1}/{holes.length} - Par {holes[currentHole].par}</span>
               </div>
 
-              <TiltCard>
-                <div
-                  ref={boardRef}
-                  onClick={handleBoardClick}
-                  className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-2 overflow-hidden"
-                  style={{ aspectRatio: '3/4', maxHeight: 500 }}
-                >
-                  <canvas ref={canvasRef} className="w-full h-full rounded-2xl" style={{ touchAction: 'none' }} />
+              <TiltCard intensity={3}>
+                <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-[2rem] shadow-xl border border-green-200 p-4 relative overflow-hidden" style={{ minHeight: '300px' }}>
+                  <svg viewBox="0 0 100 100" className="w-full h-64">
+                    {holes.slice(0, currentHole + 1).map((h, i) => (
+                      <circle key={i} cx={h.x} cy={h.y} r="4" fill="white" stroke="#333" strokeWidth="0.5" />
+                    ))}
+                    {holes[currentHole] && (
+                      <circle cx={holes[currentHole].x} cy={holes[currentHole].y} r="3" fill="#dc2626" />
+                    )}
+                    <circle cx={ballX} cy={ballY} r="3" fill="white" stroke="#333" strokeWidth="0.5">
+                      <animate attributeName="r" values="3;4;3" dur="0.5s" repeatCount="indefinite" />
+                    </circle>
+                  </svg>
+                  {comment && (
+                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center text-lg font-bold text-green-700">
+                      {comment}
+                    </motion.p>
+                  )}
                 </div>
               </TiltCard>
 
-              {phase === 'aim' && (
-                <div className="flex justify-center gap-3 mt-3">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={shoot}
-                    className="bg-gradient-to-r from-primary-500 to-rose-500 text-white rounded-full px-8 py-3 font-display font-black text-lg shadow-lg"
-                  >
-                    <Zap className="w-5 h-5 inline mr-1" /> Shoot!
-                  </motion.button>
+              {!comment && (
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mt-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-1">Power: {power}%</label>
+                      <input type="range" min="10" max="100" value={power} onChange={e => setPower(+e.target.value)} className="w-full" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-1">Angle: {angle}°</label>
+                      <input type="range" min="5" max="85" value={angle} onChange={e => setAngle(+e.target.value)} className="w-full" />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <div className="bg-blue-50 rounded-xl px-4 py-2"><p className="text-blue-500">P1 Total</p><p className="text-xl font-black">{p1Score}</p></div>
+                      <div className="bg-rose-50 rounded-xl px-4 py-2"><p className="text-rose-500">P2 Total</p><p className="text-xl font-black">{p2Score}</p></div>
+                    </div>
+                    <Button onClick={swing} variant="primary" className="w-full" size="lg">Swing! 🏌️</Button>
+                  </div>
                 </div>
               )}
-
-              {phase === 'shoot' && lastHit && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center mt-3">
-                  <div className="text-4xl mb-1">
-                    {lastHit.pts >= 40 ? '🎯' : lastHit.pts >= 20 ? '💚' : '🌱'}
-                  </div>
-                  <p className="text-lg font-bold text-primary-600">
-                    {lastHit.pts >= 40 ? 'Excellent shot!' : lastHit.pts >= 20 ? 'Nice one!' : 'Keep trying!'}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Distance: {lastHit.dist}px | +{lastHit.pts} points
-                  </p>
-                </motion.div>
-              )}
-
-              <p className="text-center text-sm text-gray-500 mt-3">
-                {phase === 'aim' ? 'Tap target area to aim, tap bottom area for power, then SHOT!' : 'Moving to next hole...'}
-              </p>
-            </>
+            </motion.div>
           )}
 
-          {done && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <TiltCard>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 text-center space-y-3">
-                  <motion.div animate={{ rotate: [0, -10, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                    <span className="text-6xl">🏆</span>
-                  </motion.div>
-                  <h2 className="text-3xl font-display font-black gradient-text-animated">
-                    {RATING_NAME(score)}
-                  </h2>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-pink-50 rounded-xl p-3">
-                      <div className="text-xs text-gray-500">Total Score</div>
-                      <div className="text-2xl font-bold text-primary-600">{score}</div>
-                    </div>
-                    <div className="bg-pink-50 rounded-xl p-3">
-                      <div className="text-xs text-gray-500">Total Shots</div>
-                      <div className="text-2xl font-bold text-rose-600">{totalShots}</div>
-                    </div>
-                    <div className="bg-pink-50 rounded-xl p-3">
-                      <div className="text-xs text-gray-500">Holes</div>
-                      <div className="text-2xl font-bold text-pink-600">{HOLE_COUNT}</div>
-                    </div>
+          {phase === 'result' && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+              <TiltCard intensity={5}>
+                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                  <div className="text-6xl">🏆</div>
+                  <h2 className="text-2xl font-display font-bold text-gray-800">Final Results!</h2>
+                  <div className="text-4xl font-black gradient-text">
+                    P1: {p1Score} vs P2: {p2Score}
                   </div>
-                  <Button onClick={startGame} variant="primary"><RotateCcw className="w-4 h-4 mr-1" /> Play Again</Button>
+                  <p className="text-xl font-bold text-primary-600">
+                    {p1Score < p2Score ? '💙 Player 1 Wins!' : p2Score < p1Score ? '💗 Player 2 Wins!' : '🤝 It\'s a Tie!'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-blue-50 rounded-xl p-3"><p className="font-bold text-blue-700">Player 1 Scores</p>{p1HoleScores.map((s, i) => <p key={i}>H{i + 1}: {s}</p>)}</div>
+                    <div className="bg-rose-50 rounded-xl p-3"><p className="font-bold text-rose-700">Player 2 Scores</p>{p2HoleScores.map((s, i) => <p key={i}>H{i + 1}: {s}</p>)}</div>
+                  </div>
+                  <Button onClick={startGame} variant="primary" size="lg" className="w-full">Play Again ⛳</Button>
                 </div>
               </TiltCard>
             </motion.div>
           )}
 
-          <div className="flex justify-center gap-3 mt-6">
-            <Button onClick={shareLink} variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-1" /> Invite Friend
-            </Button>
+          <div className="text-center mt-6">
+            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
           </div>
         </div>
       </div>
-            <GameSharePanel gameSlug="couplegolfs" />
-      </PremiumBackground>
+    </PremiumBackground>
   );
 }

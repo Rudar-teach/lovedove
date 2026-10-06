@@ -1,63 +1,225 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Heart, Sparkles, RotateCcw, Trophy, Share2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PremiumBackground from '@/components/PremiumBackground';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
 
-const QUESTIONS = ["What's your favorite memory of us?", "What do you love most about me?", "Where did we have our first kiss?", "What's your ideal date night?", "What makes you happiest in our relationship?", "What's a small thing I do that you adore?", "What's your favorite thing about my personality?", "Where do you see us in 5 years?"];
+const QUESTIONS = [
+  { q: "What is your partner's favorite color?", options: ['Red', 'Blue', 'Pink', 'Green', 'Purple'] },
+  { q: "What is your partner's favorite food?", options: ['Pizza', 'Sushi', 'Pasta', 'Tacos', 'Burgers'] },
+  { q: "What is your partner's favorite movie genre?", options: ['Romance', 'Action', 'Comedy', 'Thriller', 'Drama'] },
+  { q: "Who is your partner's celebrity crush?", options: ['Ryan Reynolds', 'Margot Robbie', 'Chris Hemsworth', 'Zendaya', 'Other'] },
+  { q: "What is your partner's dream vacation destination?", options: ['Paris', 'Maldives', 'Tokyo', 'New York', 'Bali'] },
+  { q: "What is your partner's biggest pet peeve?", options: ['Loud chewing', 'Tardiness', 'Messiness', 'Bad grammar', 'Interruptions'] },
+  { q: "What is your partner's go-to comfort drink?", options: ['Coffee', 'Tea', 'Hot chocolate', 'Wine', 'Smoothie'] },
+  { q: "What is your partner's favorite season?", options: ['Spring', 'Summer', 'Fall', 'Winter', 'All of them'] },
+  { q: "What makes your partner laugh the most?", options: ['Dad jokes', 'Puns', 'Slapstick', 'Memes', 'Inside jokes'] },
+  { q: "What is your partner's hidden talent?", options: ['Singing', 'Cooking', 'Drawing', 'Dancing', 'Whistling'] },
+];
 
 export default function WhoKnowsWho() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [p1Ans, setP1Ans] = useState<string[]>([]);
-  const [p2Ans, setP2Ans] = useState<string[]>([]);
-  const [phase, setPhase] = useState<'p1' | 'p2'>('p1');
-  const [answer, setAnswer] = useState('');
-  const [q, setQ] = useState<typeof QUESTIONS>([]);
+  const [phase, setPhase] = useState<'start' | 'p1' | 'p2' | 'reveal' | 'result'>('start');
+  const [current, setCurrent] = useState(0);
+  const [p1Ans, setP1Ans] = useState<number[]>([]);
+  const [p2Ans, setP2Ans] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [matchCount, setMatchCount] = useState(0);
+  const [toast, setToast] = useState(false);
 
-  useEffect(() => { setQ([...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 5)); }, []);
-  const handleSubmit = () => {
-    if (!answer.trim()) return;
-    if (phase === 'p1') { setP1Ans(prev => [...prev, answer.trim()]); setPhase('p2'); setAnswer(''); }
-    else { setP2Ans(prev => [...prev, answer.trim()]); if (currentIndex < q.length - 1) { setCurrentIndex(i => i + 1); setPhase('p1'); setAnswer(''); } else setGameState('finished'); }
+  const startGame = () => {
+    setP1Ans([]);
+    setP2Ans([]);
+    setCurrent(0);
+    setSelected(null);
+    setShowAnswer(false);
+    setMatchCount(0);
+    setPhase('p1');
   };
-  const startGame = () => { setGameState('playing'); setCurrentIndex(0); setP1Ans([]); setP2Ans([]); setPhase('p1'); setAnswer(''); setQ([...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 5)); };
+
+  const handlePick = (idx: number) => {
+    if (selected !== null) return;
+    setSelected(idx);
+  };
+
+  const next = () => {
+    if (selected === null) return;
+
+    if (phase === 'p1') {
+      setP1Ans([...p1Ans, selected]);
+      setSelected(null);
+      if (current + 1 >= QUESTIONS.length) {
+        setCurrent(0);
+        setPhase('p2');
+      } else {
+        setCurrent(c => c + 1);
+      }
+    } else if (phase === 'p2') {
+      const newP2 = [...p2Ans, selected];
+      setP2Ans(newP2);
+      setSelected(null);
+      if (current + 1 >= QUESTIONS.length) {
+        let count = 0;
+        for (let i = 0; i < QUESTIONS.length; i++) {
+          if (p1Ans[i] === newP2[i]) count++;
+        }
+        setMatchCount(count);
+        setPhase('reveal');
+      } else {
+        setCurrent(c => c + 1);
+      }
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setToast(true);
+    setTimeout(() => setToast(false), 2500);
+  };
+
+  const pct = QUESTIONS.length > 0 ? Math.round((matchCount / QUESTIONS.length) * 100) : 0;
+  const verdict = pct >= 90 ? 'Soulmate level! 🌟' : pct >= 70 ? 'You really know each other! 💕' : pct >= 50 ? 'Solid connection! 💖' : 'Lots to discover! 💬';
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3"><button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
-              <Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div><span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span></Link>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1">
+              <Sparkles className="w-4 h-4 text-pink-500" /> Who Knows Who
+            </h1>
+            <button onClick={copyLink} className="p-2 hover:bg-white rounded-full transition-colors">
+              <Share2 className="w-5 h-5 text-pink-500" />
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {phase === 'start' && (
+              <motion.div key="start" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <TiltCard intensity={5}>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">👫</div>
+                    <h2 className="text-2xl font-display font-bold text-gray-800">Who Knows Who?</h2>
+                    <p className="text-gray-600">Both partners answer the same questions about each other. Then see how many match!</p>
+                    <p className="text-sm text-gray-500">10 questions • 2 player • Pass the device!</p>
+                    <Button onClick={startGame} variant="primary" size="lg" className="w-full">Start Test 💑</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {(phase === 'p1' || phase === 'p2') && (
+              <motion.div key={`p-${phase}-${current}`} initial={{ opacity: 0, x: phase === 'p1' ? 30 : -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: phase === 'p1' ? -30 : 30 }}>
+                <div className={`rounded-2xl p-3 mb-4 text-center ${phase === 'p1' ? 'bg-pink-100' : 'bg-rose-100'}`}>
+                  <p className={`text-sm font-bold ${phase === 'p1' ? 'text-pink-700' : 'text-rose-700'}`}>
+                    🤫 {phase === 'p1' ? "Player 1's turn" : "Player 2's turn"} &mdash; Don't peek!
+                  </p>
+                </div>
+
+                <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                  <motion.div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full"
+                    animate={{ width: `${((current + 1) / QUESTIONS.length) * 100}%` }} transition={{ duration: 0.3 }} />
+                </div>
+
+                <p className="text-sm font-semibold text-gray-500 mb-2 text-center">Question {current + 1}/{QUESTIONS.length}</p>
+
+                <TiltCard intensity={4}>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+                    <p className="text-xl font-bold text-center text-gray-800 mb-6">{QUESTIONS[current].q}</p>
+                    <div className="space-y-3">
+                      {QUESTIONS[current].options.map((opt, i) => (
+                        <button key={i} onClick={() => handlePick(i)} disabled={selected !== null}
+                          className={`w-full p-4 rounded-2xl text-left font-semibold transition-all border-2 ${selected === i ? 'bg-pink-100 border-pink-400 text-pink-800' : 'bg-white border-gray-200 hover:border-pink-300'} ${selected !== null && selected !== i ? 'opacity-50' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold">{String.fromCharCode(65 + i)}</span>
+                            <span>{opt}</span>
+                            {selected === i && <span className="ml-auto">✓</span>}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {selected !== null && (
+                      <Button onClick={next} variant="primary" className="w-full mt-4">
+                        {current + 1 < QUESTIONS.length ? 'Next →' : (phase === 'p1' ? 'Pass to Player 2 →' : 'See Results →')}
+                      </Button>
+                    )}
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {phase === 'reveal' && (
+              <motion.div key="reveal" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <TiltCard intensity={5}>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 md:p-8">
+                    <h2 className="text-2xl font-display font-black text-center mb-2">📊 How You Compare</h2>
+                    <p className="text-center text-gray-600 mb-4">{matchCount} of {QUESTIONS.length} matched</p>
+
+                    <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
+                      {QUESTIONS.map((q, i) => {
+                        const matched = p1Ans[i] === p2Ans[i];
+                        return (
+                          <div key={i} className={`p-3 rounded-xl border-2 ${matched ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">Q{i + 1}: {q.q}</p>
+                            <p className="text-xs text-gray-500">
+                              {matched ? '✅ Both chose: ' : '💙 P1: "' + q.options[p1Ans[i]] + '" | 💗 P2: "' + q.options[p2Ans[i]] + '"'}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <Button onClick={() => setPhase('result')} variant="primary" className="w-full">See Final Score 🎯</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {phase === 'result' && (
+              <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <TiltCard intensity={5}>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center space-y-4">
+                    <div className="text-6xl">{pct >= 70 ? '💕' : pct >= 40 ? '💖' : '💬'}</div>
+                    <h2 className="text-3xl font-display font-black text-gray-800">{pct}% Match!</h2>
+                    <p className="text-xl text-pink-600 font-bold">{verdict}</p>
+                    <div className="flex justify-center gap-4">
+                      <div className="text-center p-3 rounded-2xl bg-pink-50">
+                        <p className="text-2xl font-black text-pink-600">{matchCount}/{QUESTIONS.length}</p>
+                        <p className="text-xs text-gray-500">Matches</p>
+                      </div>
+                      <div className="text-center p-3 rounded-2xl bg-rose-50">
+                        <p className="text-2xl font-black text-rose-600">{QUESTIONS.length - matchCount}</p>
+                        <p className="text-xs text-gray-500">Mismatches</p>
+                      </div>
+                    </div>
+                    <Button onClick={startGame} variant="primary" size="lg" className="w-full">Play Again 💕</Button>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {phase === 'start' && (
+            <div className="text-center mt-6">
+              <Link href="/games"><Button variant="ghost" size="sm">← Back to Games</Button></Link>
             </div>
-            <Link href="/games" className="hidden md:flex items-center gap-2 text-sm text-gray-600 hover:text-teal-600 px-4 py-2 rounded-xl hover:bg-white/60"><ArrowLeft className="w-4 h-4 rotate-180" /> All Games</Link>
-          </div></div>
-        </div></nav>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="text-6xl mb-6">🤔</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Who Knows Who</h1><p className="text-gray-600 mb-8 text-lg">Answer about each other!</p>
-            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
-          </motion.div>)}
-          {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="text-center mb-4"><span className="px-3 py-1 rounded-full bg-white/70 text-sm font-semibold">{phase === 'p1' ? '💕 Partner 1' : '💖 Partner 2'} answering</span></div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6"><h2 className="text-xl font-bold text-gray-900 text-center">{q[currentIndex]}</h2></div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6">
-              <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Your answer..." rows={3} className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white resize-none mb-4 outline-none focus:border-teal-500" autoFocus />
-              <button onClick={handleSubmit} disabled={!answer.trim()} className="w-full px-4 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl disabled:opacity-50">{phase === 'p1' ? 'Partner 2 →' : 'Finish'}</button>
-            </div>
-            {gameState === 'finished' && (<div className="mt-8"><p className="text-center text-2xl font-bold gradient-text mb-6">Compare your answers!</p>
-              {q.map((qq, i) => (<div key={i} className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-4">
-                <p className="text-sm font-semibold text-teal-600 mb-2">Q{i+1}: {qq}</p>
-                <p className="text-sm text-gray-600">💕 P1: {p1Ans[i] || 'N/A'}</p>
-                <p className="text-sm text-gray-600">💖 P2: {p2Ans[i] || 'N/A'}</p>
-              </div>))}
-              <div className="flex gap-4 justify-center mt-4"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl text-white font-bold">More Games</Link></div>
-            </div>)}
-          </motion.div>)}
+          )}
+
+          <AnimatePresence>
+            {toast && (
+              <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
+                Link copied! 💕
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>
