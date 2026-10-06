@@ -1,130 +1,83 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Users, Zap, Star, Medal } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Users, Sparkles, Zap, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 
-interface Word {
-  word: string;
-  category: string;
-  difficulty: number;
+const WORDS = ['LOVE', 'KISS', 'HUGS', 'HEART', 'DREAM', 'SOUL', 'PASSION', 'TENDER', 'FOREVER', 'ADORE', 'CUDDLE', 'CHERISH'];
+
+function scramble(word: string): string {
+  const arr = word.split('');
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr.join('');
 }
-
-const WORDS: Word[] = [
-  { word: "cuddle", category: "Affection", difficulty: 1 },
-  { word: "cherish", category: "Love", difficulty: 2 },
-  { word: "embrace", category: "Affection", difficulty: 2 },
-  { word: "romance", category: "Love", difficulty: 1 },
-  { word: "hearts", category: "Symbols", difficulty: 1 },
-  { word: "passion", category: "Love", difficulty: 2 },
-  { word: "together", category: "Love", difficulty: 1 },
-  { word: "adorable", category: "Compliments", difficulty: 3 },
-  { word: "valentine", category: "Events", difficulty: 2 },
-  { word: "sweetheart", category: "Love", difficulty: 2 },
-  { word: "kisses", category: "Affection", difficulty: 1 },
-  { word: "darling", category: "Love", difficulty: 1 },
-  { word: "forever", category: "Love", difficulty: 1 },
-  { word: "butterflies", category: "Feelings", difficulty: 3 },
-  { word: "sunshine", category: "Compliments", difficulty: 2 },
-  { word: "enchanting", category: "Compliments", difficulty: 3 },
-  { word: "blushing", category: "Feelings", difficulty: 2 },
-  { word: "wedding", category: "Events", difficulty: 2 },
-  { word: "romantic", category: "Love", difficulty: 2 },
-  { word: "yearning", category: "Feelings", difficulty: 3 },
-  { word: "devoted", category: "Love", difficulty: 2 },
-  { word: "honeymoon", category: "Events", difficulty: 3 },
-  { word: "tender", category: "Affection", difficulty: 2 },
-  { word: "dazzling", category: "Compliments", difficulty: 3 },
-  { word: "lovers", category: "Love", difficulty: 1 },
-];
-
-const shuffleWord = (word: string): string => {
-  const chars = word.split('');
-  const shuffled = [...chars].sort(() => Math.random() - 0.5);
-  return shuffled.join('') === word ? shuffleWord(word) : shuffled.join('');
-};
-
-type GameState = 'setup' | 'roundStart' | 'playing' | 'roundEnd' | 'finished';
 
 export default function CoupleScramblePage() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<GameState>('setup');
-  const [p1Name, setP1Name] = useState('');
-  const [p2Name, setP2Name] = useState('');
-  const [pool, setPool] = useState<Word[]>([]);
-  const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [phase, setPhase] = useState<'start' | 'playing' | 'finished'>('start');
+  const [currentWord, setCurrentWord] = useState('');
   const [scrambled, setScrambled] = useState('');
-  const [p1Input, setP1Input] = useState('');
-  const [p2Input, setP2Input] = useState('');
+  const [p1Answer, setP1Answer] = useState('');
+  const [p2Answer, setP2Answer] = useState('');
+  const [p1Finished, setP1Finished] = useState(false);
+  const [p2Finished, setP2Finished] = useState(false);
+  const [p1Time, setP1Time] = useState(0);
+  const [p2Time, setP2Time] = useState(0);
   const [p1Score, setP1Score] = useState(0);
   const [p2Score, setP2Score] = useState(0);
-  const [p1Wins, setP1Wins] = useState(0);
-  const [p2Wins, setP2Wins] = useState(0);
-  const [round, setRound] = useState(0);
-  const [totalRounds, setTotalRounds] = useState(5);
+  const [roundNum, setRoundNum] = useState(0);
   const [roundWinner, setRoundWinner] = useState<string | null>(null);
-  const [timer, setTimer] = useState(15);
-  const [difficulty, setDifficulty] = useState<number[]>([1, 2, 3]);
-
-  useEffect(() => {
-    if (gameState !== 'playing' || timer <= 0) return;
-    const t = setTimeout(() => setTimer(t => t - 1), 1000);
-    return () => clearTimeout(t);
-  }, [gameState, timer]);
+  const [startTime, setStartTime] = useState<number>(0);
 
   const startGame = () => {
-    const p = WORDS.filter(w => difficulty.includes(w.difficulty)).sort(() => Math.random() - 0.5).slice(0, totalRounds);
-    setPool(p);
-    setP1Score(0);
-    setP2Score(0);
-    setP1Wins(0);
-    setP2Wins(0);
-    setRound(0);
-    startRound(p[0]);
+    setP1Score(0); setP2Score(0); setRoundNum(0);
+    const w = WORDS[Math.floor(Math.random() * WORDS.length)];
+    setCurrentWord(w); setScrambled(scramble(w));
+    setP1Answer(''); setP2Answer(''); setP1Finished(false); setP2Finished(false);
+    setRoundWinner(null); setStartTime(Date.now());
+    setPhase('playing');
   };
 
-  const startRound = (word: Word) => {
-    setCurrentWord(word);
-    setScrambled(shuffleWord(word.word));
-    setP1Input('');
-    setP2Input('');
-    setRoundWinner(null);
-    setTimer(15);
-    setGameState('roundStart');
-  };
+  useEffect(() => {
+    if (p1Finished && p2Finished) {
+      const t1 = p1Time;
+      const t2 = p2Time;
+      let p1Win = false;
+      if (t1 < t2) { setP1Score(s => s + 10); p1Win = true; }
+      else if (t2 < t1) { setP2Score(s => s + 10); p1Win = false; }
+      else { setP1Score(s => s + 5); setP2Score(s => s + 5); p1Win = false; }
 
-  const checkAnswer = (player: 1 | 2, input: string) => {
-    if (!currentWord || roundWinner) return;
-    const correct = input.trim().toLowerCase() === currentWord.word.toLowerCase();
-    if (correct) {
-      const speedBonus = timer * 2;
-      const pts = 50 + speedBonus;
-      if (player === 1) { setP1Score(s => s + pts); setP1Wins(w => w + 1); }
-      else { setP2Score(s => s + pts); setP2Wins(w => w + 1); }
-      setRoundWinner(player === 1 ? (p1Name || 'Partner 1') : (p2Name || 'Partner 2'));
-
+      setRoundWinner(p1Win ? 'Partner 1' : 'Partner 2');
       setTimeout(() => {
-        if (round + 1 < pool.length) {
-          const nextRound = round + 1;
-          setRound(nextRound);
-          startRound(pool[nextRound]);
-        } else {
-          setGameState('finished');
-        }
-      }, 2500);
+        if (roundNum + 1 >= 8) setPhase('finished');
+        else nextRound();
+      }, 2000);
+    }
+  }, [p1Finished, p2Finished]);
+
+  const nextRound = () => {
+    setRoundNum(r => r + 1);
+    const w = WORDS[Math.floor(Math.random() * WORDS.length)];
+    setCurrentWord(w); setScrambled(scramble(w));
+    setP1Answer(''); setP2Answer(''); setP1Finished(false); setP2Finished(false);
+    setRoundWinner(null); setStartTime(Date.now());
+  };
+
+  const handleSubmitP1 = () => {
+    if (p1Answer.trim().toUpperCase() === currentWord) {
+      setP1Time((Date.now() - startTime) / 1000);
+      setP1Finished(true);
     }
   };
 
-  const getScrambleStatus = () => {
-    if (roundWinner === null) return null;
-    if (p1Wins > p2Wins) return { emoji: '👑', text: `${p1Name || 'P1'} Wins!`, color: 'text-blue-600' };
-    if (p2Wins > p1Wins) return { emoji: '👑', text: `${p2Name || 'P2'} Wins!`, color: 'text-pink-600' };
-    return { emoji: '🤝', text: "It's a Tie!", color: 'text-purple-600' };
+  const handleSubmitP2 = () => {
+    if (p2Answer.trim().toUpperCase() === currentWord) {
+      setP2Time((Date.now() - startTime) / 1000);
+      setP2Finished(true);
+    }
   };
-
-  const overall = getScrambleStatus();
 
   return (
     <PremiumBackground>
@@ -134,142 +87,91 @@ export default function CoupleScramblePage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </button>
+                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
                   <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg"><Heart className="w-4 h-4 text-white" fill="white" /></div>
                     <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
                   </Link>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-amber-500" />
-                  <span className="font-bold text-gray-700">Word Scramble Race</span>
-                </div>
+                <div className="flex items-center gap-2"><Users className="w-5 h-5 text-blue-500" /><span className="font-bold text-gray-700">Race Scramble</span></div>
               </div>
             </div>
           </div>
         </nav>
 
-        <div className="max-w-lg mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'setup' && (
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+          {phase === 'start' && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-7xl mb-6">⚡</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Scramble Race!</h1>
-              <p className="text-gray-600 mb-8 text-lg">Same scrambled word, first to solve wins the round!</p>
-
+              <div className="text-7xl mb-6">⚔️</div>
+              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Scramble Battle</h1>
+              <p className="text-gray-600 mb-8 text-lg">First to unscramble the word wins the point!</p>
               <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-3">Rounds</h3>
-                <div className="flex gap-2">
-                  {[3, 5, 8].map(r => (
-                    <button key={r} onClick={() => setTotalRounds(r)} className={`flex-1 py-2 rounded-xl text-sm font-bold ${totalRounds === r ? 'bg-pink-500 text-white' : 'bg-white text-gray-600'}`}>{r}</button>
-                  ))}
-                </div>
-                <h3 className="font-bold text-gray-900 mt-4 mb-3">Difficulty</h3>
-                <div className="flex gap-2">
-                  {[{ d: [1], l: 'Easy' }, { d: [1, 2], l: 'Medium' }, { d: [1, 2, 3], l: 'Hard' }].map(opt => (
-                    <button key={opt.l} onClick={() => setDifficulty(opt.d)} className={`flex-1 py-2 rounded-xl text-sm font-bold ${difficulty.join(',') === opt.d.join(',') ? 'bg-pink-500 text-white' : 'bg-white text-gray-600'}`}>{opt.l}</button>
-                  ))}
-                </div>
+                <h3 className="font-bold text-gray-900 mb-3">How to Play</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>Same word scrambled for both players</li>
+                  <li>First to type correct word gets 10 pts</li>
+                  <li>Tie = both get 5 pts</li>
+                  <li>Race through 8 rounds total!</li>
+                </ul>
               </div>
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-3">Player Names</h3>
-                <input type="text" value={p1Name} onChange={e => setP1Name(e.target.value)} placeholder="Player 1 name" className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-2xl font-bold mb-2 focus:border-blue-400 focus:outline-none" />
-                <input type="text" value={p2Name} onChange={e => setP2Name(e.target.value)} placeholder="Player 2 name" className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-2xl font-bold focus:border-pink-400 focus:outline-none" />
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start!</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start Race</button>
             </motion.div>
           )}
 
-          {gameState === 'roundStart' && currentWord && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+          {phase === 'playing' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex items-center justify-between mb-4">
-                <span className="px-4 py-1.5 rounded-full bg-blue-100 text-blue-700 text-sm font-bold">Round {round + 1}/{pool.length}</span>
-                <span className="text-sm text-gray-500 font-medium">{timer}s</span>
+                <span className="px-4 py-1.5 rounded-full bg-white text-gray-700 text-sm font-bold border">Round {roundNum + 1}/8</span>
+                <span className="text-sm font-bold text-blue-600">P1: {p1Score}</span>
+                <span className="text-sm font-bold text-purple-600">P2: {p2Score}</span>
               </div>
-              <div className="w-full h-3 bg-white/50 rounded-full mb-8 overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: `${(timer / 15) * 100}%` }} />
-              </div>
-              <p className="text-lg text-gray-600 mb-2">Ready... Set... Unscramble!</p>
+
+              <motion.div key={currentWord} initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-[2rem] shadow-2xl p-8 mb-4 text-center">
+                <p className="text-white text-sm mb-2">UNSCRAMBLE:</p>
+                <div className="text-6xl font-black text-white tracking-widest mb-3 break-all">{scrambled}</div>
+                <p className="text-sm text-white/70">Race to type the correct word!</p>
+              </motion.div>
+
+              {roundWinner ? (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-[2rem] p-6 text-center text-white">
+                  <p className="font-black text-2xl mb-1">{roundWinner} wins this round!</p>
+                  <p className="text-sm">P1: {p1Time}s | P2: {p2Time}s</p>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-blue-200 p-4">
+                    <h3 className="font-bold text-blue-700 mb-2">Partner 1 {p1Finished && '✓'}</h3>
+                    <input type="text" value={p1Answer} onChange={e => setP1Answer(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleSubmitP1()} placeholder="Type answer..." disabled={p1Finished} className="w-full px-3 py-2 rounded-xl border-2 border-blue-200 text-center font-bold uppercase focus:border-blue-500 disabled:opacity-50" />
+                    <button onClick={handleSubmitP1} disabled={p1Finished} className="w-full mt-2 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition disabled:opacity-50">Submit</button>
+                  </div>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-purple-200 p-4">
+                    <h3 className="font-bold text-purple-700 mb-2">Partner 2 {p2Finished && '✓'}</h3>
+                    <input type="text" value={p2Answer} onChange={e => setP2Answer(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleSubmitP2()} placeholder="Type answer..." disabled={p2Finished} className="w-full px-3 py-2 rounded-xl border-2 border-purple-200 text-center font-bold uppercase focus:border-purple-500 disabled:opacity-50" />
+                    <button onClick={handleSubmitP2} disabled={p2Finished} className="w-full mt-2 py-2 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 transition disabled:opacity-50">Submit</button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
-          {gameState === 'playing' && currentWord && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-4 py-1.5 rounded-full bg-white text-gray-700 text-sm font-bold border">Round {round + 1}/{pool.length}</span>
-                <span className={`text-2xl font-black ${timer <= 5 ? 'text-red-500 animate-pulse' : 'text-gray-700'}`}>{timer}s</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-[2rem] shadow-xl p-6 text-white text-center">
-                  <p className="text-sm text-blue-100 mb-2">{p1Name || 'Player 1'}</p>
-                  <p className="text-4xl font-black">{p1Score}</p>
-                  <p className="text-xs text-blue-200">pts</p>
-                  <div className="mt-2"><Medal className="w-5 h-5 inline text-blue-200" /> {p1Wins} wins</div>
-                </div>
-                <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-[2rem] shadow-xl p-6 text-white text-center">
-                  <p className="text-sm text-pink-100 mb-2">{p2Name || 'Player 2'}</p>
-                  <p className="text-4xl font-black">{p2Score}</p>
-                  <p className="text-xs text-pink-200">pts</p>
-                  <div className="mt-2"><Medal className="w-5 h-5 inline text-pink-200" /> {p2Wins} wins</div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-[2rem] shadow-2xl p-8 mb-6 text-white text-center">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/20 mb-4">{currentWord.category}</span>
-                <div className="text-4xl font-black tracking-[0.3em] mb-4">{scrambled.toUpperCase()}</div>
-              </div>
-
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={p1Input}
-                  onChange={(e) => setP1Input(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && checkAnswer(1, p1Input)}
-                  placeholder={`${p1Name || 'Player 1'}: Type answer and press Enter`}
-                  disabled={!!roundWinner}
-                  className="w-full px-6 py-4 bg-white/70 border-2 border-gray-200 rounded-2xl text-lg font-bold text-center focus:border-blue-400 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={p2Input}
-                  onChange={(e) => setP2Input(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && checkAnswer(2, p2Input)}
-                  placeholder={`${p2Name || 'Player 2'}: Type answer and press Enter`}
-                  disabled={!!roundWinner}
-                  className="w-full px-6 py-4 bg-white/70 border-2 border-gray-200 rounded-2xl text-lg font-bold text-center focus:border-pink-400 focus:outline-none"
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {gameState === 'finished' && overall && (
+          {phase === 'finished' && (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-              <div className="text-7xl mb-4">{overall.emoji}</div>
-              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Game Over!</h2>
-              <p className={`text-xl font-bold mb-6 ${overall.color}`}>{overall.text}</p>
-
-              <div className="grid grid-cols-2 gap-4 mb-8 max-w-sm mx-auto">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-[2rem] shadow-xl p-6 text-white text-center">
-                  <p className="text-sm text-blue-100 mb-2">{p1Name || 'Player 1'}</p>
-                  <p className="text-4xl font-black">{p1Score}</p>
-                  <p className="text-xs text-blue-200">pts</p>
-                  <p className="text-sm mt-2">🏆 {p1Wins} wins</p>
+              <div className="text-7xl mb-4">🏆</div>
+              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Race Complete!</h2>
+              <div className="grid grid-cols-2 gap-4 my-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white">
+                  <p className="text-sm mb-2">Partner 1</p>
+                  <p className="text-5xl font-black">{p1Score}</p>
                 </div>
-                <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-[2rem] shadow-xl p-6 text-white text-center">
-                  <p className="text-sm text-pink-100 mb-2">{p2Name || 'Player 2'}</p>
-                  <p className="text-4xl font-black">{p2Score}</p>
-                  <p className="text-xs text-pink-200">pts</p>
-                  <p className="text-sm mt-2">🏆 {p2Wins} wins</p>
+                <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white">
+                  <p className="text-sm mb-2">Partner 2</p>
+                  <p className="text-5xl font-black">{p2Score}</p>
                 </div>
               </div>
-
+              <p className="text-2xl font-display font-black gradient-text mb-6">{p1Score > p2Score ? 'Partner 1 Wins!' : p2Score > p1Score ? 'Partner 2 Wins!' : "It's a Tie!"}</p>
               <div className="flex gap-4 justify-center">
-                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link>
+                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Race Again</button>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
