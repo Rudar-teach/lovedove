@@ -60,18 +60,41 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email, password: formData.password,
-        options: { data: { full_name: formData.fullName, username: formData.username } },
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: { full_name: formData.fullName, username: formData.username },
+          emailRedirectTo: typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
+        },
       });
       if (signUpError) {
         if (signUpError.message.includes('fetch') || signUpError.message.includes('Failed to')) setConnectionError(true);
         throw signUpError;
       }
       if (!authData.user) throw new Error('Signup failed');
-      const { error: profileError } = await supabase.from('profiles').insert({ id: authData.user.id, email: formData.email, full_name: formData.fullName, username: formData.username, theme_color: 'pink' });
-      if (profileError) { console.error('Profile creation error:', profileError); throw profileError; }
-      toast.success('Account created! Welcome to Love Dove! 💕');
-      router.push('/dashboard');
+
+      // Profile is auto-created by the DB trigger (handle_new_user).
+      // If the trigger hasn't fired yet, fall back to a manual upsert.
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        await supabase.from('profiles').insert({
+          id: authData.user.id,
+          email: formData.email,
+          full_name: formData.fullName,
+          username: formData.username,
+          theme_color: '#e91e63',
+        });
+      }
+
+      toast.success('Account created! Check your email to verify, then log in. 💕');
+      router.push('/auth/login');
     } catch (error: any) {
       const msg = error.message || 'Something went wrong';
       if (msg.includes('fetch') || msg.includes('Failed to') || msg.includes('Network')) {

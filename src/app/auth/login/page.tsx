@@ -79,8 +79,41 @@ export default function LoginPage() {
         throw error;
       }
       if (!data.user) throw new Error('Login failed');
-      const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-      if (profileError) throw profileError;
+
+      // Wait briefly for the auth session to propagate, then load profile.
+      // The profile is auto-created by a DB trigger on auth.users insert.
+      let profile: any = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data: p, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        if (p) { profile = p; break; }
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      if (!profile) {
+        // Fallback: create the profile manually if the trigger didn't fire
+        const meta: any = data.user.user_metadata || {};
+        const fullName = meta.full_name || data.user.email?.split('@')[0] || 'User';
+        const username = (meta.username || fullName).toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 30);
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email ?? '',
+            full_name: fullName,
+            username,
+            theme_color: '#e91e63',
+          })
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        profile = newProfile;
+      }
+
       setUser(profile);
       setLoading(false);
       toast.success(`Welcome back! 💕`);
