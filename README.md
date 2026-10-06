@@ -1,347 +1,157 @@
-# 🕊️ Love Dove - Where Hearts Connect 💕
+# 🕊️ Love Dove — Where Hearts Connect & Play
 
-> A premium couple platform for creating beautiful birthday websites, sending proposals, playing 36 online games together, and tracking your love story.
+A beautiful, full-stack web application for couples to create personalized birthday websites, play 100+ romantic games, send proposals, and track their love journey together.
 
-**Live GitHub Repo:** https://github.com/Rudar-teach/lovedove
-**Built for:** rudarsalaria12345@gmail.com
+## ✨ Features
 
----
+### 🎂 **Birthday Websites**
+- Create personalized birthday pages with photos, messages, and themes
+- Share via unique URL slug
+- Public/private visibility options
+- View counter for each birthday site
 
-## ✨ What's Inside
+### 🎮 **100+ Couple Games** (organized in categories)
+- **Classic** — Tic-Tac-Toe, Memory Match, 2048, Snake, Pong, Rock-Paper-Scissors, Hangman, Number Guess
+- **Arcade** — Flappy Heart, Cupid's Arrow, Heart Catcher, Hearts
+- **Party** — Truth or Dare, Kissing Spinner, Drawing Challenge, Emoji Story, Couple Pictionary, Dance Challenge
+- **Quiz** — Would You Rather, Trivia Battle, Love Song Quiz, Photo Quiz, Speed Date, Love Trivia, Word Chain, Typing Race
+- **Love Special** — Compatibility Test, Couple's Scramble, Love Maze, Love Letters, Puzzle Love, Love Calculator, Love Challenges
+- **New Batch 51-115** — Who Knows Who, Love Horoscope, Future Together, Love Dares, Couple Goals, Would You Rather 2, Couple Truths, Love Riddles, Couple Poetry, Love Challenges, Romantic Riddles 2, Love Quotes Quiz, Couple Drawing, Love Scramble 2, Relationship Goals, Couple Music Quiz, Love Journal, Couple Playlist, Anniversary Planner, Couple Photo Story, Love Q&A, Girlfriend Rules, Boyfriend Rules, Love Scenarios, Love Bingo, Love Mad Libs, Love Truth Questions, Couple Goals 2, Love Dares 2, Couple Scenarios, Love Compatibility 2, Couple Memory Game, Love Word Search 2, Couple Quiz, Love Quotes, Love Emoji Quiz 2, Couple Photo Challenge, Love Story Builder 2, Love Wheel of Fortune, Love Countdown, Love Resolutions, Couple Time Capsule, Couple Reflex
 
-### 💝 Birthday Websites
-- Sign up, login
-- Create unlimited birthday sites with photos, message, and 6 stunning themes
-- Public shareable links
-- View counter, hearts, comments
+### 💌 **Custom Proposals**
+- Send custom proposals (purpose, anniversary, etc.) to your partner
+- Email notifications via Resend
+- 5 categories with emojis (proposal, anniversary, love letter, etc.)
+- Yes/No/Maybe responses
 
-### 💌 Proposal System (NEW!)
-- 12 proposal categories: Romantic Date, Marriage Proposal, Late Night Chat, Movie Night, Adventure Together, etc.
-- Send a proposal to any user by username
-- Receiver gets a notification + link to respond with **Yes** 💕 or **No** 💔
-- Sender gets a notification when responded
-- Beautiful response animation
-- **Custom Proposals:** Create your own proposal with custom title, message, theme, emoji, and challenge question
-- **Proposal Templates:** 12 pre-made templates to pick from
-- **Email Notifications:** Real email sent to both users via Resend API (or dev-mode console log)
-
-### 🎮 36 Couple Games (All 2-Player / Solo)
-- **Quick Play:** Tic-Tac-Toe, Rock-Paper-Scissors, Pong, Memory Match, Number Guess, Memory Palace
-- **Word Games:** Hangman, Word Chain, Couple Scramble, Trivia Battle, Love Song Quiz, Love Trivia
-- **Creative:** Drawing Challenge, Couple Pictionary, Love Letters, Emoji Story, Love Song Quiz 2
-- **Quiz:** Truth or Dare, Would You Rather, Compatibility Test, Photo Quiz, Speed Date
-- **Arcade:** Snake, Flappy Heart, 2048, Heart Catcher, Kissing Game, Cupids Arrow, Love Maze, Hearts
-- **Puzzle & Skill:** Puzzle Love (sliding), Dance Challenge, Couple Golfs
-- **Typing:** Typing Race
-
-### 🤝 Share & Play Together (NEW!)
-Every game has a **"Share with Friend & Play Together"** button:
-- Generates a 6-character session code
-- Polls Supabase for friend joining
-- "Friend joined! 🎉" notification when they open the link
-- Both players see the same session code
-
-### 👫 Friends System
+### 👥 **Friends System**
 - Add friends by username
-- Send / accept / reject friend requests
-- See friends list and online status
-- Friends can play games together
-
-### 🏆 Profile & Stats
-- Click your profile icon → see game history
-- Total time played per game
-- Recent activity
-- **Badges:** 1h, 10h, 50h, 100h milestones
-- Couple streaks and shared time
-
-### 🔔 Notifications
-- Proposal responses
-- Friend requests
-- Game invites
-- Mark as read / delete
-
----
-
-## 📋 Prerequisites
-
-- Node.js 18+ ([Download](https://nodejs.org/))
-- A Supabase account ([Sign up free](https://supabase.com/))
-- A GitHub account (already have: Rudar-teach)
-
----
-
-## 🚀 Step-by-Step Setup Guide (Beginner Friendly)
-
-### Step 1: Install Node.js
-
-1. Go to https://nodejs.org/
-2. Download the **LTS** version
-3. Run the installer (keep all defaults)
-4. Open Command Prompt and type: `node -v` and `npm -v`
-5. Both should show version numbers (if yes, you're good!)
-
-### Step 2: Create a Supabase Project
-
-1. Go to https://supabase.com/ and click **Start your project**
-2. Sign up with **Google** or **GitHub** (easiest)
-3. Click **New Project**
-4. Choose an **Organization** (or create one)
-5. Fill in:
-   - **Project Name**: `lovedove`
-   - **Database Password**: Choose a strong password (SAVE THIS!)
-   - **Region**: Pick the closest to you (e.g., `Asia Pacific`)
-6. Click **Create new project** (takes ~2 minutes)
-
-### Step 3: Set Up Database
-
-1. In your Supabase dashboard, go to **SQL Editor** (left sidebar)
-2. Click **New Query**
-3. Open the file `supabase-schema.sql` from this project
-4. Copy ALL the SQL code and paste it into the SQL editor
-5. Click **Run** (bottom right)
-6. You should see "Success. No rows returned" for all queries
-
-### Step 4: Set Up Storage
-
-1. In Supabase, go to **Storage** (left sidebar)
-2. Click **Create a new bucket**
-3. Name it: `photos`
-4. Set it as **Public** (toggle the switch)
-5. Click **Create bucket**
-6. Click on the `photos` bucket → **Configuration** tab → **Policies**
-7. Add a policy:
-   - **Policy name**: `Allow public uploads`
-   - **Allowed operation**: `INSERT`
-   - **Target roles**: `authenticated`
-   - **USING expression**: `true`
-   - **WITH CHECK expression**: `true`
-8. Add another policy:
-   - **Policy name**: `Allow public view`
-   - **Allowed operation**: `SELECT`
-   - **Target roles**: `public`
-   - **USING expression**: `true`
-
-### Step 5: Get Your API Keys
-
-1. In Supabase, go to **Settings** → **API** (bottom left)
-2. You'll see:
-   - **Project URL**: Copy this
-   - **anon public** key: Click to reveal and copy this
-
-### Step 6: Configure Environment Variables
-
-1. Create a file named `.env.local` in the root of this project (same folder as package.json)
-2. Paste this:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
-```
-
-3. Replace the values with your actual keys from Step 5
-
-### Step 7: Install Dependencies and Run
-
-Open Command Prompt in the project folder and run:
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-The website will open at **http://localhost:3000**
-
-### Step 8: Test the Website
-
-1. Go to http://localhost:3000
-2. Click **Get Started Free**
-3. Create an account with your name, username, email, and password
-4. You'll be taken to the Dashboard!
-5. Try creating a birthday site, playing games, and adding friends!
-6. Create a second account (in a different browser) to test friend requests and proposals
-
----
-
-## 🔌 Connect Your GitHub to Claude (Auto-Sync)
-
-Want Claude to automatically read and update your project on GitHub?
-
-### Step 1: Install GitHub CLI (already done in your setup)
-
-```bash
-# Check if installed
-gh --version
-```
-
-### Step 2: Authenticate GitHub
-
-```bash
-gh auth login
-```
-
-Follow the prompts:
-1. Choose **GitHub.com**
-2. Choose **HTTPS**
-3. Choose **Login with a web browser**
-4. Copy the one-time code, press Enter, paste it in browser
-5. Sign in with `rudarsalaria12345@gmail.com`
-
-### Step 3: Verify the Connection
-
-```bash
-gh repo view Rudar-teach/lovedove
-```
-
-You should see your repo details. If yes — Claude can now read and push to it!
-
-### Step 4: Push Updates from Claude
-
-Every time you ask Claude to make changes, it will:
-
-```bash
-git add -A
-git commit -m "Your message here"
-git push origin main
-```
-
-You can verify anytime at: https://github.com/Rudar-teach/lovedove
-
----
-
-## 🌐 Connect GitHub to Vercel (Deploy Online)
-
-When you're ready to share the website with the world:
-
-### Option A: Auto-Deploy via Vercel + GitHub
-
-1. Go to https://vercel.com and sign up with your **GitHub account** (use `rudarsalaria12345@gmail.com`)
-2. Click **Add New Project**
-3. Find your repo: `Rudar-teach/lovedove`
-4. Click **Import**
-5. Add environment variables (same as `.env.local`):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-6. Click **Deploy**
-
-**Every time you push to GitHub, Vercel auto-deploys!**
-
----
-
-## 📦 Project Structure
-
-```
-lovedove/
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── layout.tsx         # Root layout (Toaster, fonts, providers)
-│   │   ├── page.tsx           # Landing page
-│   │   ├── auth/              # Login & Signup
-│   │   ├── dashboard/         # Main dashboard
-│   │   ├── games/             # 26 game pages
-│   │   ├── friends/           # Friends management
-│   │   ├── profile/           # User profile (game history, badges)
-│   │   ├── proposals/         # Proposal system (list, new, respond)
-│   │   ├── notifications/     # Notifications center
-│   │   └── birthday/          # Birthday sites
-│   ├── components/            # Reusable UI components
-│   │   ├── ui/               # Button, Input, Card, etc.
-│   │   └── 3d/               # 3D effects (TiltCard, etc.)
-│   ├── lib/                   # Supabase client, types, helpers
-│   └── stores/                # Zustand state (useAuthStore)
-├── supabase-schema.sql        # Database schema (run once)
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-└── .env.local                 # Your API keys (DO NOT commit!)
-```
-
----
-
-## 🎮 How to Play Games
-
-1. Go to **Dashboard** → Click any game card
-2. The game opens — play immediately
-3. Your stats (games played, time, wins) are tracked
-4. Invite a friend by sharing the link
-5. Both of you play, and your combined time builds your **"X hours spent together"** badge!
-
-## 🎂 How to Create a Birthday Site
-
-1. Go to **Dashboard** → Click "Birthday Site"
-2. Enter the person's name
-3. Write a birthday message
-4. Choose a theme (Pink, Purple, Blue, Green, Gold, Dark)
-5. Upload photos
-6. Click "Create Birthday Site"
-7. Share the link with everyone!
-
-## 💌 How to Send a Proposal
-
-1. Go to **Dashboard** → Click "Proposals" → "New Proposal"
-2. Choose a category (Romantic Date, Marriage Proposal, etc.)
-3. Fill in the title and message
-4. Enter the receiver's username
-5. Click **Send Proposal 💕**
-6. The receiver gets a notification and can respond Yes/No
-7. You get notified of their answer
-
-## 👫 How to Add Friends
-
-1. Go to **Friends** (top nav)
-2. Search for a username
-3. Click **Add Friend** — they get a request
-4. Once accepted, you can play games together and see each other's profiles
-
----
-
-## 🏆 Badges Earned
-
-- **1 Hour Together** — Play games for 1 hour total
-- **10 Hours Together** — Play for 10 hours
-- **50 Hours Together** — Play for 50 hours
-- **100 Hours Together** — Play for 100 hours
-- **First Proposal** — Send your first proposal
-- **Soulmates** — Compatibility test 90%+
-
----
+- Friend request flow (send/accept/reject)
+- See your friends list
+- Play games together
+
+### 🏆 **Badges & Stats**
+- Earn badges for milestones (10 hours, 100 hours together)
+- Track time played per game
+- See recently played games
+- Profile page with stats dashboard
+
+### 🎨 **Beautiful UI**
+- Glassmorphism design
+- 3D tilt cards
+- Particle field backgrounds
+- Smooth framer-motion animations
+- Premium gradients and Tailwind CSS
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js 14 (App Router), React 18, TypeScript
-- **Styling:** Tailwind CSS, Framer Motion, Lucide Icons
-- **Backend:** Supabase (PostgreSQL, Auth, Storage)
-- **3D Effects:** Custom 3D card tilt, glassmorphism
-- **State:** Zustand
-- **Deployment:** Vercel (auto-deploy from GitHub)
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4
+- **Animations:** Framer Motion
+- **3D Effects:** Custom tilt card components
+- **Database:** Supabase (PostgreSQL)
+- **Auth:** Supabase Auth
+- **Storage:** Supabase Storage (for photos)
+- **Email:** Resend (for proposal notifications)
+- **Icons:** Lucide React
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (free tier works)
+- Resend account (free for 100 emails/day)
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Rudar-teach/lovedove.git
+cd lovedove
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables
+# Copy .env.local.example to .env.local and fill in your credentials
+cp .env.local.example .env.local
+
+# 4. Set up Supabase
+# - Create a project at supabase.com
+# - Run the SQL schema in supabase/schema.sql
+# - Copy your project URL and anon key to .env.local
+
+# 5. Set up Resend
+# - Sign up at resend.com
+# - Get your API key and add to .env.local
+
+# 6. Run the development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📦 Environment Variables
+
+Create a `.env.local` file with:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=Love Dove <onboarding@resend.dev>
+PROPOSAL_NOTIFICATION_EMAIL=rudarsalaria12345@gmail.com
+```
+
+## 🗄️ Database Schema
+
+Run the SQL in `supabase/schema.sql` to create these tables:
+- `profiles` — User profiles with partner linking
+- `birthday_sites` — Birthday websites
+- `friend_requests` — Friend system
+- `game_sessions` — Live multiplayer game state
+- `badges` — Available badges
+- `user_badges` — Earned badges
+- `game_stats` — Per-user game statistics
+- `proposals` — Custom proposals
+- `notifications` — User notifications
+
+## 🎨 Pages
+
+- `/` — Landing page with features
+- `/auth/login` & `/auth/signup` — Authentication
+- `/dashboard` — User dashboard
+- `/profile` — Profile with game stats
+- `/friends` — Friends management
+- `/games` — Browse 100+ games
+- `/games/[slug]` — Individual game (115+ games)
+- `/birthday/new` — Create birthday site
+- `/birthday/[slug]` — View birthday site
+- `/proposals` — Browse & send proposals
+- `/proposals/new` — Create custom proposal
+- `/proposals/[id]/respond` — Respond to proposal
+- `/notifications` — View notifications
+
+## 📧 Email Setup (Resend)
+
+1. Sign up at [resend.com](https://resend.com)
+2. Verify your domain or use the default `onboarding@resend.dev`
+3. Get your API key from the dashboard
+4. Add to `.env.local`
+
+## 🤝 Contributing
+
+Contributions welcome! Please open an issue first to discuss major changes.
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 👤 Author
+
+**Rudar** — [GitHub @Rudar-teach](https://github.com/Rudar-teach)
 
 ---
 
-## 🆘 Troubleshooting
-
-**Server won't start?**
-- Delete `.next` folder, run `npm install` again, then `npm run dev`
-
-**Database errors?**
-- Make sure you ran `supabase-schema.sql` in Supabase SQL Editor
-- Check that `.env.local` has correct values
-
-**Photos not uploading?**
-- Check the `photos` storage bucket is set to **Public** in Supabase
-- Verify the storage policies allow authenticated uploads
-
-**Want to reset everything?**
-- In Supabase: Settings → Database → Reset database, then re-run the schema
-
----
-
-## 📞 Support
-
-- **GitHub:** https://github.com/Rudar-teach/lovedove
-- **Email:** rudarsalaria12345@gmail.com
-
----
-
-Made with 💕 for couples everywhere.
+Built with 💕 for couples everywhere.
