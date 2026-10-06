@@ -8,122 +8,151 @@ import PremiumBackground from '@/components/PremiumBackground';
 
 type Phase = 'idle' | 'playing' | 'finished';
 
-interface MadLibsGame {
+type MadLib = {
   title: string;
   emoji: string;
-  difficulty: string;
-  story: (blanks: string[]) => string;
-  blanks: MadLibBlank[];
-}
+  template: string[];
+  blanks: { wordType: string; label: string }[];
+  answers: (string | number)[];
+};
 
-interface MadLibBlank {
-  label: string;
-  emoji: string;
-  value: string;
-  type: 'noun' | 'verb' | 'adj' | 'adv' | 'name' | 'place' | 'number' | 'color' | 'food';
-}
-
-const GAMES: MadLibsGame[] = [
+const MAD_LIBS: MadLib[] = [
   {
-    title: 'Our Magical Date',
-    emoji: '🌃',
-    difficulty: 'Easy',
-    blanks: [
-      { label: 'Adjective', emoji: '✨', value: '', type: 'adj' },
-      { label: 'Place', emoji: '🏰', value: '', type: 'place' },
-      { label: 'Noun', emoji: '🎁', value: '', type: 'noun' },
-      { label: 'Verb', emoji: '🕺', value: '', type: 'verb' },
-      { label: 'Body Part', emoji: '❤️', value: '', type: 'noun' },
-      { label: 'Food', emoji: '🍫', value: '', type: 'food' },
-      { label: 'Number', emoji: '🔢', value: '', type: 'number' },
+    title: 'Our Perfect Date',
+    emoji: '💕',
+    template: [
+      'Last Saturday, we went on a {0} to {1}.',
+      'I was wearing my favorite {2} and you looked absolutely {3}.',
+      'We ate {4} at a {5} restaurant by the {6}.',
+      'You held my hand and whispered {7} in my ear.',
+      'It was the most {8} evening of my life!',
     ],
-    story: (b) => `Tonight, my ${b[0]} date took me to ${b[1]}. They brought me a ${b[2]} and then we started to ${b[3]}. I could feel my ${b[4]} beating faster. For dessert, we shared ${b[5]} and we fell in love ${b[6]} times over. 💕`,
+    blanks: [
+      { wordType: 'noun', label: 'A place' },
+      { wordType: 'place', label: 'A location' },
+      { wordType: 'clothing', label: 'An outfit' },
+      { wordType: 'adjective', label: 'An adjective' },
+      { wordType: 'food', label: 'A food' },
+      { wordType: 'adjective', label: 'Another adjective' },
+      { wordType: 'nature', label: 'Nature word' },
+      { wordType: 'romantic', label: 'A romantic phrase' },
+      { wordType: 'adjective', label: 'One more adjective' },
+    ],
+    answers: [],
   },
   {
     title: 'Our Proposal',
     emoji: '💍',
-    difficulty: 'Medium',
-    blanks: [
-      { label: 'Place', emoji: '🌅', value: '', type: 'place' },
-      { label: 'Adjective', emoji: '💫', value: '', type: 'adj' },
-      { label: 'Noun', emoji: '💍', value: '', type: 'noun' },
-      { label: 'Verb (ed)', emoji: '🥺', value: '', type: 'verb' },
-      { label: 'Flower', emoji: '🌹', value: '', type: 'noun' },
-      { label: 'Body Part', emoji: '💧', value: '', type: 'noun' },
-      { label: 'Adverb', emoji: '🤞', value: '', type: 'adv' },
+    template: [
+      'It was a {0} evening when I got down on one {1}.',
+      'The {2} was shining above as I said, "Will you {3} me?"',
+      'You cried {4} tears and whispered "Yes!"',
+      'Our families cheered and the {5} rang out.',
+      'That was the most {6} moment of my entire life.',
     ],
-    story: (b) => `At ${b[0]}, under a ${b[1]} sky, I knelt down and offered ${b[2]}. My voice shook as I ${b[3]} my love. A single ${b[4]} petal fell on my shoulder as ${b[5]} filled with tears. I knew they would ${b[6]} say yes. 💖`,
+    blanks: [
+      { wordType: 'adjective', label: 'An adjective' },
+      { wordType: 'body', label: 'A body part' },
+      { wordType: 'nature', label: 'Nature word' },
+      { wordType: 'verb', label: 'A verb' },
+      { wordType: 'emotion', label: 'Emotion' },
+      { wordType: 'sound', label: 'A sound' },
+      { wordType: 'adjective', label: 'An adjective' },
+    ],
+    answers: [],
   },
   {
-    title: 'The Honeymoon',
-    emoji: '✈️',
-    difficulty: 'Medium',
-    blanks: [
-      { label: 'Country', emoji: '🌍', value: '', type: 'place' },
-      { label: 'Adjective', emoji: '🏖️', value: '', type: 'adj' },
-      { label: 'Noun', emoji: '🍹', value: '', type: 'noun' },
-      { label: 'Animal', emoji: '🦋', value: '', type: 'noun' },
-      { label: 'Verb', emoji: '💃', value: '', type: 'verb' },
-      { label: 'Number', emoji: '📅', value: '', type: 'number' },
+    title: 'Our Wedding Vows',
+    emoji: '💒',
+    template: [
+      'I promise to {0} you through sunshine and {1}.',
+      'To laugh at your jokes, even the {2} ones.',
+      'To share my {3} with you every single day.',
+      'To be your {4} when you need me most.',
+      'I love you more than {5}, and always will.',
     ],
-    story: (b) => `We flew to ${b[0]} where the beaches were ${b[1]}. Every morning, we sipped ${b[2]} while ${b[3]}s danced above us. We would ${b[4]} all night long and every day felt like a new adventure. After ${b[5]} days, we never wanted to leave. ✈️`,
+    blanks: [
+      { wordType: 'verb', label: 'A verb (support action)' },
+      { wordType: 'weather', label: 'Weather word' },
+      { wordType: 'adjective', label: 'An adjective' },
+      { wordType: 'food', label: 'A food item' },
+      { wordType: 'support', label: 'A supportive word' },
+      { wordType: 'superlative', label: 'Something precious' },
+    ],
+    answers: [],
   },
 ];
 
-export default function LoveMadlibsPage() {
-  const router = useRouter();
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [gameIdx, setGameIdx] = useState(0);
-  const [blankValues, setBlankValues] = useState<string[]>([]);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [timerActive, setTimerActive] = useState(false);
-  const [funniest, setFunniest] = useState(0);
+const WORD_SUGGESTIONS: Record<string, string[]> = {
+  noun: ['journey', 'adventure', 'picnic', 'hike', 'dance', 'walk'],
+  place: ['the beach', 'the park', 'Paris', 'home', 'a rooftop', 'the mountains'],
+  clothing: ['dress', 'suit', 'casual outfit', 'favorite jacket', 'sundress'],
+  adjective: ['beautiful', 'gorgeous', 'wonderful', 'amazing', 'stunning', 'lovely'],
+  food: ['pizza', 'sushi', 'pasta', 'ice cream', 'chocolate', 'steak'],
+  nature: ['moon', 'stars', 'ocean', 'sunset', 'river', 'trees'],
+  romantic: ['"I love you"', '"You\'re perfect"', '"Forever yours"', '"My heart is yours"'],
+  body: ['knee', 'foot', 'hand'],
+  verb: ['marry', 'love', 'cherish', 'adore', 'choose'],
+  emotion: ['happy', 'joyful', 'overwhelmed', 'ecstatic'],
+  sound: ['bells', 'applause', 'cheers', 'music'],
+  weather: ['rain', 'snow', 'storms', 'winds'],
+  superlative: ['chocolate', 'starlight', 'paradise', 'the ocean', 'infinity'],
+  support: ['rock', 'shoulder', 'strength', 'comfort'],
+};
 
-  useEffect(() => {
-    if (!timerActive) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      setPhase('finished');
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, timerActive]);
+export default function LoveMadLibsPage() {
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [madLibIdx, setMadLibIdx] = useState(0);
+  const [blankIdx, setBlankIdx] = useState(0);
+  const [answers, setAnswers] = useState<(string | number)[]>([]);
+  const [inputVal, setInputVal] = useState('');
+  const [score, setScore] = useState(0);
 
   const startGame = () => {
-    setGameIdx(0);
-    setBlankValues(Array(GAMES[0].blanks.length).fill(''));
+    setMadLibIdx(0);
+    setBlankIdx(0);
+    setAnswers([]);
     setScore(0);
-    setTimeLeft(60);
-    setTimerActive(true);
-    setFunniest(0);
+    setInputVal('');
     setPhase('playing');
   };
 
-  const currentGame = GAMES[gameIdx];
-  const currentBlank = blankValues.findIndex(v => v === '');
+  const current = MAD_LIBS[madLibIdx];
+  const totalBlanks = current ? current.blanks.length : 0;
+  const currentBlank = current ? current.blanks[blankIdx] : null;
 
-  const updateBlank = (i: number, val: string) => {
-    setBlankValues(b => { const n = [...b]; n[i] = val; return n; });
+  const submitAnswer = () => {
+    if (!inputVal.trim()) return;
+    const newAnswers = [...answers, inputVal.trim()];
+    setAnswers(newAnswers);
+    setScore(s => s + 10);
+    setInputVal('');
+    if (blankIdx < totalBlanks - 1) {
+      setBlankIdx(b => b + 1);
+    } else {
+      setTimeout(() => {
+        if (madLibIdx < MAD_LIBS.length - 1) {
+          setMadLibIdx(i => i + 1);
+          setBlankIdx(0);
+          setAnswers([]);
+          setScore(s => s + 25);
+        } else {
+          setScore(s => s + 50);
+          setPhase('finished');
+        }
+      }, 800);
+    }
   };
 
-  const allFilled = blankValues.every(v => v.trim() !== '');
-
-  const generateStory = () => {
-    const pts = blankValues.filter(v => v.trim()).length * 5;
-    setScore(s => s + pts);
-    setFunniest(f => f + 1);
-
-    if (gameIdx < GAMES.length - 1) {
-      const next = gameIdx + 1;
-      setGameIdx(next);
-      setBlankValues(Array(GAMES[next].blanks.length).fill(''));
-      setTimeLeft(60);
-    } else {
-      setTimerActive(false);
-      setPhase('finished');
-    }
+  const getFilledStory = () => {
+    if (!current) return [];
+    return current.template.map((line, i) => {
+      let filled = line;
+      answers.forEach((ans, ai) => {
+        filled = filled.replace(`{${ai}}`, String(ans));
+      });
+      return filled;
+    });
   };
 
   return (
@@ -139,53 +168,94 @@ export default function LoveMadlibsPage() {
               <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
                 <div className="text-6xl mb-4">📝</div>
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Mad Libs</h1>
-                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Fill in the blanks with romantic words to create hilarious love stories together!</p>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Fill in the blanks to create hilarious romantic stories! The sillier, the better.</p>
+                <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-xl mb-6 max-w-md mx-auto">
+                  <h3 className="font-semibold text-rose-700 mb-3">Stories</h3>
+                  <div className="space-y-2">
+                    {MAD_LIBS.map((m, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-rose-50 p-2 rounded-lg">
+                        <span className="text-xl">{m.emoji}</span>
+                        <span className="font-medium text-rose-700">{m.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
-                  <Wand2 className="w-5 h-5" /> Start Mad Libs
+                  <Play className="w-5 h-5" /> Start Mad Libs
                 </button>
               </motion.div>
             )}
 
-            {phase === 'playing' && currentGame && (
-              <motion.div key={gameIdx} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white/90 rounded-2xl p-8 shadow-xl">
-                <div className="text-center mb-2">
-                  <span className="text-sm text-rose-500">{currentGame.emoji} {currentGame.title} - {currentGame.difficulty}</span>
-                  <span className="text-pink-600 text-sm ml-4">⭐ {score} pts</span>
+            {phase === 'playing' && current && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">{current.emoji} {current.title}</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-rose-600 font-semibold">{blankIdx + 1}/{totalBlanks}</span>
                 </div>
 
-                <h2 className="text-2xl font-bold text-rose-700 mb-6 text-center">{currentGame.title}</h2>
+                <div className="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-xl mb-6">
+                  <div className="mb-4">
+                    <h3 className="text-lg text-rose-700 mb-1">Fill in the blank:</h3>
+                    <p className="text-2xl font-bold text-rose-700">a {currentBlank?.label || 'word'}</p>
+                  </div>
 
-                <div className="space-y-3 max-w-lg mx-auto">
-                  {currentGame.blanks.map((blank, i) => (
-                    <div key={i} className="flex items-center gap-2 bg-rose-50 rounded-lg p-2">
-                      <span className="text-xl">{blank.emoji}</span>
-                      <span className="text-sm text-rose-600 w-24">{blank.label}:</span>
-                      <input
-                        value={blankValues[i]}
-                        onChange={e => updateBlank(i, e.target.value)}
-                        placeholder={blank.label}
-                        className="flex-1 px-3 py-1.5 border border-rose-200 rounded-lg text-sm focus:border-rose-500 focus:outline-none"
-                        autoFocus={currentBlank === i}
-                      />
+                  <form onSubmit={(e) => { e.preventDefault(); submitAnswer(); }} className="flex justify-center gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={inputVal}
+                      onChange={e => setInputVal(e.target.value)}
+                      placeholder={`Enter a ${currentBlank?.wordType || 'word'}...`}
+                      className="border-2 border-rose-200 rounded-full px-4 py-2 text-center focus:outline-none focus:border-rose-500 w-64"
+                      autoFocus
+                    />
+                    <button type="submit" className="bg-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-rose-600 transition">Next</button>
+                  </form>
+
+                  {WORD_SUGGESTIONS[currentBlank?.wordType || ''] && (
+                    <div className="flex flex-wrap gap-2 justify-center mt-3">
+                      {WORD_SUGGESTIONS[currentBlank!.wordType].map(s => (
+                        <button key={s} onClick={() => setInputVal(s)} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs hover:bg-rose-200 transition">{s}</button>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                <div className="flex justify-center mt-4">
-                  <button onClick={generateStory} disabled={!allFilled} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold disabled:opacity-50 hover:scale-105 transition">
-                    ✨ Generate Story!
-                  </button>
-                </div>
+                {answers.length > 0 && (
+                  <div className="bg-pink-50 rounded-xl p-4 text-left max-w-md mx-auto">
+                    <p className="text-sm text-pink-700 font-semibold mb-1">Story so far:</p>
+                    {getFilledStory().slice(0, answers.length + 1).map((line, i) => (
+                      <p key={i} className="text-sm text-pink-600 italic">{line}</p>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
             {phase === 'finished' && (
               <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
-                <BookOpen className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-                <h2 className="text-3xl font-bold text-rose-700 mb-2">Stories Complete!</h2>
+                <Wand2 className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-4">Your Love Stories</h2>
+                <div className="text-left bg-rose-50 rounded-xl p-4 mb-4 max-h-80 overflow-y-auto">
+                  {MAD_LIBS.map((m, mi) => {
+                    const startIdx = MAD_LIBS.slice(0, mi).reduce((sum, ml) => sum + ml.blanks.length, 0);
+                    const libAnswers = answers.slice(startIdx, startIdx + m.blanks.length);
+                    const filled = m.template.map((line, li) => {
+                      let l = line;
+                      libAnswers.forEach((ans, ai) => { l = l.replace(`{${ai}}`, String(ans)); });
+                      return l;
+                    });
+                    return (
+                      <div key={mi} className="mb-3">
+                        <p className="font-semibold text-rose-700">{m.emoji} {m.title}</p>
+                        {filled.map((l, i) => (
+                          <p key={i} className="text-sm text-pink-600 italic">{l}</p>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
-                <p className="text-xl text-pink-600 mb-2">{funniest} stories generated</p>
-                <p className="text-gray-700 mb-6">{score >= 60 ? 'Master storyteller! 📚' : 'Loved your stories! 💖'}</p>
                 <div className="flex gap-3 justify-center">
                   <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Play Again
