@@ -8,82 +8,82 @@ import PremiumBackground from '@/components/PremiumBackground';
 
 type Phase = 'idle' | 'playing' | 'finished';
 
-interface CrosswordClue {
-  number: number;
-  direction: 'across' | 'down';
-  clue: string;
-  answer: string;
-  row: number;
-  col: number;
-  length: number;
-  filled: string[];
-  correct: boolean;
-}
+type Word = { hint: string; answer: string; category: string; emoji: string };
 
-const CLUES: CrosswordClue[] = [
-  { number: 1, direction: 'across', clue: 'Symbol of love', answer: 'HEART', row: 0, col: 1, length: 5, filled: [], correct: false },
-  { number: 2, direction: 'down', clue: 'Sweet greeting', answer: 'HELLO', row: 0, col: 0, length: 5, filled: [], correct: false },
-  { number: 3, direction: 'across', clue: 'Romantic flower', answer: 'ROSE', row: 2, col: 2, length: 4, filled: [], correct: false },
-  { number: 4, direction: 'down', clue: 'Partner for life', answer: 'LOVE', row: 1, col: 3, length: 4, filled: [], correct: false },
-  { number: 5, direction: 'across', clue: 'A warm embrace', answer: 'HUG', row: 3, col: 4, length: 3, filled: [], correct: false },
-  { number: 6, direction: 'down', clue: 'A romantic dinner', answer: 'DATE', row: 0, col: 5, length: 4, filled: [], correct: false },
+const WORDS: Word[] = [
+  { hint: 'The feeling when your heart races', answer: 'LOVE', category: 'Feelings', emoji: '💕' },
+  { hint: 'Kissed with a flower', answer: 'ROSE', category: 'Flowers', emoji: '🌹' },
+  { hint: 'Symbol of eternal commitment', answer: 'RING', category: 'Gifts', emoji: '💍' },
+  { hint: 'Flying messenger of love', answer: 'DOVE', category: 'Symbols', emoji: '🕊️' },
+  { hint: 'Warm fuzzy feeling', answer: 'FLIRT', category: 'Actions', emoji: '😊' },
+  { hint: 'Sweet talk to woo someone', answer: 'DATE', category: 'Actions', emoji: '🍽️' },
+  { hint: 'Two hearts joined', answer: 'SOUL', category: 'Feelings', emoji: '✨' },
+  { hint: 'Bouquet of romantic flowers', answer: 'BLOOM', category: 'Flowers', emoji: '🌸' },
+  { hint: 'Lover's promise', answer: 'KISS', category: 'Actions', emoji: '💋' },
+  { hint: 'Shining star of affection', answer: 'ADORE', category: 'Feelings', emoji: '⭐' },
 ];
 
-export default function LoveCrosswordPage() {
-  const router = useRouter();
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [clues, setClues] = useState<CrosswordClue[]>(CLUES);
-  const [activeClue, setActiveClue] = useState<number>(0);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(120);
-  const [timerActive, setTimerActive] = useState(false);
-  const [activeInput, setActiveInput] = useState<{ clueIdx: number; cellIdx: number } | null>(null);
+const CATEGORIES = ['Feelings', 'Flowers', 'Gifts', 'Symbols', 'Actions'];
 
-  useEffect(() => {
-    if (!timerActive) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      setPhase('finished');
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, timerActive]);
+export default function LoveCrosswordPage() {
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [currentWordIdx, setCurrentWordIdx] = useState(0);
+  const [guesses, setGuesses] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [shuffledWords, setShuffledWords] = useState<Word[]>([]);
+
+  const shuffleWords = () => {
+    return [...WORDS].sort(() => Math.random() - 0.5);
+  };
 
   const startGame = () => {
-    setClues(CLUES.map(c => ({ ...c, filled: Array(c.length).fill(''), correct: false })));
-    setActiveClue(0);
+    setShuffledWords(shuffleWords());
+    setCurrentWordIdx(0);
+    setGuesses([]);
     setScore(0);
-    setTimeLeft(120);
-    setTimerActive(true);
-    setActiveInput({ clueIdx: 0, cellIdx: 0 });
+    setHintsUsed(0);
     setPhase('playing');
   };
 
-  const currentClue = clues[activeClue];
-  const checkAnswer = (clueIdx: number) => {
-    setClues(cs => cs.map((c, i) => {
-      if (i !== clueIdx) return c;
-      const correct = c.filled.join('').toUpperCase() === c.answer;
-      return { ...c, correct };
-    }));
+  const currentWord = shuffledWords[currentWordIdx];
+  const displayHint = currentWord ? currentWord.hint : '';
+
+  const submitGuess = (guess: string) => {
+    if (!currentWord) return;
+    const g = guess.toUpperCase().trim();
+    if (!g) return;
+    setGuesses(prev => [...prev, g]);
+    if (g === currentWord.answer) {
+      const hintPenalty = hintsUsed * 5;
+      const pts = Math.max(10, 30 - hintsUsed * 5);
+      setScore(s => s + pts);
+      if (currentWordIdx < shuffledWords.length - 1) {
+        setTimeout(() => {
+          setCurrentWordIdx(i => i + 1);
+          setGuesses([]);
+          setHintsUsed(0);
+        }, 800);
+      } else {
+        setScore(s => s + Math.max(0, 50 - hintsUsed * 10));
+        setTimeout(() => setPhase('finished'), 600);
+      }
+    }
   };
 
-  useEffect(() => {
-    if (currentClue?.correct) {
-      setScore(s => s + currentClue.answer.length * 10);
-      const next = clues.findIndex((c, i) => i > activeClue && !c.correct);
-      if (next !== -1) setActiveClue(next);
-    }
-  }, [currentClue?.correct]);
+  const useHint = () => {
+    if (!currentWord) return;
+    setHintsUsed(h => h + 1);
+  };
 
-  const allCorrect = clues.every(c => c.correct);
-  useEffect(() => {
-    if (allCorrect && clues.length > 0) {
-      setTimerActive(false);
-      setPhase('finished');
+  const revealLetter = () => {
+    if (!currentWord) return;
+    const unrevealed = currentWord.answer.split('').filter((_, i) => guesses.length === 0 ? true : i < guesses.length);
+    if (unrevealed.length > 0) {
+      setGuesses(prev => [...prev, unrevealed[0]]);
+      setHintsUsed(h => h + 1);
     }
-  }, [allCorrect]);
+  };
 
   return (
     <PremiumBackground>
@@ -96,77 +96,53 @@ export default function LoveCrosswordPage() {
           <AnimatePresence mode="wait">
             {phase === 'idle' && (
               <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
-                <div className="text-6xl mb-4">🧩</div>
+                <div className="text-6xl mb-4">✏️</div>
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Crossword</h1>
-                <p className="text-gray-700 mb-6 max-w-xl mx-auto">A romantic crossword puzzle! Fill in the blanks with love-themed words.</p>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Guess romantic words from hints. Type the correct answer to fill in the crossword!</p>
+                <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-xl mb-6 max-w-md mx-auto">
+                  <h3 className="font-semibold text-rose-700 mb-3">Categories</h3>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {CATEGORIES.map(cat => (
+                      <span key={cat} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm font-medium">{cat}</span>
+                    ))}
+                  </div>
+                </div>
                 <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
-                  <Play className="w-5 h-5" /> Start Puzzle
+                  <Play className="w-5 h-5" /> Start Game
                 </button>
               </motion.div>
             )}
 
-            {phase === 'playing' && (
-              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {phase === 'playing' && currentWord && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
                 <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
-                  <span className="text-rose-700 font-semibold">⏱️ {timeLeft}s</span>
+                  <span className="text-rose-700 font-semibold">{currentWord.category} {currentWord.emoji}</span>
                   <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-rose-600 font-semibold">{currentWordIdx + 1}/{shuffledWords.length}</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="bg-white/90 rounded-2xl p-4 shadow-xl">
-                      <div className="flex gap-2 mb-4">
-                        {clues.map((c, i) => (
-                          <button key={i} onClick={() => setActiveClue(i)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${activeClue === i ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-700'} ${c.correct ? 'bg-green-500! text-white' : ''}`}>
-                            {c.number}
-                          </button>
-                        ))}
+                <div className="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-xl mb-6">
+                  <h3 className="text-lg text-gray-600 mb-2">Hint:</h3>
+                  <p className="text-2xl font-semibold text-rose-700 mb-4">{displayHint}</p>
+
+                  <div className="flex justify-center gap-2 mb-4">
+                    {currentWord.answer.split('').map((letter, i) => (
+                      <div key={i} className="w-10 h-12 border-2 border-rose-300 rounded flex items-center justify-center text-xl font-bold text-rose-700 bg-rose-50">
+                        {guesses.length > 0 && i < guesses.length ? guesses[i] : ''}
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        <span className="font-semibold text-rose-700">{currentClue?.direction.toUpperCase()}:</span> {currentClue?.clue}
-                        <span className="text-rose-500 ml-2">({currentClue?.length} letters)</span>
-                      </p>
-                      <div className="flex gap-1 justify-center my-3">
-                        {currentClue?.filled.map((ch, i) => (
-                          <input
-                            key={i}
-                            value={ch}
-                            onChange={e => {
-                              const val = e.target.value.toUpperCase();
-                              setClues(cs => {
-                                const clue = cs[activeClue];
-                                const newFilled = [...clue.filled];
-                                if (val && newFilled[i] !== val) {
-                                  newFilled[i] = val.slice(-1);
-                                  return cs.map((c, j) => j === activeClue ? { ...c, filled: newFilled } : c);
-                                }
-                                return cs;
-                              });
-                            }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') checkAnswer(activeClue);
-                            }}
-                            className={`w-9 h-10 text-center text-lg font-bold border-2 rounded ${currentClue.correct ? 'bg-green-100 border-green-500 text-green-700' : 'border-rose-300 focus:border-rose-500'}`}
-                          />
-                        ))}
-                      </div>
-                      <button onClick={() => checkAnswer(activeClue)} className="w-full bg-rose-500 text-white py-2 rounded-lg font-semibold hover:bg-rose-600 transition">
-                        {currentClue.correct ? '✓ Correct!' : 'Check Answer'}
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                  <div>
-                    <div className="bg-white/90 rounded-2xl p-4 shadow-xl">
-                      <h3 className="font-semibold text-rose-700 mb-3">Clues</h3>
-                      <div className="space-y-2">
-                        {clues.map((c, i) => (
-                          <div key={i} className={`p-2 rounded-lg text-sm ${c.correct ? 'bg-green-100 text-green-700' : activeClue === i ? 'bg-rose-100 text-rose-700' : 'text-gray-600'}`}>
-                            <span className="font-semibold">{c.number}.</span> {c.clue}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+
+                  {guesses.length > 0 && guesses[guesses.length - 1] !== currentWord.answer && (
+                    <p className="text-red-500 mb-3">Not quite! Try again.</p>
+                  )}
+
+                  <GuessInput onSubmit={submitGuess} />
+                </div>
+
+                <div className="flex justify-center gap-3">
+                  <button onClick={revealLetter} className="bg-rose-100 text-rose-700 px-4 py-2 rounded-full text-sm hover:bg-rose-200 transition">Reveal Letter (-10 pts)</button>
+                  <button onClick={useHint} className="bg-pink-100 text-pink-700 px-4 py-2 rounded-full text-sm hover:bg-pink-200 transition">Show Hint (-5 pts)</button>
                 </div>
               </motion.div>
             )}
@@ -174,9 +150,9 @@ export default function LoveCrosswordPage() {
             {phase === 'finished' && (
               <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
                 <PenTool className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-                <h2 className="text-3xl font-bold text-rose-700 mb-2">Puzzle Complete!</h2>
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Crossword Complete!</h2>
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
-                <p className="text-xl text-pink-600 mb-6">words completed</p>
+                <p className="text-xl text-pink-600 mb-2">{hintsUsed} hints used</p>
                 <div className="flex gap-3 justify-center">
                   <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Play Again
@@ -189,5 +165,22 @@ export default function LoveCrosswordPage() {
         </div>
       </div>
     </PremiumBackground>
+  );
+}
+
+function GuessInput({ onSubmit }: { onSubmit: (g: string) => void }) {
+  const [val, setVal] = useState('');
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(val); setVal(''); }} className="flex justify-center gap-2">
+      <input
+        type="text"
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        placeholder="Type your guess..."
+        maxLength={20}
+        className="border-2 border-rose-200 rounded-full px-4 py-2 text-center focus:outline-none focus:border-rose-500"
+      />
+      <button type="submit" className="bg-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-rose-600 transition">Guess</button>
+    </form>
   );
 }

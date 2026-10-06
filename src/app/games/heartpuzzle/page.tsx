@@ -18,91 +18,70 @@ const PUZZLE_EMOJI: Record<string, string> = {
 const PUZZLES = [
   { id: 'heart', title: 'Heart', emoji: '❤️', rows: 3, cols: 3, shape: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
   { id: 'couple', title: 'Couple', emoji: '💑', rows: 3, cols: 4, shape: [[0,1],[0,2],[1,0],[1,1],[1,2],[1,3],[2,1],[2,2]] },
-  { id: 'rose', title: 'Rose', emoji: '🌹', rows: 3, cols: 3, shape: [[0,0],[0,1],[0,2],[1,1],[2,1]] },
-  { id: 'dove', title: 'Dove', emoji: '🕊️', rows: 3, cols: 4, shape: [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1],[2,2],[2,3]] },
+  { id: 'rose', title: 'Rose', emoji: '🌹', rows: 3, cols: 3, shape: [[0,0],[0,1],[1,0],[1,1],[2,1]] },
+  { id: 'dove', title: 'Dove', emoji: '🕊️', rows: 3, cols: 3, shape: [[0,1],[1,0],[1,1],[1,2],[2,1]] },
 ];
 
-export default function HeartpuzzlePage() {
-  const router = useRouter();
+export default function HeartPuzzlePage() {
   const [phase, setPhase] = useState<Phase>('idle');
-  const [currentPuzzle, setCurrentPuzzle] = useState(PUZZLES[0]);
-  const [puzzles, setPuzzles] = useState(PUZZLES);
   const [puzzleIdx, setPuzzleIdx] = useState(0);
   const [pieces, setPieces] = useState<PieceLayout>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [moves, setMoves] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(90);
-  const [timerActive, setTimerActive] = useState(false);
-  const [puzzlesDone, setPuzzlesDone] = useState(0);
-
-  useEffect(() => {
-    if (!timerActive) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      setPhase('finished');
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, timerActive]);
+  const [moves, setMoves] = useState(0);
 
   const buildPieces = () => {
     const puzzle = PUZZLES[puzzleIdx];
-    const shapeCells = puzzle.shape;
-    let id = 0;
-    const p: PieceLayout = shapeCells.map(([r, c]) => ({
-      id: id++, r, c, correctR: r, correctC: c,
-    }));
-    const shuffled = p.sort(() => Math.random() - 0.5);
-    setPieces(shuffled.map((p, i) => ({ ...p, r: Math.floor(i / puzzle.cols), c: i % puzzle.cols })));
+    const list: PieceLayout = [];
+    puzzle.shape.forEach(([r, c], idx) => {
+      list.push({ id: idx, r, c, correctR: r, correctC: c });
+    });
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    setPieces(list);
+    setSelected(null);
   };
 
   const startGame = () => {
     setPuzzleIdx(0);
-    setPuzzlesDone(0);
-    setMoves(0);
     setScore(0);
-    setTimeLeft(90);
-    setTimerActive(true);
-    setPhase('playing');
+    setMoves(0);
     buildPieces();
+    setPhase('playing');
   };
 
-  const handleSlotClick = (slotR: number, slotC: number) => {
+  const handleSlotClick = (r: number, c: number) => {
     if (selected === null) {
-      const occupying = pieces.find(p => p.r === slotR && p.c === slotC);
-      if (occupying) setSelected(occupying.id);
+      const p = pieces.find(p => p.r === r && p.c === c);
+      if (p) setSelected(p.id);
       return;
     }
-    const occupied = pieces.find(p => p.r === slotR && p.c === slotC && p.id !== selected);
-    if (occupied) {
-      setPieces(p => p.map(x => {
-        if (x.id === selected) return { ...x, r: occupied.r, c: occupied.c };
-        if (x.id === occupied.id) return { ...x, r: pieces.find(p => p.id === selected)!.r, c: pieces.find(p => p.id === selected)!.c };
-        return x;
-      }));
-    } else {
-      const piece = pieces.find(p => p.id === selected);
-      if (piece) setPieces(p => p.map(x => x.id === selected ? { ...x, r: slotR, c: slotC } : x));
-    }
+    const fromP = pieces.find(p => p.id === selected);
+    if (!fromP) return;
+    const targetIdx = pieces.findIndex(p => p.r === r && p.c === c);
+    if (targetIdx === -1) { setSelected(null); return; }
+    const toP = pieces[targetIdx];
+    const newPieces = [...pieces];
+    newPieces[selected] = { ...newPieces[selected], r: toP.r, c: toP.c };
+    newPieces[targetIdx] = { ...newPieces[targetIdx], r: fromP.r, c: fromP.c };
+    setPieces(newPieces);
     setMoves(m => m + 1);
     setSelected(null);
-    checkWin();
-  };
-
-  const checkWin = () => {
-    if (!currentPuzzle) return;
-    const allCorrect = pieces.every(p => p.r === p.correctR && p.c === p.correctC);
-    if (allCorrect) {
-      setScore(s => s + Math.max(100 - moves * 2, 10));
-      setPuzzlesDone(d => d + 1);
-      if (puzzleIdx < PUZZLES.length - 1) {
-        setPuzzleIdx(i => i + 1);
-        buildPieces();
-      } else {
-        setPhase('finished');
-      }
+    const puzzle = PUZZLES[puzzleIdx];
+    const solved = puzzle.shape.every(([r, c]) => newPieces.some(p => p.r === r && p.c === c && p.correctR === r && p.correctC === c));
+    if (solved) {
+      setScore(s => s + 100);
+      setTimeout(() => {
+        if (puzzleIdx < PUZZLES.length - 1) {
+          setPuzzleIdx(i => i + 1);
+          buildPieces();
+        } else {
+          setScore(s => s + Math.max(0, 200 - moves * 2));
+          setPhase('finished');
+        }
+      }, 600);
     }
   };
 
@@ -165,6 +144,12 @@ export default function HeartpuzzlePage() {
                     })}
                   </div>
                 </div>
+
+                <div className="flex justify-center gap-4 mb-4">
+                  <span className="text-pink-600 font-semibold">Moves: {moves}</span>
+                  <span className="text-rose-600 font-semibold">Score: {score}</span>
+                </div>
+                <button onClick={startGame} className="text-sm text-gray-500 hover:text-rose-600 transition">Reset</button>
               </motion.div>
             )}
 
