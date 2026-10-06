@@ -1,138 +1,152 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Sparkles, RotateCcw, Target, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Star, Flame, TrendingUp, Target, Crown } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
-import TiltCard from '@/components/3d/TiltCard';
-import Button from '@/components/ui/Button';
 
-type Category = 'Communication' | 'Intimacy' | 'Adventure' | 'Growth' | 'Family';
+interface Goal {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  priority: number;
+  category: 'short' | 'long';
+  completed: boolean;
+}
 
-const DEFAULT_GOALS: Record<Category, { id: number; text: string; progress: number }[]> = {
-  Communication: [
-    { id: 1, text: 'Have a weekly relationship check-in', progress: 0 },
-    { id: 2, text: 'Read a relationship book together', progress: 0 },
-    { id: 3, text: 'Practice active listening for 10 min daily', progress: 0 },
-  ],
-  Intimacy: [
-    { id: 4, text: 'Plan a monthly date night (no phones)', progress: 0 },
-    { id: 5, text: 'Give each other a massage once a week', progress: 0 },
-  ],
-  Adventure: [
-    { id: 6, text: 'Take a quarterly trip together', progress: 0 },
-    { id: 7, text: 'Try one new activity every month', progress: 0 },
-  ],
-  Growth: [
-    { id: 8, text: 'Try a new hobby together', progress: 0 },
-    { id: 9, text: 'Learn a new skill as a couple', progress: 0 },
-  ],
-  Family: [
-    { id: 10, text: 'Have a monthly family visit', progress: 0 },
-    { id: 11, text: 'Plan a yearly family tradition', progress: 0 },
-  ],
-};
-
-const CAT_COLORS: Record<Category, string> = {
-  Communication: 'from-blue-400 to-indigo-500',
-  Intimacy: 'from-pink-400 to-rose-500',
-  Adventure: 'from-orange-400 to-red-500',
-  Growth: 'from-green-400 to-teal-500',
-  Family: 'from-purple-400 to-pink-500',
-};
+const INITIAL_GOALS: Goal[] = [
+  { id: 1, title: "Weekly date night", description: "Schedule a dedicated date night every week", icon: "🌙", priority: 1, category: 'short', completed: false },
+  { id: 2, title: "Morning texts", description: "Send a good morning text every day", icon: "☀️", priority: 2, category: 'short', completed: false },
+  { id: 3, title: "Communication ritual", description: "30-minute check-in every Sunday", icon: "🗣️", priority: 1, category: 'short', completed: false },
+  { id: 4, title: "Visit 5 new places", description: "Explore new places together this year", icon: "🗺️", priority: 2, category: 'long', completed: false },
+  { id: 5, title: "Save for a dream vacation", description: "Build a savings fund together", icon: "💰", priority: 2, category: 'long', completed: false },
+  { id: 6, title: "Complete a 5K together", description: "Train and run as a team", icon: "🏃", priority: 3, category: 'long', completed: false },
+  { id: 7, title: "Start a joint hobby", description: "Pick something new to learn together", icon: "🎨", priority: 3, category: 'long', completed: false },
+  { id: 8, title: "Gratitude practice", description: "Share one thing you're grateful for daily", icon: "🙏", priority: 1, category: 'short', completed: false },
+  { id: 9, title: "Cook a new cuisine", description: "Learn to cook a new cuisine together", icon: "🍳", priority: 2, category: 'long', completed: false },
+  { id: 10, title: "Monthly surprises", description: "Plan a surprise date for each other monthly", icon: "🎭", priority: 2, category: 'short', completed: false },
+  { id: 11, title: "Relationship book club", description: "Read and discuss a relationship book", icon: "📚", priority: 3, category: 'long', completed: false },
+  { id: 12, title: "Create a scrapbook", description: "Document your favorite memories", icon: "📖", priority: 3, category: 'long', completed: false },
+];
 
 export default function RelationshipGoalsPage() {
-  const [goals, setGoals] = useState<typeof DEFAULT_GOALS>(DEFAULT_GOALS);
-  const [activeCat, setActiveCat] = useState<Category>('Communication');
-  const [newGoal, setNewGoal] = useState('');
+  const router = useRouter();
+  const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
+  const [view, setView] = useState<'all' | 'short' | 'long'>('all');
+  const [sortBy, setSortBy] = useState<'priority' | 'name'>('priority');
+  const [editingPriority, setEditingPriority] = useState<number | null>(null);
 
-  const cats = Object.keys(goals) as Category[];
-
-  const addGoal = () => {
-    if (!newGoal.trim()) return;
-    setGoals(g => ({ ...g, [activeCat]: [...g[activeCat], { id: Date.now(), text: newGoal.trim(), progress: 0 }] }));
-    setNewGoal('');
+  const toggleComplete = (id: number) => {
+    setGoals(g => g.map(goal => goal.id === id ? { ...goal, completed: !goal.completed } : goal));
   };
 
-  const updateProgress = (cat: Category, id: number, delta: number) => {
-    setGoals(g => ({
-      ...g,
-      [cat]: g[cat].map(item => item.id === id ? { ...item, progress: Math.max(0, Math.min(100, item.progress + delta)) } : item)
-    }));
+  const setPriority = (id: number, p: number) => {
+    setGoals(g => g.map(goal => goal.id === id ? { ...goal, priority: p } : goal));
+    setEditingPriority(null);
   };
 
-  const removeGoal = (cat: Category, id: number) => {
-    setGoals(g => ({ ...g, [cat]: g[cat].filter(item => item.id !== id) }));
+  const getSorted = () => {
+    let filtered = view === 'all' ? goals : goals.filter(g => g.category === view);
+    return sortBy === 'priority' ? filtered.sort((a, b) => a.priority - b.priority || a.id - b.id) : filtered.sort((a, b) => a.title.localeCompare(b.title));
   };
 
-  const allGoals = cats.flatMap(c => goals[c].map(i => ({ ...i, cat: c })));
-  const totalProgress = allGoals.length === 0 ? 0 : Math.round(allGoals.reduce((s, g) => s + g.progress, 0) / allGoals.length);
+  const completedCount = goals.filter(g => g.completed).length;
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/games"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
-            <h1 className="text-xl font-display font-black gradient-text-animated flex items-center gap-1"><Target className="w-5 h-5 text-rose-500" /> Relationship Goals</h1>
-            <button onClick={() => { setGoals(DEFAULT_GOALS); setActiveCat('Communication'); }} className="p-2 hover:bg-white rounded-full transition-colors"><RotateCcw className="w-6 h-6 text-gray-600" /></button>
-          </div>
-
-          <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.1)">
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-800">Yearly Progress</h3>
-                <span className="text-2xl font-black text-rose-500">{totalProgress}%</span>
-              </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full" animate={{ width: `${totalProgress}%` }} transition={{ duration: 0.5 }} />
-              </div>
-              <p className="text-sm text-gray-500">{allGoals.length} goals across {cats.length} categories</p>
-            </div>
-          </TiltCard>
-
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-            {cats.map(cat => (
-              <button key={cat} onClick={() => setActiveCat(cat)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${activeCat === cat ? `bg-gradient-to-r ${CAT_COLORS[cat]} text-white shadow-lg` : 'bg-white border border-gray-200 text-gray-600'}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <TiltCard intensity={3}>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-4 mb-4 space-y-2">
-              <div className="flex gap-2">
-                <input value={newGoal} onChange={e => setNewGoal(e.target.value)} placeholder="Add a custom goal..." onKeyDown={e => e.key === 'Enter' && addGoal()}
-                  className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-pink-400 outline-none text-sm" />
-                <Button onClick={addGoal} variant="primary" size="sm"><Plus className="w-4 h-4" /></Button>
-              </div>
-            </div>
-          </TiltCard>
-
-          <div className="space-y-3">
-            {goals[activeCat].map(goal => (
-              <motion.div key={goal.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="bg-white/70 backdrop-blur-xl rounded-2xl border border-pink-100/60 p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-800">{goal.text}</p>
-                  <button onClick={() => removeGoal(activeCat, goal.id)} className="text-red-300 hover:text-red-500 ml-2"><Trash2 className="w-4 h-4" /></button>
+      <div className="min-h-screen pb-20">
+        <nav className="relative z-50">
+          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
+                    <ArrowLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <Link href="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+                      <Heart className="w-4 h-4 text-white" fill="white" />
+                    </div>
+                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
+                  </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => updateProgress(activeCat, goal.id, -10)} className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">-</button>
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div className={`h-full bg-gradient-to-r ${CAT_COLORS[activeCat]} rounded-full`} animate={{ width: `${goal.progress}%` }} />
+                  <Crown className="w-5 h-5 text-amber-500" />
+                  <span className="font-bold text-gray-700">Relationship Goals</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+            <div className="flex gap-2">
+              {(['all', 'short', 'long'] as const).map(v => (
+                <button key={v} onClick={() => setView(v)} className={`px-4 py-2 rounded-xl text-sm font-bold transition ${view === v ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' : 'bg-white/70 text-gray-700 hover:bg-white'}`}>
+                  {v === 'all' ? 'All' : v === 'short' ? 'Short-term' : 'Long-term'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setSortBy(sortBy === 'priority' ? 'name' : 'priority')} className="px-3 py-2 rounded-xl text-xs font-bold bg-white/50 text-gray-600 hover:bg-white transition">
+              {sortBy === 'priority' ? 'Sort: Priority ↑' : 'Sort: Name A-Z'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            {[1, 2, 3].map(p => {
+              const count = goals.filter(g => g.priority === p).length;
+              const colors = ['from-red-500 to-pink-500', 'from-amber-500 to-orange-500', 'from-green-500 to-emerald-500'];
+              return (
+                <div key={p} className="bg-white/70 backdrop-blur-xl rounded-2xl p-4 border border-pink-100 text-center">
+                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colors[p - 1]} text-white flex items-center justify-center font-black text-sm mx-auto mb-1`}>{p}</div>
+                  <p className="text-lg font-black text-gray-900">{count}</p>
+                  <p className="text-xs text-gray-500">Priority {p}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="space-y-3">
+            {getSorted().map((goal) => (
+              <motion.div
+                key={goal.id}
+                layout
+                className={`bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border p-5 transition-all ${goal.completed ? 'border-green-300 bg-green-50/50' : 'border-pink-100'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <button onClick={() => toggleComplete(goal.id)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${goal.completed ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-green-400'}`}>
+                    {goal.completed && <span className="text-white text-sm">✓</span>}
+                  </button>
+                  <span className="text-3xl">{goal.icon}</span>
+                  <div className="flex-1">
+                    <h3 className={`font-bold text-gray-900 ${goal.completed ? 'line-through text-gray-400' : ''}`}>{goal.title}</h3>
+                    <p className="text-sm text-gray-500">{goal.description}</p>
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${goal.category === 'short' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{goal.category === 'short' ? 'Short-term' : 'Long-term'}</span>
                   </div>
-                  <button onClick={() => updateProgress(activeCat, goal.id, 10)} className="w-7 h-7 rounded-full bg-pink-100 hover:bg-pink-200 text-pink-600 font-bold">+</button>
-                  <span className="text-xs font-bold text-gray-600 w-10 text-right">{goal.progress}%</span>
+                  <div className="flex items-center gap-2">
+                    {editingPriority === goal.id ? (
+                      <div className="flex gap-1">
+                        {[1, 2, 3].map(p => (
+                          <button key={p} onClick={() => setPriority(goal.id, p)} className={`w-8 h-8 rounded-full text-sm font-bold ${goal.priority === p ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-amber-100'}`}>{p}</button>
+                        ))}
+                      </div>
+                    ) : (
+                      <button onClick={() => setEditingPriority(goal.id)} className={`px-3 py-1 rounded-full text-xs font-bold ${goal.priority === 1 ? 'bg-red-100 text-red-700' : goal.priority === 2 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>P{goal.priority}</button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <div className="text-center mt-6">
-            <p className="text-sm text-gray-500 mb-3">Total: {allGoals.length} goals | Overall: {totalProgress}%</p>
-            <Link href="/games"><Button variant="outline">← Back to Games</Button></Link>
+          <div className="text-center mt-8">
+            <p className="text-lg text-gray-600">Progress: <span className="font-black text-pink-600">{completedCount}/{goals.length}</span> goals completed</p>
+            <div className="w-full h-4 bg-white/50 rounded-full mt-4 overflow-hidden">
+              <motion.div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style={{ width: `${(completedCount / goals.length) * 100}%` }} />
+            </div>
           </div>
         </div>
       </div>

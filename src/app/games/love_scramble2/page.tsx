@@ -1,204 +1,224 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Shuffle } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Lightbulb, Sparkles, Star, Zap, Flame } from 'lucide-react';
+import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 
-type Phase = 'idle' | 'playing' | 'finished';
-
-interface SentencePuzzle {
-  scrambled: string[];
-  correct: string[];
+interface Phrase {
+  original: string;
   hint: string;
-  emoji: string;
+  category: string;
+  difficulty: number;
+  points: number;
 }
 
-const SENTENCES: SentencePuzzle[] = [
-  { scrambled: ['love', 'I', 'you'], correct: ['I', 'love', 'you'], hint: 'The classic 3 words', emoji: '❤️' },
-  { scrambled: ['be', 'mine', 'will', 'you'], correct: ['Will', 'you', 'be', 'mine'], hint: 'A question of the heart', emoji: '💍' },
-  { scrambled: ['are', 'my', 'you', 'everything'], correct: ['You', 'are', 'my', 'everything'], hint: 'You mean the world', emoji: '🌍' },
-  { scrambled: ['kiss', 'a', 'me', 'give'], correct: ['Give', 'me', 'a', 'kiss'], hint: 'A sweet request', emoji: '💋' },
-  { scrambled: ['always', 'love', 'I', 'will', 'you'], correct: ['I', 'will', 'always', 'love', 'you'], hint: 'A forever promise', emoji: '♾️' },
-  { scrambled: ['together', 'grow', 'we', 'old', 'will'], correct: ['We', 'will', 'grow', 'old', 'together'], hint: 'Aging side by side', emoji: '👵' },
-  { scrambled: ['hold', 'me', 'please', 'me'], correct: ['Please', 'hold', 'me'], hint: 'A comforting request', emoji: '🫂' },
-  { scrambled: ['heart', 'you', 'have', 'my'], correct: ['You', 'have', 'my', 'heart'], hint: 'A gift of devotion', emoji: '💝' },
-  { scrambled: ['soul', 'mate', 'you', 'are', 'my'], correct: ['You', 'are', 'my', 'soul', 'mate'], hint: 'A perfect match', emoji: '✨' },
-  { scrambled: ['dreams', 'you', 'are', 'my', 'come', 'true'], correct: ['You', 'are', 'my', 'dreams', 'come', 'true'], hint: 'Wishes fulfilled', emoji: '🌟' },
+const PHRASES: Phrase[] = [
+  { original: "love you forever", hint: "A promise that never ends", category: "Love", difficulty: 2, points: 35 },
+  { original: "sweet dreams", hint: "What you say before bed", category: "Night", difficulty: 1, points: 25 },
+  { original: "be my valentine", hint: "Feb 14 request", category: "Romance", difficulty: 2, points: 35 },
+  { original: "falling in love", hint: "When your heart takes over", category: "Love", difficulty: 2, points: 30 },
+  { original: "happily ever after", hint: "Fairy tale ending", category: "Romance", difficulty: 3, points: 45 },
+  { original: "cupid arrow", hint: "What makes you fall in love", category: "Mythology", difficulty: 1, points: 20 },
+  { original: "heart to heart", hint: "Honest conversation", category: "Communication", difficulty: 2, points: 30 },
+  { original: "love at first sight", hint: "Instant attraction", category: "Love", difficulty: 3, points: 45 },
+  { original: "my better half", hint: "Your perfect complement", category: "Romance", difficulty: 2, points: 30 },
+  { original: "together always", hint: "A promise of forever", category: "Love", difficulty: 1, points: 25 },
+  { original: "love is patient", hint: "From a famous letter", category: "Bible", difficulty: 2, points: 30 },
+  { original: "kiss me goodnight", hint: "Before sleep ritual", category: "Night", difficulty: 2, points: 30 },
+  { original: "you complete me", hint: "Movie quote about love", category: "Quotes", difficulty: 2, points: 35 },
+  { original: "destined to be", hint: "Meant for each other", category: "Fate", difficulty: 2, points: 30 },
+  { original: "soulmates forever", hint: "Two halves of one whole", category: "Romance", difficulty: 3, points: 45 },
+  { original: "true love story", hint: "Every couple has one", category: "Love", difficulty: 2, points: 30 },
+  { original: "kiss under stars", hint: "Romantic outdoor moment", category: "Romance", difficulty: 2, points: 30 },
+  { original: "our little secret", hint: "Something just for us", category: "Intimacy", difficulty: 1, points: 25 },
+  { original: "blessed with love", hint: "Feeling grateful for love", category: "Gratitude", difficulty: 2, points: 30 },
+  { original: "endless love song", hint: "Music about forever love", category: "Music", difficulty: 2, points: 30 },
 ];
 
-const shuffleArr = <T,>(arr: T[]): T[] => {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
+const shufflePhrase = (phrase: string): string => {
+  const words = phrase.split(' ');
+  const chars = words.join('').split('');
+  const shuffled = [...chars].sort(() => Math.random() - 0.5);
+  if (shuffled.join('') === phrase.replace(' ', '')) return shufflePhrase(phrase);
+  return shuffled.join('');
 };
 
 export default function LoveScramble2Page() {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [puzzles, setPuzzles] = useState<SentencePuzzle[]>([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [tiles, setTiles] = useState<{ word: string; idx: number; used: boolean }[]>([]);
-  const [placed, setPlaced] = useState<{ word: string; idx: number }[]>([]);
+  const [gameState, setGameState] = useState<'start' | 'playing' | 'finished'>('start');
+  const [pool, setPool] = useState<Phrase[]>([]);
+  const [current, setCurrent] = useState<Phrase | null>(null);
+  const [scrambled, setScrambled] = useState('');
+  const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(120);
-  const [timerActive, setTimerActive] = useState(false);
-  const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [completed, setCompleted] = useState<{ phrase: Phrase; time: number }[]>([]);
+  const [hintUsed, setHintUsed] = useState(false);
+  const [startTime, setStartTime] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [difficulty, setDifficulty] = useState<number[]>([1, 2, 3]);
 
   useEffect(() => {
-    if (!timerActive) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      setPhase('finished');
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, timerActive]);
+    if (gameState !== 'playing') return;
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [gameState, startTime]);
 
   const startGame = () => {
-    const fixed = SENTENCES.map(s => ({ ...s, scrambled: shuffleArr(s.correct) }));
-    const shuffled = [...fixed].sort(() => Math.random() - 0.5);
-    setPuzzles(shuffled);
-    setCurrentIdx(0);
-    setTiles(shuffled[0].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
-    setPlaced([]);
+    const p = PHRASES.filter(w => difficulty.includes(w.difficulty)).sort(() => Math.random() - 0.5).slice(0, 8);
+    setPool(p);
+    setCurrent(p[0]);
+    setScrambled(shufflePhrase(p[0].original));
+    setInput('');
     setScore(0);
-    setTimeLeft(120);
-    setTimerActive(true);
-    setFeedback(null);
-    setPhase('playing');
+    setCompleted([]);
+    setHintUsed(false);
+    setStartTime(Date.now());
+    setElapsed(0);
+    setGameState('playing');
   };
 
-  const placeWord = (word: string, idx: number) => {
-    if (placed.length >= puzzles[currentIdx].correct.length) return;
-    setPlaced(p => [...p, { word, idx }]);
-    setTiles(t => t.map(x => x.idx === idx ? { ...x, used: true } : x));
-    setTimeout(checkAnswer, 200);
-  };
-
-  const removeWord = (idx: number) => {
-    setPlaced(p => p.filter(x => x.idx !== idx));
-    setTiles(t => t.map(x => x.idx === idx ? { ...x, used: false } : x));
-  };
-
-  const checkAnswer = () => {
-    const current = puzzles[currentIdx];
-    const isCorrect = placed.length === current.correct.length &&
-      placed.every((p, i) => p.word.toLowerCase() === current.correct[i].toLowerCase());
-    if (isCorrect) {
-      setScore(s => s + current.correct.length * 10);
-      setFeedback('correct');
-      setTimeout(() => nextPuzzle(), 1200);
-    } else if (placed.length === current.correct.length) {
-      setFeedback('wrong');
-      setTimeout(() => {
-        setPlaced([]);
-        setTiles(current.scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
-        setFeedback(null);
-      }, 1000);
+  const submitAnswer = () => {
+    if (!current) return;
+    const correct = input.trim().toLowerCase() === current.original.toLowerCase();
+    if (correct) {
+      const timeBonus = Math.max(0, 30 - elapsed);
+      const hintPenalty = hintUsed ? 10 : 0;
+      const pts = current.points + timeBonus - hintPenalty;
+      setScore(s => s + Math.max(pts, 5));
+      setCompleted(c => [...c, { phrase: current, time: elapsed }]);
+      const idx = pool.indexOf(current);
+      if (idx < pool.length - 1) {
+        setCurrent(pool[idx + 1]);
+        setScrambled(shufflePhrase(pool[idx + 1].original));
+      } else { setCurrent(null); setGameState('finished'); }
+      setInput('');
+      setHintUsed(false);
+      setStartTime(Date.now());
+      setElapsed(0);
     }
   };
 
-  const nextPuzzle = () => {
-    if (currentIdx >= puzzles.length - 1) {
-      setPhase('finished');
-      return;
-    }
-    const next = currentIdx + 1;
-    setCurrentIdx(next);
-    setTiles(puzzles[next].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
-    setPlaced([]);
-    setFeedback(null);
-  };
-
-  const shuffleTiles = () => {
-    setTiles(t => shuffleArr(t));
-  };
-
-  const skip = () => {
-    setPlaced([]);
-    setTiles(puzzles[currentIdx].scrambled.map((w, i) => ({ word: w, idx: i, used: false })));
-  };
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to Games
-          </Link>
-
-          <AnimatePresence mode="wait">
-            {phase === 'idle' && (
-              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
-                <div className="text-6xl mb-4">💬</div>
-                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Sentence Scramble</h1>
-                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Rearrange word tiles to form romantic sentences. Each word unlocks the next part of the puzzle!</p>
-                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
-                  <Play className="w-5 h-5" /> Start Unscrambling
-                </button>
-              </motion.div>
-            )}
-
-            {phase === 'playing' && puzzles[currentIdx] && (
-              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
-                  <span className="text-rose-700 font-semibold">⏱️ {timeLeft}s</span>
-                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
-                  <span className="text-purple-600 font-semibold">{currentIdx + 1}/{puzzles.length}</span>
-                </div>
-
-                <motion.div key={currentIdx} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white/90 rounded-2xl p-6 shadow-xl">
-                  <div className="text-center text-3xl mb-2">{puzzles[currentIdx].emoji}</div>
-                  <p className="text-center text-sm text-rose-500 italic mb-4">Hint: {puzzles[currentIdx].hint}</p>
-
-                  <div className={`min-h-[80px] bg-gradient-to-r ${feedback === 'correct' ? 'from-green-100 to-emerald-100' : 'from-rose-50 to-pink-50'} rounded-xl p-3 mb-4 flex flex-wrap gap-2 justify-center items-center border-2 border-dashed border-rose-300`}>
-                    {placed.length === 0 && <span className="text-rose-400 italic text-sm">Tap words below to build sentence...</span>}
-                    {placed.map(p => (
-                      <button key={p.idx} onClick={() => removeWord(p.idx)} className="bg-white border-2 border-rose-400 text-rose-700 font-semibold px-3 py-1.5 rounded-lg shadow">
-                        {p.word}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {tiles.filter(t => !t.used).map(t => (
-                      <button key={t.idx} onClick={() => placeWord(t.word, t.idx)} className="bg-gradient-to-r from-rose-400 to-pink-400 text-white font-semibold px-3 py-1.5 rounded-lg shadow hover:scale-105 transition">
-                        {t.word}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-center gap-2 mt-4">
-                    <button onClick={shuffleTiles} className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm"><Shuffle className="w-3 h-3 inline mr-1" /> Shuffle</button>
-                    <button onClick={skip} className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full text-sm">Reset</button>
-                  </div>
-
-                  {feedback === 'correct' && <p className="text-center text-green-600 font-bold mt-3">✨ Perfect!</p>}
-                </motion.div>
-              </motion.div>
-            )}
-
-            {phase === 'finished' && (
-              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
-                <Sparkles className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-                <h2 className="text-3xl font-bold text-rose-700 mb-2">Sentence Master!</h2>
-                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
-                <p className="text-xl text-pink-600 mb-6">points earned</p>
-                <div className="flex gap-3 justify-center">
-                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4" /> Play Again
+      <div className="min-h-screen pb-20">
+        <nav className="relative z-50">
+          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
+                    <ArrowLeft className="w-5 h-5 text-gray-600" />
                   </button>
-                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
+                  <Link href="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+                      <Heart className="w-4 h-4 text-white" fill="white" />
+                    </div>
+                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
+                  </Link>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                  <span className="font-bold text-gray-700">Phrase Scramble</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-lg mx-auto px-4 sm:px-6 py-8">
+          {gameState === 'start' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+              <div className="text-7xl mb-6">📝</div>
+              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Phrase Scramble</h1>
+              <p className="text-gray-600 mb-8 text-lg">Unscramble romantic phrases and express your love!</p>
+
+              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
+                <h3 className="font-bold text-gray-900 mb-3">Difficulty</h3>
+                <div className="flex gap-2">
+                  {[{ d: [1], label: 'Easy' }, { d: [1, 2], label: 'Medium' }, { d: [1, 2, 3], label: 'Hard' }].map(opt => (
+                    <button key={opt.label} onClick={() => setDifficulty(opt.d)} className={`flex-1 py-2 rounded-xl text-sm font-bold ${difficulty.join(',') === opt.d.join(',') ? 'bg-pink-500 text-white' : 'bg-white text-gray-600'}`}>{opt.label}</button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            </motion.div>
+          )}
+
+          {gameState === 'playing' && current && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="px-4 py-1.5 rounded-full bg-white text-gray-700 text-sm font-bold border">Phrase {completed.length + 1}/{pool.length}</span>
+                <span className="text-sm text-gray-500 font-medium">Score: {score}</span>
+              </div>
+              <div className="w-full h-3 bg-white/50 rounded-full mb-6 overflow-hidden">
+                <motion.div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style={{ width: `${(completed.length / pool.length) * 100}%` }} />
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-[2rem] shadow-2xl p-8 mb-6 text-white text-center">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/20 mb-4">{current.category}</span>
+                <div className="text-3xl font-black tracking-wider mb-4 leading-relaxed">{scrambled.toUpperCase()}</div>
+                <p className="text-sm text-white/70">{current.hint}</p>
+              </div>
+
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitAnswer()}
+                placeholder="Type the phrase..."
+                className="w-full px-6 py-4 bg-white/70 border-2 border-gray-200 rounded-2xl text-lg text-center font-bold focus:border-pink-400 focus:outline-none mb-3"
+                autoFocus
+              />
+
+              <div className="flex gap-3 mb-4">
+                <button onClick={submitAnswer} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Submit</button>
+                {!hintUsed && (
+                  <button onClick={() => setHintUsed(true)} className="px-6 py-4 bg-amber-100 rounded-2xl font-bold text-amber-700 hover:bg-amber-200 transition">
+                    <Lightbulb className="w-5 h-5 inline mr-1" /> Hint
+                  </button>
+                )}
+              </div>
+
+              {hintUsed && (
+                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 mb-4">
+                  <p className="text-sm text-amber-800">💡 Hint: Starts with "{current.original.split(' ')[0]}" ({current.original.length} chars)</p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span className="flex items-center gap-1"><Zap className="w-4 h-4" /> {formatTime(elapsed)}</span>
+                <span>Difficulty: {current.difficulty === 1 ? 'Easy' : current.difficulty === 2 ? 'Medium' : 'Hard'}</span>
+              </div>
+            </motion.div>
+          )}
+
+          {gameState === 'finished' && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+              <div className="text-7xl mb-4">🏆</div>
+              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Amazing!</h2>
+              <p className="text-5xl font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mb-8">{score} pts</p>
+
+              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8">
+                <h3 className="font-bold text-gray-900 mb-4">Phrases Solved</h3>
+                {completed.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between mb-2 p-2 bg-white/50 rounded-xl">
+                    <span className="text-gray-700">{c.phrase.original}</span>
+                    <span className="text-xs text-gray-500">{formatTime(c.time)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4 justify-center">
+                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold">More Games</Link>
+              </div>
+            </motion.div>
+          )}
+          <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
     </PremiumBackground>

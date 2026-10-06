@@ -1,254 +1,359 @@
 'use client';
+
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Play, RotateCcw, Trophy, Sparkles, Star, Shuffle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Heart, Sparkles, Trophy, Flame, Star, Zap, Target } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 
-const ITEMS = [
-  "Cook together", "Hold hands", "Watch a sunset", "Dance together", "Cuddle for 30 min",
-  "Send a love text", "Compliment deeply", "Slow dance", "Stargaze", "Read together",
-  "Play a game", "Take a walk", "Share a dessert", "Picnic date", "Make art together",
-  "Phone-free hour", "Massage each other", "Tell a story", "Sing together", "Plant something",
-  "Visit a new place", "Cook a new recipe", "Take a selfie", "Laugh until crying", "Write a love note",
+type BingoPattern = 'horizontal' | 'vertical' | 'diagonal' | 'fullcard';
+
+const ALL_ITEMS = [
+  'Kiss', 'Hug', 'Dance', 'Compliment', 'Cook together', 'Stargaze',
+  'Hold hands', 'Share a memory', 'Sing together', 'Give flowers',
+  'Write love note', 'Take selfie', 'Feed each other', 'Whisper sweet nothings',
+  'Watch sunset', 'Give massage', 'Play game', 'Go for walk',
+  'Share dreams', 'Cuddle', 'Make toast', 'FIVE CORNER BINGO'
 ];
 
-const WIN_PATTERNS = [
-  { name: "First Row", check: (i: number) => i < 5 },
-  { name: "Second Row", check: (i: number) => i >= 5 && i < 10 },
-  { name: "Third Row", check: (i: number) => i >= 10 && i < 15 },
-  { name: "Fourth Row", check: (i: number) => i >= 15 && i < 20 },
-  { name: "Fifth Row", check: (i: number) => i >= 20 },
-  { name: "First Column", check: (i: number) => i % 5 === 0 },
-  { name: "Last Column", check: (i: number) => i % 5 === 4 },
-  { name: "Top-Left to Bottom-Right Diagonal", check: (i: number) => i % 5 === Math.floor(i / 5) },
-  { name: "Top-Right to Bottom-Left Diagonal", check: (i: number) => (4 - i % 5) === Math.floor(i / 5) },
-  { name: "Four Corners", check: (i: number) => i === 0 || i === 4 || i === 20 || i === 24 },
-  { name: "Full Card", check: (i: number) => i >= 0 && i < 25 },
-];
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-export default function LoveBingo() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'called' | 'finished'>('idle');
-  const [card, setCard] = useState<string[]>([]);
-  const [marked, setMarked] = useState<boolean[]>(Array(25).fill(false));
-  const [centerIdx] = useState(12);
-  const [calledItems, setCalledItems] = useState<string[]>([]);
-  const [wins, setWins] = useState<string[]>([]);
-  const [currentCall, setCurrentCall] = useState('');
-
-  const setupNewCard = () => {
-    const shuffled = [...ITEMS].sort(() => Math.random() - 0.5);
-    setCard(shuffled);
-    setMarked(Array(25).fill(false));
-    setMarked(prev => {
-      const newMarked = [...prev];
-      newMarked[centerIdx] = true; // Free space
-      return newMarked;
-    });
-    setCalledItems([]);
-    setWins([]);
-    setCurrentCall('');
-  };
-
-  const startGame = () => {
-    setupNewCard();
-    setGameState('playing');
-  };
-
-  const callRandomItem = () => {
-    const unmarked = card.filter((item, i) => !marked[i] && i !== centerIdx);
-    if (unmarked.length === 0) return;
-    const randomItem = unmarked[Math.floor(Math.random() * unmarked.length)];
-    setCurrentCall(randomItem);
-    setCalledItems(prev => [...prev, randomItem]);
-    setGameState('called');
-  };
-
-  const confirmAndContinue = () => {
-    if (currentCall) {
-      const idx = card.indexOf(currentCall);
-      if (idx !== -1) {
-        const newMarked = [...marked];
-        newMarked[idx] = true;
-        setMarked(newMarked);
-
-        // Check for win patterns
-        const newWins = [...wins];
-        for (const pattern of WIN_PATTERNS) {
-          const allMarked = card.every((_, i) => pattern.check(i) ? newMarked[i] : true);
-          if (allMarked && !newWins.includes(pattern.name)) {
-            newWins.push(pattern.name);
-          }
-        }
-        setWins(newWins);
-
-        if (newMarked.every(m => m)) {
-          setGameState('finished');
-          return;
-        }
-      }
+function generateCard(items: string[]): string[] {
+  const pool = items.filter((i) => i !== 'FIVE CORNER BINGO');
+  const shuffled = shuffle(pool);
+  const card: string[] = [];
+  // 5x5 = 25 cells; center (index 12) is FREE
+  let p = 0;
+  for (let i = 0; i < 25; i++) {
+    if (i === 12) {
+      card.push('FREE');
+    } else {
+      card.push(shuffled[p % shuffled.length]);
+      p++;
     }
-    setCurrentCall('');
-    setGameState('playing');
+  }
+  return card;
+}
+
+function checkPatterns(marked: boolean[]): { name: BingoPattern; cells: number[] }[] {
+  const wins: { name: BingoPattern; cells: number[] }[] = [];
+  const rows = [
+    [0, 1, 2, 3, 4],
+    [5, 6, 7, 8, 9],
+    [10, 11, 12, 13, 14],
+    [15, 16, 17, 18, 19],
+    [20, 21, 22, 23, 24],
+  ];
+  const cols = [
+    [0, 5, 10, 15, 20],
+    [1, 6, 11, 16, 21],
+    [2, 7, 12, 17, 22],
+    [3, 8, 13, 18, 23],
+    [4, 9, 14, 19, 24],
+  ];
+  const diags = [
+    [0, 6, 12, 18, 24],
+    [4, 8, 12, 16, 20],
+  ];
+
+  rows.forEach((r) => {
+    if (r.every((i) => marked[i])) wins.push({ name: 'horizontal', cells: r });
+  });
+  cols.forEach((c) => {
+    if (c.every((i) => marked[i])) wins.push({ name: 'vertical', cells: c });
+  });
+  diags.forEach((d) => {
+    if (d.every((i) => marked[i])) wins.push({ name: 'diagonal', cells: d });
+  });
+  if (marked.every(Boolean)) wins.push({ name: 'fullcard', cells: marked.map((_, i) => i) });
+  return wins;
+}
+
+export default function LoveBingoPage() {
+  const router = useRouter();
+  const [card, setCard] = useState<string[]>(() => generateCard(ALL_ITEMS));
+  const [marked, setMarked] = useState<boolean[]>(() => {
+    const m = new Array(25).fill(false);
+    m[12] = true; // FREE
+    return m;
+  });
+  const [calledPool, setCalledPool] = useState<string[]>([]);
+  const [calledOrder, setCalledOrder] = useState<string[]>([]);
+  const [currentCall, setCurrentCall] = useState<string | null>(null);
+  const [wins, setWins] = useState<{ name: BingoPattern; cells: number[] }[]>([]);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [autoCall, setAutoCall] = useState(false);
+
+  const toggleCell = (i: number) => {
+    if (i === 12) return; // FREE can't be unmarked
+    if (card[i] === 'FREE') return;
+    const next = [...marked];
+    next[i] = !next[i];
+    setMarked(next);
+    const newWins = checkPatterns(next);
+    if (newWins.length > wins.length) {
+      const gained = newWins.length - wins.length;
+      setScore((s) => s + gained * 100);
+      setStreak((s) => s + 1);
+      setWins(newWins);
+    }
   };
 
-  const markFromCard = (idx: number) => {
-    if (idx === centerIdx) return;
-    const newMarked = [...marked];
-    newMarked[idx] = !newMarked[idx];
-    setMarked(newMarked);
+  const callNext = () => {
+    if (calledPool.length === 0) {
+      setCalledPool(shuffle(ALL_ITEMS));
+    }
+    setCalledPool((pool) => {
+      if (pool.length === 0) {
+        const fresh = shuffle(ALL_ITEMS);
+        const next = fresh[0];
+        setCurrentCall(next);
+        setCalledOrder((o) => [...o, next]);
+        return fresh.slice(1);
+      }
+      const next = pool[0];
+      setCurrentCall(next);
+      setCalledOrder((o) => [...o, next]);
+      return pool.slice(1);
+    });
   };
 
-  const getMarkedCount = () => marked.filter(m => m).length;
-  const getWinEmoji = (name: string) => {
-    if (name.includes('Row')) return '↔️';
-    if (name.includes('Column')) return '↕️';
-    if (name.includes('Diagonal')) return '✖️';
-    if (name.includes('Corners')) return '🔲';
-    return '🎉';
+  const resetGame = () => {
+    setCard(generateCard(ALL_ITEMS));
+    const m = new Array(25).fill(false);
+    m[12] = true;
+    setMarked(m);
+    setCalledPool([]);
+    setCalledOrder([]);
+    setCurrentCall(null);
+    setWins([]);
+    setScore(0);
+    setStreak(0);
   };
+
+  useEffect(() => {
+    if (!autoCall) return;
+    const t = setInterval(() => {
+      callNext();
+    }, 1800);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCall]);
+
+  const winSet = new Set<number>();
+  wins.forEach((w) => w.cells.forEach((c) => winSet.add(c)));
 
   return (
-    <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50">
-          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
-                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-                  </Link>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-violet-500" />
-                  <span className="font-bold text-gray-700">Love Bingo</span>
-                </div>
+    <div className="min-h-screen relative overflow-hidden">
+      <PremiumBackground />
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+        <button
+          onClick={() => router.back()}
+          className="mb-6 flex items-center gap-2 text-rose-200 hover:text-white transition"
+        >
+          <ArrowLeft size={20} /> Back
+        </button>
+
+        <div className="text-center mb-8">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl font-bold bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-transparent"
+          >
+            Love Bingo
+          </motion.h1>
+          <p className="text-rose-100/80 mt-2 flex items-center justify-center gap-2">
+            <Heart size={16} className="text-rose-400" /> Mark your card as items are called
+            <Heart size={16} className="text-rose-400" />
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { icon: Trophy, label: 'Score', value: score, color: 'text-amber-300' },
+            { icon: Flame, label: 'Streak', value: streak, color: 'text-orange-300' },
+            { icon: Target, label: 'Patterns', value: wins.length, color: 'text-emerald-300' },
+            { icon: Sparkles, label: 'Called', value: calledOrder.length, color: 'text-fuchsia-300' },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <s.icon size={18} className={s.color} />
+                <span className="text-xs uppercase text-rose-100/70">{s.label}</span>
               </div>
+              <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Caller */}
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 via-rose-500/10 to-pink-500/10 backdrop-blur-xl p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex-1 text-center md:text-left">
+              <div className="text-xs uppercase tracking-widest text-rose-200/70 mb-1">Now Calling</div>
+              <AnimatePresence mode="wait">
+                {currentCall ? (
+                  <motion.div
+                    key={currentCall + calledOrder.length}
+                    initial={{ scale: 0.6, opacity: 0, rotate: -8 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                    className="text-3xl md:text-4xl font-extrabold text-white"
+                  >
+                    {currentCall}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-2xl text-rose-200/60 italic"
+                  >
+                    Press Call Next to begin
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={callNext}
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white font-semibold shadow-lg shadow-rose-500/40 transition"
+              >
+                <Zap size={18} className="inline -mt-1 mr-1" /> Call Next
+              </button>
+              <button
+                onClick={() => setAutoCall((a) => !a)}
+                className={`px-5 py-3 rounded-full font-semibold transition border ${
+                  autoCall
+                    ? 'bg-fuchsia-500/30 border-fuchsia-300 text-white'
+                    : 'bg-white/5 border-white/10 text-rose-100 hover:bg-white/10'
+                }`}
+              >
+                {autoCall ? 'Stop Auto' : 'Auto Call'}
+              </button>
+              <button
+                onClick={resetGame}
+                className="px-5 py-3 rounded-full bg-white/5 border border-white/10 text-rose-100 hover:bg-white/10 transition"
+              >
+                New Card
+              </button>
             </div>
           </div>
-        </nav>
+        </div>
 
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'idle' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-7xl mb-6">🎲</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Bingo</h1>
-              <p className="text-gray-600 mb-8 text-lg">Mark off romantic activities as you complete them!</p>
+        {/* Bingo Card */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 md:p-6 mb-6">
+          <div className="grid grid-cols-5 gap-2 md:gap-3">
+            {card.map((label, i) => {
+              const isWin = winSet.has(i);
+              const isFree = i === 12 || label === 'FREE';
+              return (
+                <motion.button
+                  key={`${i}-${label}`}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => toggleCell(i)}
+                  className={`relative aspect-square rounded-xl md:rounded-2xl border p-1 md:p-2 flex items-center justify-center text-center text-[10px] sm:text-xs md:text-sm font-semibold transition-all ${
+                    isFree
+                      ? 'bg-gradient-to-br from-amber-300 to-pink-400 border-amber-200 text-rose-900'
+                      : marked[i]
+                      ? isWin
+                        ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-200 text-white shadow-lg shadow-emerald-500/40'
+                        : 'bg-gradient-to-br from-rose-500 to-pink-500 border-rose-300 text-white'
+                      : 'bg-white/5 border-white/15 text-rose-50 hover:bg-white/10'
+                  }`}
+                >
+                  {isFree ? (
+                    <div className="flex flex-col items-center">
+                      <Star size={18} className="mb-0.5" />
+                      <span className="leading-none">FREE</span>
+                    </div>
+                  ) : (
+                    <span className="leading-tight">{label}</span>
+                  )}
+                  {marked[i] && !isFree && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-1 right-1"
+                    >
+                      <Heart size={12} className="fill-white text-white" />
+                    </motion.div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
 
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-500" /> Win Patterns</h3>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li>↔️ 5 Rows</li>
-                  <li>↕️ 2 Columns</li>
-                  <li>✖️ 2 Diagonals</li>
-                  <li>🔲 4 Corners</li>
-                  <li>🎉 Full Card</li>
-                </ul>
-              </div>
+        {/* Called Items */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 mb-6">
+          <div className="text-xs uppercase tracking-widest text-rose-200/70 mb-2 flex items-center gap-2">
+            <Sparkles size={14} /> Called Items ({calledOrder.length})
+          </div>
+          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+            {calledOrder.length === 0 && (
+              <span className="text-rose-100/50 text-sm italic">No items called yet…</span>
+            )}
+            {calledOrder.map((item, i) => (
+              <span
+                key={i}
+                className="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-300/30 text-rose-100 text-xs"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
 
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105">
-                <Play className="w-5 h-5 inline mr-2" /> Generate Card
-              </button>
-            </motion.div>
-          )}
+        {/* Wins */}
+        {wins.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-emerald-300/30 bg-emerald-500/10 backdrop-blur-xl p-6"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy size={22} className="text-amber-300" />
+              <span className="text-xl font-bold text-white">Patterns Completed!</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {wins.map((w, i) => (
+                <span
+                  key={i}
+                  className="px-4 py-2 rounded-full bg-emerald-500/30 border border-emerald-300 text-white font-semibold capitalize"
+                >
+                  {w.name}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-          {(gameState === 'playing' || gameState === 'called') && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <span className="text-sm font-bold text-gray-700">{getMarkedCount()}/25 marked</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-violet-700">{wins.length} wins!</span>
-                </div>
-              </div>
-
-              {gameState === 'called' && currentCall && (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl shadow-2xl p-5 mb-4 text-white text-center">
-                  <p className="text-xs uppercase tracking-wider mb-1">Now playing...</p>
-                  <p className="text-2xl font-black">{currentCall}</p>
-                  <button onClick={confirmAndContinue} className="mt-3 px-6 py-2 bg-white text-violet-600 rounded-xl font-bold text-sm hover:shadow-lg transition">
-                    Mark on Card →
-                  </button>
-                </motion.div>
-              )}
-
-              <div className="grid grid-cols-5 gap-2 mb-4">
-                {card.map((item, idx) => (
-                  <motion.button
-                    key={idx}
-                    onClick={() => markFromCard(idx)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    disabled={idx === centerIdx}
-                    className={`aspect-square rounded-2xl p-2 text-xs font-bold transition-all border-2 flex items-center justify-center text-center ${marked[idx] ? 'bg-violet-500 text-white border-violet-600' : 'bg-white/70 text-gray-700 border-pink-100 hover:bg-white'} ${idx === centerIdx ? 'bg-amber-200 text-amber-800 border-amber-300 cursor-default' : ''}`}
-                  >
-                    {idx === centerIdx ? '⭐ FREE' : marked[idx] ? '✓ ' + item.substring(0, 10) : item.substring(0, 12)}
-                  </motion.button>
-                ))}
-              </div>
-
-              {wins.length > 0 && (
-                <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-pink-100/60 p-4 mb-4">
-                  <h3 className="font-bold text-gray-900 mb-2 text-sm">Wins!</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {wins.map((w, i) => (
-                      <span key={i} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">{getWinEmoji(w)} {w}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button onClick={callRandomItem} className="flex-1 px-6 py-4 bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold rounded-2xl hover:shadow-xl transition">
-                  <Shuffle className="w-5 h-5 inline mr-2" /> Call Next Item
-                </button>
-                <button onClick={() => setGameState('finished')} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">
-                  End
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {gameState === 'finished' && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-              <div className="text-7xl mb-4">🎉</div>
-              <h2 className="text-3xl font-display font-black text-gray-900 mb-2">BINGO!</h2>
-              <p className="text-gray-600 mb-8">You marked {getMarkedCount()}/25 squares and won {wins.length} patterns!</p>
-
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8">
-                <h3 className="font-bold text-gray-900 mb-3">Achievements</h3>
-                {wins.length === 0 ? (
-                  <p className="text-sm text-gray-500">No wins yet, but every moment counts!</p>
-                ) : wins.map((w, i) => (
-                  <div key={i} className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-amber-50 border border-amber-200">
-                    <span className="text-2xl">{getWinEmoji(w)}</span>
-                    <span className="font-medium text-amber-900">{w}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-4 justify-center">
-                <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition">
-                  <RotateCcw className="w-5 h-5 inline mr-2" /> New Card
-                </button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl text-white font-bold hover:shadow-xl transition">
-                  More Games
-                </Link>
-              </div>
-            </motion.div>
-          )}
+        <div className="text-center mt-8">
+          <Link
+            href="/games"
+            className="inline-block px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 transition"
+          >
+            Browse More Games
+          </Link>
         </div>
       </div>
-    </PremiumBackground>
+    </div>
   );
 }

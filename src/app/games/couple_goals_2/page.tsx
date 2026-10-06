@@ -1,305 +1,201 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Flame, Clock, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Heart, Sparkles, Trophy, Flame, Calendar, Star, Zap, Medal, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 
-const GOAL_QUESTIONS = [
-  {
-    category: '🏖️ Vacations',
-    question: 'We plan our vacations...',
-    options: [
-      { text: '2 weeks in advance (plan everything!)', rating: 4 },
-      { text: '1-2 months ahead', rating: 3 },
-      { text: 'Spontaneously, last minute', rating: 2 },
-      { text: 'One plans, one shows up', rating: 1 },
-    ],
-  },
-  {
-    category: '🍽️ Dining',
-    question: 'When trying a new restaurant...',
-    options: [
-      { text: 'Both research reviews', rating: 3 },
-      { text: 'One decides completely', rating: 2 },
-      { text: 'Pick based on ambiance', rating: 4 },
-      { text: 'We argue for 30 mins', rating: 1 },
-    ],
-  },
-  {
-    category: '💤 Sleep',
-    question: 'Our bedtime routine...',
-    options: [
-      { text: 'Both early birds', rating: 4 },
-      { text: 'Night owl + early bird', rating: 2 },
-      { text: 'We pull all nighters', rating: 3 },
-      { text: 'Different schedules', rating: 1 },
-    ],
-  },
-  {
-    category: '🎬 Entertainment',
-    question: 'Movie night preferences...',
-    options: [
-      { text: 'Same taste always', rating: 3 },
-      { text: 'Compromise every time', rating: 4 },
-      { text: 'Separate rooms', rating: 1 },
-      { text: 'We binge series together', rating: 3 },
-    ],
-  },
-  {
-    category: '🏋️ Fitness',
-    question: 'Working out together...',
-    options: [
-      { text: 'Gym buddies daily', rating: 4 },
-      { text: 'Weekend hikes', rating: 3 },
-      { text: 'One motivates the other', rating: 2 },
-      { text: 'Different gyms', rating: 1 },
-    ],
-  },
-  {
-    category: '💰 Money',
-    question: 'Managing finances together...',
-    options: [
-      { text: 'Joint account, transparency', rating: 4 },
-      { text: 'Split everything 50/50', rating: 3 },
-      { text: 'One manages money', rating: 2 },
-      { text: 'Never discuss money', rating: 1 },
-    ],
-  },
-  {
-    category: '👨‍👩‍👧 Family',
-    question: 'Holidays with family...',
-    options: [
-      { text: 'Alternate each year', rating: 4 },
-      { text: 'Both families together', rating: 3 },
-      { text: 'Skip and travel alone', rating: 2 },
-      { text: 'It\'s stressful', rating: 1 },
-    ],
-  },
-  {
-    category: '📱 Tech',
-    question: 'Phone usage on dates...',
-    options: [
-      { text: 'Phones away', rating: 4 },
-      { text: 'Occasional checks OK', rating: 3 },
-      { text: 'Both on phones', rating: 1 },
-      { text: 'One is worse than other', rating: 2 },
-    ],
-  },
+interface DayChallenge {
+  day: number;
+  title: string;
+  description: string;
+  emoji: string;
+  category: 'communication' | 'romance' | 'fun' | 'adventure' | 'affection';
+  completed: boolean;
+}
+
+const CHALLENGES: Omit<DayChallenge, 'completed'>[] = [
+  { day: 1, title: "Share your dreams", description: "Tell each other 3 dreams you have for your future", emoji: "🌟", category: 'communication' },
+  { day: 2, title: "Morning surprise", description: "Surprise your partner with breakfast in bed", emoji: "☀️", category: 'romance' },
+  { day: 3, title: "Dance party", description: "Have a 10-minute dance party together", emoji: "💃", category: 'fun' },
+  { day: 4, title: "Nature walk", description: "Take a walk in nature and hold hands", emoji: "🌿", category: 'adventure' },
+  { day: 5, title: "Gratitude sharing", description: "Share 5 things you're grateful for about each other", emoji: "🙏", category: 'communication' },
+  { day: 6, title: "Cook together", description: "Prepare a meal together from start to finish", emoji: "🍳", category: 'fun' },
+  { day: 7, title: "Week 1 reflection", description: "Discuss your first week of challenges", emoji: "📝", category: 'communication' },
+  { day: 8, title: "Stargazing", description: "Stargaze together and make wishes", emoji: "✨", category: 'adventure' },
+  { day: 9, title: "Love letter", description: "Write a short love letter to each other", emoji: "💌", category: 'romance' },
+  { day: 10, title: "Spa night", description: "Give each other a relaxing massage", emoji: "💆", category: 'affection' },
+  { day: 11, title: "Learn something", description: "Teach each other something new", emoji: "📚", category: 'fun' },
+  { day: 12, title: "Silent connection", description: "Sit in silence holding hands for 10 minutes", emoji: "🤝", category: 'affection' },
+  { day: 13, title: "New place", description: "Go somewhere neither of you has been", emoji: "🗺️", category: 'adventure' },
+  { day: 14, title: "Halfway celebration!", description: "Celebrate 2 weeks of challenges", emoji: "🎉", category: 'fun' },
+  { day: 15, title: "Deep talk", description: "Have an honest conversation about your relationship", emoji: "💬", category: 'communication' },
+  { day: 16, title: "Photo walk", description: "Take photos of things that remind you of each other", emoji: "📸", category: 'fun' },
+  { day: 17, title: "Sunset date", description: "Watch the sunset together with snacks", emoji: "🌅", category: 'romance' },
+  { day: 18, title: "Fitness together", description: "Do a workout or yoga session together", emoji: "💪", category: 'adventure' },
+  { day: 19, title: "Compliment spree", description: "Give each other 10 genuine compliments", emoji: "💖", category: 'affection' },
+  { day: 20, title: "Goal setting", description: "Set shared goals for the next month", emoji: "🎯", category: 'communication' },
+  { day: 21, title: "Taste test", description: "Try a food neither of you has tasted before", emoji: "👅", category: 'fun' },
+  { day: 22, title: "Memory lane", description: "Look through photos from your relationship", emoji: "📷", category: 'romance' },
+  { day: 23, title: "Baking together", description: "Bake something sweet together", emoji: "🧁", category: 'fun' },
+  { day: 24, title: "Candlelit dinner", description: "Create a romantic dinner with candlelight", emoji: "🕯️", category: 'romance' },
+  { day: 25, title: "Future planning", description: "Plan a trip or event you want to experience together", emoji: "✈️", category: 'adventure' },
+  { day: 26, title: "Silly day", description: "Spend the whole day being goofy together", emoji: "🤪", category: 'fun' },
+  { day: 27, title: "Reassurance", description: "Reassure each other about your commitment", emoji: "🤗", category: 'affection' },
+  { day: 28, title: "Growth chat", description: "Discuss how you've grown as individuals and a couple", emoji: "🌱", category: 'communication' },
+  { day: 29, title: "Bucket list", description: "Create a joint bucket list together", emoji: "📋", category: 'adventure' },
+  { day: 30, title: "Celebration!", description: "Celebrate completing 30 days of connection!", emoji: "🏆", category: 'romance' },
 ];
 
-export default function CoupleGoals_2Page() {
-  const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
-  const [currentQ, setCurrentQ] = useState(0);
+const CAT_STYLE: Record<string, string> = {
+  communication: 'bg-blue-100 text-blue-700',
+  romance: 'bg-pink-100 text-pink-700',
+  fun: 'bg-amber-100 text-amber-700',
+  adventure: 'bg-green-100 text-green-700',
+  affection: 'bg-rose-100 text-rose-700',
+};
+
+const STREAK_BONUS: Record<number, number> = { 3: 25, 7: 50, 14: 100, 21: 150, 30: 300 };
+
+export default function CoupleGoals2Page() {
+  const router = useRouter();
+  const [days, setDays] = useState<DayChallenge[]>(CHALLENGES.map(c => ({ ...c, completed: false })));
+  const [currentDay, setCurrentDay] = useState(1);
   const [score, setScore] = useState(0);
-  const [best, setBest] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [timeLeft, setTimeLeft] = useState(12);
+  const [showDay, setShowDay] = useState(false);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [view, setView] = useState<'calendar' | 'list'>('calendar');
 
-  useEffect(() => {
-    const b = localStorage.getItem('goals2_best');
-    if (b) setBest(Number(b));
-  }, []);
-
-  const startGame = useCallback(() => {
-    setCurrentQ(0);
-    setScore(0);
-    setSelected(null);
-    setShowResult(false);
-    setAnswers([]);
-    setTimeLeft(12);
-    setState('playing');
-  }, []);
-
-  useEffect(() => {
-    if (state !== 'playing') return;
-    if (timeLeft <= 0) {
-      if (selected === null) {
-        setAnswers((a) => [...a, 0]);
-      }
-      if (currentQ >= GOAL_QUESTIONS.length - 1) {
-        setState('finished');
-        const finalScore = score;
-        if (finalScore > best) {
-          setBest(finalScore);
-          localStorage.setItem('goals2_best', String(finalScore));
-        }
-      } else {
-        setCurrentQ((q) => q + 1);
-        setSelected(null);
-        setShowResult(false);
-        setTimeLeft(12);
-      }
-      return;
-    }
-    const t = setInterval(() => setTimeLeft((tt) => tt - 1), 1000);
-    return () => clearInterval(t);
-  }, [timeLeft, state, currentQ, selected, score, best]);
-
-  const handleAnswer = (idx: number) => {
-    if (selected !== null) return;
-    setSelected(idx);
-    setShowResult(true);
-    const pts = GOAL_QUESTIONS[currentQ].options[idx].rating * 10;
-    setScore((s) => s + pts);
-    setAnswers((a) => [...a, GOAL_QUESTIONS[currentQ].options[idx].rating]);
-
-    setTimeout(() => {
-      if (currentQ >= GOAL_QUESTIONS.length - 1) {
-        setState('finished');
-        const finalScore = score + pts;
-        if (finalScore > best) {
-          setBest(finalScore);
-          localStorage.setItem('goals2_best', String(finalScore));
-        }
-      } else {
-        setCurrentQ((q) => q + 1);
-        setSelected(null);
-        setShowResult(false);
-        setTimeLeft(12);
-      }
-    }, 1200);
+  const completeDay = (day: number) => {
+    setDays(d => d.map(x => x.day === day ? { ...x, completed: true } : x));
+    const ns = currentStreak + 1;
+    setCurrentStreak(ns);
+    if (ns > bestStreak) setBestStreak(ns);
+    const pts = 10 + (STREAK_BONUS[ns] || 0);
+    setScore(s => s + pts);
+    setShowDay(false);
   };
 
-  const avgRating = answers.length > 0 ? (answers.reduce((a, b) => a + b, 0) / answers.length).toFixed(1) : '0';
+  const completedCount = days.filter(d => d.completed).length;
+  const overallPercent = Math.round((completedCount / 30) * 100);
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
-        <div className="w-full max-w-lg">
-          <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
-              <ArrowLeft size={20} /> Back
-            </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Flame className="text-orange-400" /> Goals Match
-            </h1>
-            <div className="w-16" />
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 shadow-2xl"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
-                <div className="text-xl font-bold text-white">{score}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-white/60 text-xs uppercase">Compatibility</div>
-                <div className={`text-xl font-bold ${avgRating >= 3 ? 'text-green-400' : avgRating >= 2 ? 'text-yellow-400' : 'text-red-400'}`}>
-                  {avgRating}/4 ⭐
+      <div className="min-h-screen pb-20">
+        <nav className="relative z-50">
+          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
+                    <ArrowLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <Link href="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+                      <Heart className="w-4 h-4 text-white" fill="white" />
+                    </div>
+                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
+                  </Link>
                 </div>
-              </div>
-              <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-purple-500" />
+                  <span className="font-bold text-gray-700">30 Day Challenge</span>
+                </div>
               </div>
             </div>
+          </div>
+        </nav>
 
-            {state === 'idle' && (
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                className="text-center"
-              >
-                <Flame className="text-orange-400 mx-auto mb-4" size={48} />
-                <p className="text-white text-lg mb-2">How Compatible Are You?</p>
-                <p className="text-white/60 text-sm mb-4">
-                  Answer questions about your relationship to find your compatibility score!
-                </p>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">🔥</div>
+            <h1 className="text-4xl font-display font-black text-gray-900 mb-2">30-Day Connection Challenge</h1>
+            <p className="text-gray-600 text-lg">Complete one challenge daily and build your relationship!</p>
+            <p className="text-3xl font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mt-4">{score} pts</p>
+          </div>
+
+          <div className="w-full h-4 bg-white/50 rounded-full mb-8 overflow-hidden">
+            <motion.div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style={{ width: `${overallPercent}%` }} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="bg-white/70 rounded-2xl p-3 border border-pink-100 text-center">
+              <Flame className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+              <p className="text-lg font-black text-gray-900">{currentStreak}</p>
+              <p className="text-xs text-gray-500">Streak</p>
+            </div>
+            <div className="bg-white/70 rounded-2xl p-3 border border-pink-100 text-center">
+              <Medal className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+              <p className="text-lg font-black text-gray-900">{bestStreak}</p>
+              <p className="text-xs text-gray-500">Best Streak</p>
+            </div>
+            <div className="bg-white/70 rounded-2xl p-3 border border-pink-100 text-center">
+              <Star className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+              <p className="text-lg font-black text-gray-900">{completedCount}/30</p>
+              <p className="text-xs text-gray-500">Done</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mb-6">
+            <button onClick={() => setView('calendar')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${view === 'calendar' ? 'bg-pink-500 text-white' : 'bg-white/70 text-gray-600'}`}>Calendar</button>
+            <button onClick={() => setView('list')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${view === 'list' ? 'bg-pink-500 text-white' : 'bg-white/70 text-gray-600'}`}>List</button>
+          </div>
+
+          {view === 'calendar' && (
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2">
+              {days.map(d => (
                 <button
-                  onClick={startGame}
-                  className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg mx-auto"
+                  key={d.day}
+                  onClick={() => !d.completed && (setCurrentDay(d.day), setShowDay(true))}
+                  disabled={d.completed}
+                  className={`aspect-square rounded-2xl flex items-center justify-center text-sm font-bold transition ${d.completed ? 'bg-gradient-to-br from-green-400 to-emerald-400 text-white' : 'bg-white/70 border border-pink-100 text-gray-700 hover:border-pink-300'}`}
                 >
-                  <Play size={20} /> Start
+                  {d.completed ? '✓' : d.day}
                 </button>
-              </motion.div>
-            )}
+              ))}
+            </div>
+          )}
 
-            {state === 'playing' && GOAL_QUESTIONS[currentQ] && (
-              <motion.div
-                key={currentQ}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-4"
-              >
-                <div className="bg-black/30 rounded-xl p-3">
-                  <span className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs font-medium">
-                    {GOAL_QUESTIONS[currentQ].category}
-                  </span>
-                </div>
-
-                <h3 className="text-xl font-bold text-white">{GOAL_QUESTIONS[currentQ].question}</h3>
-
-                <div className="space-y-2">
-                  {GOAL_QUESTIONS[currentQ].options.map((opt, idx) => {
-                    let bg = 'bg-white/10 hover:bg-white/20';
-                    if (showResult) {
-                      if (opt.rating >= 4) bg = 'bg-green-500/30 border border-green-400';
-                      else if (idx === selected && opt.rating < 3) bg = 'bg-red-500/30 border border-red-400';
-                      else bg = 'bg-white/5 opacity-50';
-                    }
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => handleAnswer(idx)}
-                        disabled={selected !== null}
-                        className={`w-full p-4 rounded-xl text-left text-white font-medium transition-all ${bg}`}
-                      >
-                        {opt.text}
-                        {showResult && (
-                          <span className="ml-2 text-sm">{'⭐'.repeat(opt.rating)}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex justify-between items-center pt-2">
-                  <div className={`text-lg font-bold ${timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
-                    ⏱️ {timeLeft}s
-                  </div>
-                  <div className="text-white/40 text-sm">
-                    {currentQ + 1}/{GOAL_QUESTIONS.length}
+          {view === 'list' && (
+            <div className="space-y-3">
+              {days.map(d => (
+                <div key={d.day} className={`bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border p-4 ${d.completed ? 'border-green-300 bg-green-50/50' : 'border-pink-100'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{d.completed ? '✅' : d.emoji}</span>
+                    <div className="flex-1">
+                      <h3 className={`font-bold text-sm ${d.completed ? 'text-green-600' : 'text-gray-900'}`}>Day {d.day}: {d.title}</h3>
+                      <p className="text-xs text-gray-500">{d.description}</p>
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${CAT_STYLE[d.category]}`}>{d.category}</span>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
+              ))}
+            </div>
+          )}
 
-            <AnimatePresence>
-              {state === 'finished' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="space-y-3"
-                >
-                  <div className="text-center">
-                    <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
-                      {avgRating >= 3.5 ? '🏆 Perfect Match!' : avgRating >= 2.5 ? '💖 Great Match!' : '💕 Still Compatible!'}
-                    </h2>
-                    <p className="text-white/70">
-                      Compatibility: <span className="text-pink-300 font-bold">{avgRating}/4</span>
-                    </p>
-                    <p className="text-white/50 text-sm">
-                      {answers.filter((a) => a >= 3).length}/{answers.length} great answers
-                    </p>
-                  </div>
-                  <button
-                    onClick={startGame}
-                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <RotateCcw size={20} /> Play Again
-                  </button>
+          <AnimatePresence>
+            {showDay && (() => {
+              const day = days.find(d => d.day === currentDay);
+              if (!day || day.completed) return null;
+              return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDay(false)}>
+                  <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full text-center" onClick={e => e.stopPropagation()}>
+                    <span className="text-5xl block mb-4">{day.emoji}</span>
+                    <p className="text-sm text-gray-500 mb-2">Day {day.day}</p>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">{day.title}</h2>
+                    <p className="text-gray-600 mb-2">{day.description}</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${CAT_STYLE[day.category]}`}>{day.category}</span>
+                    <div className="flex gap-3 mt-6">
+                      <button onClick={() => setShowDay(false)} className="flex-1 py-3 bg-gray-100 rounded-2xl font-bold text-gray-700 hover:bg-gray-200 transition">Close</button>
+                      <button onClick={() => completeDay(day.day)} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl text-white font-bold hover:shadow-xl transition"><CheckCircle className="w-5 h-5 inline mr-1" /> Complete</button>
+                    </div>
+                  </motion.div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+              );
+            })()}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

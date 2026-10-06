@@ -6,210 +6,200 @@ import { Heart, ArrowLeft, Play, RotateCcw, Trophy, Brain, Sparkles, Lightbulb, 
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 
+type Phase = 'idle' | 'playing' | 'finished';
+
 interface Scenario {
   situation: string;
-  emoji: string;
-  options: { text: string; points: number }[];
+  options: { id: string; text: string; points: number }[];
+  explanation: string;
 }
 
 const SCENARIOS: Scenario[] = [
-  { emoji: "🌅", situation: "You wake up 10 minutes before your alarm. What do you do?",
-    options: [{ text: "Kiss them gently and go back to sleep", points: 20 }, { text: "Start their day with coffee in bed", points: 30 }, { text: "Wake them up with cuddles", points: 25 }, { text: "Send them a sweet morning text", points: 15 }] },
-  { emoji: "💼", situation: "Your partner gets a new job that pays more but requires traveling 3 days a week. How do you react?",
-    options: [{ text: "Celebrate with them and plan weekly check-ins", points: 30 }, { text: "Feel worried but support their dreams", points: 20 }, { text: "Suggest negotiating a remote option", points: 25 }, { text: "Ask them to find a closer opportunity", points: 5 }] },
-  { emoji: "🏠", situation: "Your partner's family doesn't like you. They say you're 'not good enough'. What do you do?",
-    options: [{ text: "Sit down with them and show them who you are", points: 30 }, { text: "Ask your partner to talk to their family", points: 20 }, { text: "Respect their opinion but stay true to your love", points: 25 }, { text: "Ignore it and hope it goes away", points: 10 }] },
-  { emoji: "📱", situation: "You accidentally see a flirty text on your partner's phone. What happens next?",
-    options: [{ text: "Calmly discuss it with them directly", points: 30 }, { text: "Snoop a bit more before confronting", points: 5 }, { text: "Trust them and pretend you didn't see it", points: 10 }, { text: "Confide in a friend for advice first", points: 15 }] },
-  { emoji: "💰", situation: "Your partner wants to spend $500 on something you think is frivolous. How do you handle it?",
-    options: [{ text: "Listen to why it matters to them first", points: 30 }, { text: "Suggest a compromise or waiting period", points: 25 }, { text: "Agree because they deserve happiness", points: 15 }, { text: "Say no firmly to what you see as waste", points: 10 }] },
-  { emoji: "👶", situation: "Your partner wants kids, but you're not ready. This comes up unexpectedly on date night. What now?",
-    options: [{ text: "Have an honest, calm conversation about timelines", points: 30 }, { text: "Dodge the topic and change the subject", points: 5 }, { text: "Tell them you need time to think about it", points: 20 }, { text: "Say yes just to make them happy", points: 10 }] },
-  { emoji: "🎉", situation: "You forget your partner's birthday. What's the best recovery?",
-    options: [{ text: "Plan an amazing surprise celebration that week", points: 30 }, { text: "Plan the most heartfelt apology + date", points: 25 }, { text: "Get an expensive gift and flowers", points: 15 }, { text: "Make up any excuse and move on", points: 0 }] },
-  { emoji: "🚗", situation: "You're on a road trip and your partner wants to stop at every tourist trap. You're in a hurry. What do you do?",
-    options: [{ text: "Embrace the detour - it's about the journey, not the destination", points: 30 }, { text: "Suggest a compromise - one planned stop", points: 25 }, { text: "Put on their favorite music and make it fun", points: 20 }, { text: "Keep driving and make up an excuse", points: 5 }] },
-];
-
-const PERSONALITIES = [
-  { min: 0, title: "The Caretaker", emoji: "🌿", color: "from-green-500 to-emerald-500", desc: "You prioritize your partner's happiness above your own." },
-  { min: 40, title: "The Romantic", emoji: "💕", color: "from-pink-500 to-rose-500", desc: "You lead with your heart and always choose love." },
-  { min: 70, title: "The Partner", emoji: "💪", color: "from-blue-500 to-cyan-500", desc: "You balance love with logic. A true equal partner." },
-  { min: 100, title: "The Dream Lover", emoji: "✨", color: "from-purple-500 to-pink-500", desc: "You're the total package - romantic, wise, and thoughtful." },
-  { min: 150, title: "The Soulmate", emoji: "💖", color: "from-amber-500 to-red-500", desc: "You make every relationship feel like a fairy tale." },
+  {
+    situation: 'You\'re on a surprise date night. Your partner planned something but is nervous. What do you do?',
+    options: [
+      { id: 'a', text: 'Pretend to be surprised even if you knew 😊', points: 25 },
+      { id: 'b', text: 'Be genuinely surprised and express gratitude 💖', points: 30 },
+      { id: 'c', text: 'Suggest something else you\'d rather do 🙈', points: 10 },
+      { id: 'd', text: 'Help them relax by saying you love surprises ✨', points: 30 },
+    ],
+    explanation: 'Showing appreciation for their effort strengthens your bond!',
+  },
+  {
+    situation: 'Your partner made you a gift that isn\'t perfect. How do you react?',
+    options: [
+      { id: 'a', text: 'Say it\'s perfect and hug them tightly 🤗', points: 30 },
+      { id: 'b', text: 'Thank them sincerely and tell them why it matters 💕', points: 30 },
+      { id: 'c', text: 'Suggest improvements for next time 💡', points: 5 },
+      { id: 'd', text: 'Frame it and keep it forever 🖼️', points: 30 },
+    ],
+    explanation: 'The thought and effort behind a gift is what truly matters!',
+  },
+  {
+    situation: 'You had a fight before a party. What do you do?',
+    options: [
+      { id: 'a', text: 'Talk it out privately before going together 🗣️', points: 30 },
+      { id: 'b', text: 'Put it aside and have fun at the party 🎉', points: 15 },
+      { id: 'c', text: 'Don\'t go to the party, focus on each other 🏠', points: 25 },
+      { id: 'd', text: 'Go separately and deal with it later ⏰', points: 10 },
+    ],
+    explanation: 'Addressing conflicts together builds trust and intimacy.',
+  },
+  {
+    situation: 'Your partner surprises you with breakfast in bed on a busy morning. What\'s your reaction?',
+    options: [
+      { id: 'a', text: 'Jump up immediately to help them! ❤️', points: 20 },
+      { id: 'b', text: 'Stay in bed, enjoy it, and say thank you 😋', points: 25 },
+      { id: 'c', text: 'Take photos and post them online 📸', points: 15 },
+      { id: 'd', text: 'Plan a special breakfast for them in return 🔄', points: 30 },
+    ],
+    explanation: 'Reciprocating kindness keeps the love flowing both ways!',
+  },
+  {
+    situation: 'Your partner has a bad day at work. How do you cheer them up?',
+    options: [
+      { id: 'a', text: 'Give them space to decompress first 🧘', points: 20 },
+      { id: 'b', text: 'Plan their favorite activity tonight 🎮', points: 30 },
+      { id: 'c', text: 'Send cute texts throughout the day 💌', points: 25 },
+      { id: 'd', text: 'Surprise them with their favorite snack 🍫', points: 30 },
+    ],
+    explanation: 'Small gestures of care mean the world on bad days!',
+  },
 ];
 
 export default function LoveScenarioPage() {
-  const router = useRouter();
-  const [gameState, setGameState] = useState<'start' | 'playing' | 'result'>('start');
-  const [current, setCurrent] = useState(0);
-  const [shuffled, setShuffled] = useState<Scenario[]>([]);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [scenarioIdx, setScenarioIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
 
   const startGame = () => {
-    const s = [...SCENARIOS].sort(() => Math.random() - 0.5);
-    setShuffled(s);
-    setCurrent(0);
-    setAnswers([]);
-    setSelected(null);
+    setScenarioIdx(0);
     setScore(0);
-    setGameState('playing');
+    setSelected(null);
+    setShowResult(false);
+    setPhase('playing');
   };
 
-  const selectAnswer = (idx: number) => {
-    if (selected !== null) return;
-    setSelected(idx);
-    const pts = shuffled[current].options[idx].points;
-    setScore(s => s + pts);
-    setAnswers(a => [...a, idx]);
+  const current = SCENARIOS[scenarioIdx];
 
-    setTimeout(() => {
-      if (current < shuffled.length - 1) {
-        setCurrent(c => c + 1);
-        setSelected(null);
-      } else {
-        setGameState('result');
-      }
-    }, 1200);
+  const handleSelect = (optionId: string) => {
+    if (showResult) return;
+    setSelected(optionId);
+    const option = current.options.find(o => o.id === optionId);
+    if (option) {
+      setScore(s => s + option.points);
+    }
+    setShowResult(true);
   };
 
-  const getPersonality = () => {
-    const sorted = [...PERSONALITIES].reverse();
-    return sorted.find(p => score >= p.min) || PERSONALITIES[0];
+  const nextScenario = () => {
+    if (scenarioIdx < SCENARIOS.length - 1) {
+      setScenarioIdx(i => i + 1);
+      setSelected(null);
+      setShowResult(false);
+    } else {
+      setScore(s => s + 25);
+      setPhase('finished');
+    }
   };
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen pb-20">
-        <nav className="relative z-50">
-          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
-                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-                  </Link>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-purple-500" />
-                  <span className="font-bold text-gray-700">Love Scenario</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-          {gameState === 'start' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="text-7xl mb-6">🧠</div>
-              <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Scenario</h1>
-              <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">Test your relationship wisdom! Choose the best response to each scenario and discover your love personality.</p>
-
-              <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-500" /> How It Works</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li>🧠 8 romantic scenarios to analyze</li>
-                  <li>🎯 Choose the best response from 4 options</li>
-                  <li>⭐ Each answer scores differently</li>
-                  <li>💖 Discover your unique love personality</li>
-                </ul>
-              </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition">
-                <Play className="w-5 h-5 inline mr-2" /> Start
-              </button>
-            </motion.div>
-          )}
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
+            <ArrowLeft className="w-4 h-4" /> Back to Games
+          </Link>
 
           <AnimatePresence mode="wait">
-            {gameState === 'playing' && shuffled[current] && (
-              <motion.div key={current} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-4 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-bold">Scenario {current + 1}/{shuffled.length}</span>
-                  <span className="text-sm text-gray-500 font-medium">Score: {score}</span>
+            {phase === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="text-6xl mb-4">🎭</div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Scenarios</h1>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Test your relationship skills by answering romantic scenarios. Choose the best response for each situation!</p>
+                <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-xl mb-6 max-w-md mx-auto">
+                  <h3 className="font-semibold text-rose-700 mb-3">How to Play</h3>
+                  <div className="space-y-2 text-left text-sm text-gray-700">
+                    <p>• Read each romantic scenario carefully</p>
+                    <p>• Choose the best response</p>
+                    <p>• Higher points = better relationship moves!</p>
+                    <p>• Complete all 5 scenarios</p>
+                  </div>
                 </div>
-                <div className="w-full h-3 bg-white/50 rounded-full mb-8 overflow-hidden">
-                  <motion.div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full" style={{ width: `${((current + 1) / shuffled.length) * 100}%` }} />
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Game
+                </button>
+              </motion.div>
+            )}
+
+            {phase === 'playing' && current && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className="text-rose-700 font-semibold">Scenario {scenarioIdx + 1}/{SCENARIOS.length}</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
                 </div>
 
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6 text-center">
-                  <div className="text-5xl mb-4">{shuffled[current].emoji}</div>
-                  <p className="text-lg font-bold text-gray-900 leading-relaxed">{shuffled[current].situation}</p>
+                <div className="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-xl mb-6">
+                  <Brain className="w-8 h-8 text-rose-400 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-rose-700 mb-6">{current.situation}</h2>
+
+                  <div className="space-y-3 max-w-md mx-auto">
+                    {current.options.map(opt => {
+                      const isSelected = selected === opt.id;
+                      const isCorrect = showResult && opt.points >= 25;
+                      return (
+                        <button
+                          key={opt.id}
+                          onClick={() => handleSelect(opt.id)}
+                          disabled={showResult}
+                          className={`w-full p-4 rounded-xl text-left font-medium transition ${
+                            isSelected
+                              ? 'bg-rose-500 text-white ring-4 ring-rose-300'
+                              : showResult
+                                ? isCorrect
+                                  ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                                  : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
+                                : 'bg-rose-50 hover:bg-rose-100 border-2 border-rose-200 text-rose-700'
+                          }`}
+                        >
+                          {opt.text}
+                          {showResult && isSelected && <span className="block text-sm mt-1">+{opt.points} points</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  {shuffled[current].options.map((opt, i) => {
-                    const isSelected = selected === i;
-                    const isCorrect = selected !== null && i === selected && opt.points >= 25;
-                    const isWrong = selected !== null && i === selected && opt.points < 25;
-                    const isPast = selected !== null;
-                    return (
-                      <motion.button
-                        key={i}
-                        onClick={() => selectAnswer(i)}
-                        whileHover={{ scale: isPast ? 1 : 1.01 }}
-                        disabled={isPast}
-                        className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${isCorrect ? 'bg-green-50 border-green-400' : isWrong ? 'bg-red-50 border-red-300' : isPast ? 'bg-gray-50 border-gray-200 opacity-50' : 'bg-white/70 border-gray-200 hover:border-pink-300 hover:bg-white cursor-pointer'}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isCorrect ? 'bg-green-500 text-white' : isWrong ? 'bg-red-400 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                            {String.fromCharCode(65 + i)}
-                          </span>
-                          <span className={`font-medium ${isCorrect ? 'text-green-800' : isWrong ? 'text-red-700' : 'text-gray-700'}`}>{opt.text}</span>
-                          {isCorrect && <Star className="w-4 h-4 text-yellow-500 ml-auto" fill="currentColor" />}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
+                {showResult && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-pink-50 rounded-xl p-4 max-w-md mx-auto">
+                    <p className="text-pink-700 font-medium mb-2">💡 {current.explanation}</p>
+                    <button onClick={nextScenario} className="mt-3 bg-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:scale-105 transition">
+                      {scenarioIdx < SCENARIOS.length - 1 ? 'Next Scenario' : 'See Results'}
+                    </button>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+            {phase === 'finished' && (
+              <motion.div key="finish" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white/90 backdrop-blur rounded-2xl p-8 shadow-xl">
+                <Trophy className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+                <h2 className="text-3xl font-bold text-rose-700 mb-2">Great Relationship Skills!</h2>
+                <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
+                <p className="text-xl text-pink-600 mb-6">
+                  {score >= 120 ? 'Relationship expert! 💑' : score >= 80 ? 'Great communicator! 💖' : 'Keep learning together! 💕'}
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Play Again
+                  </button>
+                  <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {gameState === 'result' && (() => {
-            const personality = getPersonality();
-            return (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-                <div className="text-7xl mb-4">{personality.emoji}</div>
-                <h2 className="text-3xl font-display font-black text-gray-900 mb-2">Your Love Personality</h2>
-                <div className={`bg-gradient-to-br ${personality.color} rounded-[2rem] shadow-2xl p-8 mb-6 text-white`}>
-                  <h3 className="text-3xl font-black mb-2">{personality.title}</h3>
-                  <p className="text-white/80 text-lg">{personality.desc}</p>
-                </div>
-                <p className="text-5xl font-black gradient-text mb-8">{score}/{Math.max(...SCENARIOS.map(s => Math.max(...s.options.map(o => o.points))))} pts</p>
-
-                <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 mb-8 text-left">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-500" /> Your Answers</h3>
-                  {shuffled.map((scen, i) => {
-                    const chosenIdx = answers[i] ?? 0;
-                    const chosen = scen.options[chosenIdx];
-                    return (
-                      <div key={i} className="flex items-start gap-3 mb-3 p-3 bg-white/50 rounded-xl">
-                        <span className="text-2xl">{scen.emoji}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-700">{scen.situation}</p>
-                          <p className="text-xs text-gray-500 mt-1">Your answer: {chosen.text}</p>
-                        </div>
-                        <span className="text-xs font-bold text-amber-600">+{chosen.points}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex gap-4 justify-center">
-                  <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                  <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold">More Games</Link>
-                </div>
-              </motion.div>
-            );
-          })()}
         </div>
       </div>
     </PremiumBackground>

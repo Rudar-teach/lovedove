@@ -9,114 +9,93 @@ import PremiumBackground from '@/components/PremiumBackground';
 type Phase = 'idle' | 'playing' | 'finished';
 type Intensity = 'sweet' | 'deep' | 'spicy' | 'all';
 
-interface QA {
-  q: string;
-  intensity: 'sweet' | 'deep' | 'spicy';
-  emoji: string;
-}
+type Question = { id: number; text: string; intensity: Intensity };
 
-const QUESTIONS: QA[] = [
-  { q: 'What\'s your favorite childhood memory of love?', intensity: 'deep', emoji: '🧸' },
-  { q: 'When did you first know you loved me?', intensity: 'deep', emoji: '💖' },
-  { q: 'What do I do that makes you feel safe?', intensity: 'deep', emoji: '🛡️' },
-  { q: 'Describe our love in one word.', intensity: 'sweet', emoji: '✨' },
-  { q: 'What\'s your favorite thing about kissing me?', intensity: 'spicy', emoji: '💋' },
-  { q: 'What\'s the most romantic thing we\'ve ever done?', intensity: 'sweet', emoji: '🌹' },
-  { q: 'What would you do if I was feeling low?', intensity: 'deep', emoji: '🤗' },
-  { q: 'What makes you smile when you think of us?', intensity: 'sweet', emoji: '😊' },
-  { q: 'What\'s a fantasy you\'d love to make real?', intensity: 'spicy', emoji: '🔥' },
-  { q: 'What do I say that makes you melt?', intensity: 'sweet', emoji: '💝' },
-  { q: 'What\'s your biggest fear about love?', intensity: 'deep', emoji: '🌙' },
-  { q: 'Where would you want to go on our next trip?', intensity: 'sweet', emoji: '✈️' },
-  { q: 'What do you love most about my touch?', intensity: 'spicy', emoji: '✋' },
-  { q: 'What\'s the biggest risk you\'d take for us?', intensity: 'deep', emoji: '💪' },
-  { q: 'What song makes you think of me?', intensity: 'sweet', emoji: '🎵' },
-  { q: 'Describe your perfect day with me.', intensity: 'deep', emoji: '☀️' },
-  { q: 'What\'s something small I do that drives you wild?', intensity: 'spicy', emoji: '💦' },
-  { q: 'What does \"home\" mean to you?', intensity: 'deep', emoji: '🏠' },
-  { q: 'What\'s your love language with me?', intensity: 'deep', emoji: '💬' },
-  { q: 'What would you put on our perfect date menu?', intensity: 'sweet', emoji: '🍽️' },
-  { q: 'What would you like to try in the bedroom?', intensity: 'spicy', emoji: '🛏️' },
-  { q: 'What\'s the sweetest thing I\'ve ever done for you?', intensity: 'sweet', emoji: '🍬' },
-  { q: 'How do you want to grow together?', intensity: 'deep', emoji: '🌱' },
-  { q: 'What do you love about my laugh?', intensity: 'sweet', emoji: '😂' },
-  { q: 'What\'s something adventurous we should do?', intensity: 'spicy', emoji: '🏄' },
-  { q: 'How do you want me to comfort you?', intensity: 'deep', emoji: '🫂' },
-  { q: 'What makes our connection special?', intensity: 'deep', emoji: '✨' },
-  { q: 'What do I wear that drives you crazy?', intensity: 'spicy', emoji: '👗' },
-  { q: 'What kind of parent do I make you?', intensity: 'deep', emoji: '👶' },
-  { q: 'What\'s your go-to when you miss me?', intensity: 'sweet', emoji: '💌' },
+const QUESTIONS: Question[] = [
+  { id: 1, text: 'What was your first impression of me?', intensity: 'sweet' },
+  { id: 2, text: 'What is your favorite memory of us?', intensity: 'deep' },
+  { id: 3, text: 'What\'s one thing you love about my personality?', intensity: 'deep' },
+  { id: 4, text: 'What\'s a small thing I do that always makes you smile?', intensity: 'sweet' },
+  { id: 5, text: 'If we could teleport anywhere right now, where would we go?', intensity: 'sweet' },
+  { id: 6, text: 'What\'s something you\'ve never told anyone but me?', intensity: 'deep' },
+  { id: 7, text: 'What makes you feel most loved by me?', intensity: 'deep' },
+  { id: 8, text: 'What\'s the most romantic thing I\'ve ever done for you?', intensity: 'deep' },
+  { id: 9, text: 'What\'s a fantasy you\'ve had about us?', intensity: 'spicy' },
+  { id: 10, text: 'What part of my body do you find most attractive?', intensity: 'spicy' },
+  { id: 11, text: 'What would you do if I dressed up for a surprise?', intensity: 'spicy' },
+  { id: 12, text: 'Have you ever thought about our first kiss?', intensity: 'deep' },
+  { id: 13, text: 'What song always reminds you of us?', intensity: 'sweet' },
+  { id: 14, text: 'What\'s your idea of a perfect anniversary?', intensity: 'deep' },
+  { id: 15, text: 'If you could relive one moment with me, which one?', intensity: 'sweet' },
+  { id: 16, text: 'What\'s something you want us to try together?', intensity: 'spicy' },
+  { id: 17, text: 'How do you imagine our life together in 10 years?', intensity: 'deep' },
+  { id: 18, text: 'What\'s a secret wish you have for our relationship?', intensity: 'deep' },
+  { id: 19, text: 'What makes you feel most connected to me?', intensity: 'deep' },
+  { id: 20, text: 'If we won the lottery, what would we do first?', intensity: 'sweet' },
 ];
 
-const INTENSITY_COLORS: Record<string, { from: string; to: string; label: string }> = {
-  sweet: { from: 'from-pink-400 to-rose-400', to: 'from-pink-500 to-rose-500', label: '💕 Sweet' },
-  deep: { from: 'from-indigo-400 to-purple-400', to: 'from-indigo-500 to-purple-500', label: '💭 Deep' },
-  spicy: { from: 'from-red-400 to-orange-400', to: 'from-red-500 to-orange-500', label: '🔥 Spicy' },
+const INTENSITY_META: Record<Intensity, { label: string; emoji: string; color: string }> = {
+  sweet: { label: 'Sweet', emoji: '🍬', color: 'bg-pink-100 text-pink-700' },
+  deep: { label: 'Deep', emoji: '🌊', color: 'bg-purple-100 text-purple-700' },
+  spicy: { label: 'Spicy', emoji: '🔥', color: 'bg-red-100 text-red-700' },
+  all: { label: 'All', emoji: '💕', color: 'bg-rose-100 text-rose-700' },
 };
 
-export default function LoveQnaPage() {
-  const router = useRouter();
+export default function LoveQnAPage() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [intensity, setIntensity] = useState<Intensity>('all');
-  const [deck, setDeck] = useState<QA[]>([]);
-  const [currentQ, setCurrentQ] = useState<QA | null>(null);
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [currentAnswer, setCurrentAnswer] = useState('');
+  const [queue, setQueue] = useState<Question[]>([]);
+  const [current, setCurrent] = useState<Question | null>(null);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(180);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
-  const [completed, setCompleted] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     if (!timerActive) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      setPhase('finished');
-      return;
-    }
-    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    if (timeLeft <= 0) { setTimerActive(false); setAnswered(true); return; }
+    const t = setTimeout(() => setTimeLeft(t => t - 1), 1000);
     return () => clearTimeout(t);
   }, [timeLeft, timerActive]);
 
-  const startGame = (int: Intensity) => {
-    setIntensity(int);
-    const pool = int === 'all' ? QUESTIONS : QUESTIONS.filter(q => q.intensity === int);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    setDeck(shuffled);
-    setCurrentQ(shuffled[0]);
-    setAnswers([]);
-    setCurrentAnswer('');
+  const startGame = () => {
+    let filtered = intensity === 'all' ? [...QUESTIONS] : QUESTIONS.filter(q => q.intensity === intensity);
+    const shuffled = filtered.sort(() => Math.random() - 0.5);
+    setQueue(shuffled);
     setScore(0);
-    setCompleted(0);
-    setTimeLeft(180);
-    setTimerActive(true);
+    setStreak(0);
+    setAnswered(false);
+    setTimerActive(false);
+    setCurrent(shuffled[0] || null);
+    setTimeLeft(15);
     setPhase('playing');
   };
 
-  const submitAnswer = () => {
-    if (!currentAnswer.trim()) return;
-    const words = currentAnswer.trim().split(/\s+/);
-    const pts = Math.min(words.length * 3, 20);
+  const answerYes = () => {
+    if (!current) return;
+    setAnswered(true);
+    setTimerActive(false);
+    setStreak(s => s + 1);
+    const pts = 10 + streak * 5 + Math.floor(timeLeft / 3) * 2;
     setScore(s => s + pts);
-    const newAnswers = [...answers, currentAnswer];
-    setAnswers(newAnswers);
-    setCurrentAnswer('');
+  };
 
-    if (completed < deck.length - 1) {
-      setCompleted(c => c + 1);
-      setCurrentQ(deck[completed + 1]);
-    } else {
-      setTimerActive(false);
+  const nextQuestion = () => {
+    const newQueue = queue.slice(1);
+    if (newQueue.length === 0) {
       setPhase('finished');
+    } else {
+      setQueue(newQueue);
+      setCurrent(newQueue[0]);
+      setAnswered(false);
+      setTimerActive(false);
+      setTimeLeft(15);
     }
   };
 
-  const getRating = (s: number) => {
-    if (s >= 200) return { text: 'Soul Mates 💞', emoji: '🏆' };
-    if (s >= 150) return { text: 'Deep Connectors 💖', emoji: '⭐' };
-    if (s >= 100) return { text: 'Heart Talkers 💕', emoji: '✨' };
-    return { text: 'Getting Closer 🌱', emoji: '💪' };
-  };
+  const currentIntensity = current?.intensity || 'sweet';
+  const meta = INTENSITY_META[currentIntensity];
 
   return (
     <PremiumBackground>
@@ -131,56 +110,58 @@ export default function LoveQnaPage() {
               <motion.div key="idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center">
                 <div className="text-6xl mb-4">💬</div>
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">Love Q&A</h1>
-                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Answer thought-provoking love questions together. Discover what makes your relationship special.</p>
+                <p className="text-gray-700 mb-6 max-w-xl mx-auto">Answer romantic questions together! How well do you really know each other?</p>
+
                 <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-xl mb-6 max-w-md mx-auto">
-                  <h3 className="font-semibold text-rose-700 mb-3">Choose Your Intensity</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => startGame('all')} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white p-3 rounded-xl hover:scale-105 transition">All Questions 💝</button>
-                    <button onClick={() => startGame('sweet')} className="bg-gradient-to-r from-pink-400 to-rose-400 text-white p-3 rounded-xl hover:scale-105 transition">Sweet 💕</button>
-                    <button onClick={() => startGame('deep')} className="bg-gradient-to-r from-indigo-400 to-purple-500 text-white p-3 rounded-xl hover:scale-105 transition">Deep 💭</button>
-                    <button onClick={() => startGame('spicy')} className="bg-gradient-to-r from-red-400 to-orange-500 text-white p-3 rounded-xl hover:scale-105 transition">Spicy 🔥</button>
+                  <h3 className="font-semibold text-rose-700 mb-3">Choose Intensity</h3>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {(Object.keys(INTENSITY_META) as Intensity[]).filter(k => k !== 'all').map(k => (
+                      <button key={k} onClick={() => setIntensity(k)} className={`px-4 py-2 rounded-full text-sm font-medium transition ${intensity === k ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}>
+                        {INTENSITY_META[k].emoji} {INTENSITY_META[k].label}
+                      </button>
+                    ))}
                   </div>
                 </div>
+
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                  <Play className="w-5 h-5" /> Start Q&A
+                </button>
               </motion.div>
             )}
 
-            {phase === 'playing' && currentQ && (
-              <motion.div key={completed} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white/90 rounded-2xl p-8 shadow-xl">
-                <div className="flex justify-between items-center mb-4 text-sm flex-wrap gap-2">
-                  <span className="text-rose-500">Question {completed + 1}/{deck.length}</span>
-                  <span className="text-pink-600">⭐ {score} pts</span>
-                  <span className="text-rose-700 font-semibold">⏱️ {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>
+            {phase === 'playing' && current && (
+              <motion.div key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+                <div className="flex justify-between items-center mb-4 bg-white/80 rounded-xl p-3 shadow flex-wrap gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${meta.color}`}>{meta.emoji} {meta.label}</span>
+                  <span className="text-pink-600 font-semibold">⭐ {score} pts</span>
+                  <span className="text-rose-600 font-semibold">🔥 {streak} streak</span>
+                  <span className="text-rose-700 font-semibold">⏱️ {timeLeft}s</span>
                 </div>
 
-                <div className={`bg-gradient-to-r ${INTENSITY_COLORS[currentQ.intensity].from} to ${INTENSITY_COLORS[currentQ.intensity].to} rounded-xl p-4 mb-4 text-white text-center`}>
-                  <span className="text-sm opacity-90">{INTENSITY_COLORS[currentQ.intensity].label}</span>
-                  <div className="text-3xl my-2">{currentQ.emoji}</div>
-                  <h3 className="text-xl font-semibold">{currentQ.q}</h3>
-                </div>
+                <div className="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-xl mb-6">
+                  <MessageCircle className="w-8 h-8 text-rose-400 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-rose-700 mb-6">{current.text}</h2>
 
-                <textarea
-                  value={currentAnswer}
-                  onChange={e => setCurrentAnswer(e.target.value)}
-                  placeholder="Type your honest answer..."
-                  className="w-full p-4 border-2 border-rose-200 rounded-xl focus:border-rose-500 focus:outline-none min-h-[120px] resize-y"
-                  autoFocus
-                />
-                <div className="text-xs text-gray-500 mt-1">{currentAnswer.split(/\s+/).filter(Boolean).length} words</div>
-
-                <button onClick={submitAnswer} disabled={!currentAnswer.trim()} className="w-full mt-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 rounded-full font-semibold disabled:opacity-50 hover:scale-105 transition">
-                  <MessageCircle className="inline w-4 h-4 mr-1" /> Send Answer
-                </button>
-
-                {answers.length > 0 && (
-                  <div className="mt-6 bg-rose-50 rounded-xl p-4">
-                    <h4 className="text-sm font-semibold text-rose-700 mb-2">💕 Your Journey</h4>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {answers.map((a, i) => (
-                        <div key={i} className="text-sm text-gray-700 bg-white p-2 rounded-lg">{a}</div>
-                      ))}
+                  {!answered ? (
+                    <div>
+                      <div className="w-full bg-rose-200 rounded-full h-2 mb-4">
+                        <div className="bg-rose-500 h-2 rounded-full transition-all" style={{ width: `${(timeLeft / 15) * 100}%` }} />
+                      </div>
+                      <div className="flex justify-center gap-3">
+                        <button onClick={answerYes} className="bg-green-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Yes! ❤️</button>
+                        <button onClick={answerYes} className="bg-blue-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Haha, exactly! 😂</button>
+                        <button onClick={answerYes} className="bg-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">100% agree! 💯</button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-pink-600 font-semibold mb-4">+{10 + streak * 5 + Math.floor(timeLeft / 3) * 2} points! Great answer! 💕</p>
+                      <button onClick={nextQuestion} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition">
+                        {queue.length > 1 ? 'Next Question' : 'See Results'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -189,10 +170,9 @@ export default function LoveQnaPage() {
                 <Flame className="w-12 h-12 text-rose-500 mx-auto mb-3" />
                 <h2 className="text-3xl font-bold text-rose-700 mb-2">Q&A Complete!</h2>
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
-                <p className="text-2xl text-pink-600 mb-2">{getRating(score).emoji} {getRating(score).text}</p>
-                <p className="text-gray-700 mb-6">{answers.length} questions answered</p>
+                <p className="text-xl text-pink-600 mb-6">{streak} max streak</p>
                 <div className="flex gap-3 justify-center">
-                  <button onClick={() => setPhase('idle')} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Play Again
                   </button>
                   <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
