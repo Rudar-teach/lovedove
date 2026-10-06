@@ -279,9 +279,9 @@ export default function HeartCatcherPage() {
     basketTargetRef.current = Math.max(0, Math.min(W - BASKET_W, x - BASKET_W / 2));
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => handleTouch(e, false);
+  const handleTouchMove = (e: React.TouchEvent) => handleTouch(e as any, false);
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (touchRef.current?.active) handleTouch(e, false);
+    if (touchRef.current?.active) handleTouch(e as any, false);
   };
   const handleEnd = () => {
     if (touchRef.current) touchRef.current.active = false;
@@ -331,10 +331,10 @@ export default function HeartCatcherPage() {
                 ref={canvasRef}
                 width={W}
                 height={H}
-                onTouchStart={handleTouch}
-                onTouchMove={handleTouchMove}
+                onTouchStart={(e) => handleTouch(e as any, true)}
+                onTouchMove={(e) => handleTouch(e as any, false)}
                 onTouchEnd={handleEnd}
-                onMouseDown={handleTouch}
+                onMouseDown={(e) => handleTouch(e as any, true)}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleEnd}
                 onMouseLeave={handleEnd}

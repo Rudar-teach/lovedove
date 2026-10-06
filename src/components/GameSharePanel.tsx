@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'next/link';
+import Link from 'next/link';
 import { Copy, Check, Share2, Users, X } from 'lucide-react';
 import { generateGameCode, getGameShareLink } from '@/lib/gameShare';
 import { useAuthStore } from '@/stores/useAuthStore';

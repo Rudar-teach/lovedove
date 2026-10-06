@@ -52,6 +52,26 @@ const games = [
   { name: 'Speed Date', slug: 'speeddate', icon: '💬', desc: '8 rapid-fire questions', gradient: 'from-red-400 to-pink-500', category: 'Quiz' },
   { name: 'Memory Palace', slug: 'memorypalace', icon: '🏰', desc: 'Match love symbols', gradient: 'from-violet-400 to-pink-500', category: 'Classic' },
   { name: 'Couple Golf', slug: 'couplegolfs', icon: '⛳', desc: '9 holes of love', gradient: 'from-green-400 to-emerald-500', category: 'Love' },
+  // Love 2
+  { name: 'Love Crossword', slug: 'lovecrossword', icon: '✏️', desc: 'Solve love-themed crossword', gradient: 'from-rose-400 to-pink-500', category: 'Quiz' },
+  { name: 'Heart Match', slug: 'heartmatch', icon: '💘', desc: 'Memory matching game', gradient: 'from-primary-400 to-rose-500', category: 'Classic' },
+  { name: 'Couple Trivia 2', slug: 'coupletrivia2', icon: '💕', desc: '10 couple questions', gradient: 'from-pink-400 to-rose-500', category: 'Quiz' },
+  { name: 'Couple Quiz 2', slug: 'couplequiz2', icon: '💝', desc: '10 relationship questions', gradient: 'from-rose-400 to-red-500', category: 'Quiz' },
+  { name: 'Love Bingo', slug: 'lovebingo', icon: '🎯', desc: 'Match 3 in a row', gradient: 'from-pink-400 to-purple-500', category: 'Party' },
+  { name: 'Heart Puzzle', slug: 'heartpuzzle', icon: '🧩', desc: 'Arrange love pieces', gradient: 'from-rose-400 to-red-500', category: 'Love' },
+  { name: 'Typing Love', slug: 'lovetyping', icon: '⌨️', desc: 'Type romantic quotes', gradient: 'from-cyan-400 to-blue-500', category: 'Quiz' },
+  { name: 'Memory Cards', slug: 'couplememory2', icon: '🎴', desc: 'Match 12 pairs of love symbols', gradient: 'from-purple-400 to-pink-500', category: 'Classic' },
+  { name: 'Word Search', slug: 'lovewordsearch', icon: '🔎', desc: 'Unscramble 10 love words', gradient: 'from-yellow-400 to-orange-500', category: 'Quiz' },
+  { name: 'Heart Quiz', slug: 'heartquiz', icon: '💝', desc: '12 heart knowledge questions', gradient: 'from-rose-400 to-red-500', category: 'Quiz' },
+  { name: 'Couple Charades', slug: 'couplecharades', icon: '🎭', desc: 'Act out 16 romantic words!', gradient: 'from-purple-500 to-pink-500', category: 'Party' },
+  { name: 'Love Math', slug: 'lovemath', icon: '➕', desc: 'Solve math in 60 seconds!', gradient: 'from-blue-400 to-indigo-500', category: 'Quiz' },
+  { name: 'Heart Spelling', slug: 'heartspelling', icon: '✍️', desc: 'Spell 12 love words', gradient: 'from-teal-400 to-cyan-500', category: 'Quiz' },
+  { name: 'Couple Riddles', slug: 'coupleriddles', icon: '🧩', desc: '12 love riddles', gradient: 'from-violet-400 to-purple-500', category: 'Quiz' },
+  { name: 'Emoji Quiz', slug: 'loveemojiquiz', icon: '😀', desc: 'Guess the movie!', gradient: 'from-yellow-400 to-pink-500', category: 'Party' },
+  { name: 'Color Quiz', slug: 'heartcolors', icon: '🎨', desc: '10 color questions', gradient: 'from-pink-400 to-rose-500', category: 'Quiz' },
+  { name: 'Pattern Memory', slug: 'couplepatterns', icon: '🎨', desc: 'Memorize color patterns', gradient: 'from-indigo-400 to-purple-500', category: 'Classic' },
+  { name: 'Number Sequence', slug: 'lovesequences', icon: '🔢', desc: 'Find next number', gradient: 'from-cyan-400 to-blue-500', category: 'Quiz' },
+  { name: 'Heart Rhythm', slug: 'heartrhythm', icon: '💓', desc: 'Tap to the beat!', gradient: 'from-rose-400 to-red-500', category: 'Love' },
 ];
 
 const categories = ['All', ...new Set(games.map(g => g.category))];

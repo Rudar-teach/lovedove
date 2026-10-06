@@ -5,7 +5,7 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Love Dove <onboarding@resend.dev>';
 // Default recipient for now; can be overridden per-call
-const DEFAULT_RECIPIENT = process.env.PROPOSAL_NOTIFICATION_EMAIL || 'rudarsalaria12345@gmail.com';
+const DEFAULT_RECIPIENT = process.env.PROPOSAL_NOTIFICATION_EMAIL || 'noreply@example.com';
 
 export type EmailPayload = {
   to: string;

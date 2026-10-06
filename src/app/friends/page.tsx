@@ -1,163 +1,183 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Heart, ArrowLeft, UserPlus, UserCheck, Send, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, UserPlus, MessageCircle, Search, UserMinus, Users, X, Check } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
-import Button from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase';
 import PremiumBackground from '@/components/PremiumBackground';
-import Input from '@/components/ui/Input';
+import TiltCard from '@/components/3d/TiltCard';
+import Button from '@/components/ui/Button';
+import toast from 'react-hot-toast';
 
-type Profile = { id: string; full_name: string; username: string; avatar_url: string | null };
-type FriendReq = { id: string; sender_id: string; receiver_id: string; status: string };
+type Tab = 'friends' | 'requests' | 'search';
 
-export default function FriendsPage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const [friends, setFriends] = useState<Profile[]>([]);
-  const [requests, setRequests] = useState<FriendReq[]>([]);
-  const [allUsers, setAllUsers] = useState<Profile[]>([]);
-  const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'discover'>('friends');
-  const [searchQuery, setSearchQuery] = useState('');
+export default function FriendsPage(){
+  const { user } = useAuthStore();
+  const [tab, setTab] = useState<Tab>('friends');
+  const [friends, setFriends] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [searchQ, setSearchQ] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sendingTo, setSendingTo] = useState<string|null>(null);
 
-  useEffect(() => { if (!isAuthenticated) router.push('/auth/login'); else loadData(); }, [isAuthenticated]);
-
-  const loadData = async () => {
+  const loadFriends = async () => {
     if (!user) return;
-    const { data: friendReqs } = await supabase.from('friend_requests').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
-    if (friendReqs) {
-      const accepted = friendReqs.filter(r => r.status === 'accepted');
-      const otherIds = accepted.map(r => r.sender_id === user.id ? r.receiver_id : r.sender_id);
-      if (otherIds.length > 0) {
-        const { data: friendProfiles } = await supabase.from('profiles').select('*').in('id', otherIds);
-        if (friendProfiles) setFriends(friendProfiles);
-      }
-      const pending = friendReqs.filter(r => r.status === 'pending' && r.receiver_id === user.id);
-      setRequests(pending);
-    }
-    const { data: users } = await supabase.from('profiles').select('id, full_name, username, avatar_url').neq('id', user.id).limit(20);
-    if (users) setAllUsers(users);
+    const { data: reqs } = await supabase.from('friend_requests').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).eq('status','accepted');
+    const ids = reqs?.map(r => r.sender_id === user.id ? r.receiver_id : r.sender_id) || [];
+    if (user.partner_id) ids.push(user.partner_id);
+    const unique = [...new Set(ids)];
+    const { data: profiles } = await supabase.from('profiles').select('*').in('id', unique);
+    setFriends(profiles || []);
   };
 
-  const sendRequest = async (userId: string) => {
-    const { error } = await supabase.from('friend_requests').insert({ sender_id: user!.id, receiver_id: userId, status: 'pending' });
-    if (error) toast.error('Failed to send request');
-    else { toast.success('Friend request sent! 💕'); loadData(); }
+  const loadRequests = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('friend_requests').select('*,sender:profiles!friend_requests_sender_id_fkey(*),receiver:profiles!friend_requests_receiver_id_fkey(*)').eq('receiver_id', user.id).eq('status','pending');
+    setRequests(data || []);
   };
 
-  const acceptRequest = async (reqId: string, senderId: string) => {
-    const { error } = await supabase.from('friend_requests').update({ status: 'accepted' }).eq('id', reqId);
-    if (!error) { toast.success('Friend added! 💖'); await supabase.from('profiles').update({ partner_id: senderId }).eq('id', user!.id).is('partner_id', null); loadData(); }
+  useEffect(() => { if (user) { loadFriends(); loadRequests(); } }, [user]);
+
+  const search = async (q: string) => {
+    setSearchQ(q);
+    if (q.trim().length < 2) { setResults([]); return; }
+    setSearching(true);
+    const { data } = await supabase.from('profiles').select('*').or(`full_name.ilike.%${q}%,username.ilike.%${q}%`).neq('id', user?.id || '').limit(20);
+    setResults(data || []);
+    setSearching(false);
   };
 
-  if (!isAuthenticated) return null;
+  const sendRequest = async (id: string) => {
+    setSendingTo(id);
+    const { error } = await supabase.from('friend_requests').insert({ sender_id: user!.id, receiver_id: id, status: 'pending' });
+    if (error) { toast.error(error.message); }
+    else { toast.success('Friend request sent! 💕'); }
+    setSendingTo(null);
+  };
 
-  const discovered = allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === u.id) && !requests.some(r => r.receiver_id === u.id));
+  const respond = async (id: string, status: 'accepted'|'rejected') => {
+    await supabase.from('friend_requests').update({ status }).eq('id', id);
+    toast.success(status === 'accepted' ? 'Friend added! 🎉' : 'Request declined');
+    loadFriends(); loadRequests();
+  };
+
+  const removeFriend = async (id: string) => {
+    await supabase.from('friend_requests').delete().or(`and(sender_id.eq.${user!.id},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${user!.id})`);
+    toast.success('Friend removed');
+    loadFriends();
+  };
+
+  if (!user) {
+    return (
+      <PremiumBackground>
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-gray-700 mb-4">Please log in to view friends.</p>
+            <Link href="/auth/login"><Button>Log In</Button></Link>
+          </div>
+        </div>
+      </PremiumBackground>
+    );
+  }
 
   return (
     <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/dashboard"><button className="p-2.5 hover:bg-white/60 backdrop-blur-sm rounded-2xl transition-all"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
-            <h1 className="text-3xl font-display font-black gradient-text-animated">Friends</h1>
-            <div className="w-10" />
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Link href="/dashboard"><button className="p-2 hover:bg-white rounded-full transition-colors"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
+            <h1 className="text-2xl font-display font-black gradient-text-animated flex items-center gap-2"><Users className="w-6 h-6 text-primary-500" /> Friends</h1>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-8 bg-white/70 backdrop-blur-xl p-1.5 rounded-2xl shadow-lg border border-pink-100/60 max-w-md mx-auto">
-            {[
-              { key: 'friends', label: 'My Friends', icon: '❤️', count: friends.length },
-              { key: 'requests', label: 'Requests', icon: '📩', count: requests.length },
-              { key: 'discover', label: 'Discover', icon: '🔍' },
-            ].map(tab => (
-              <button key={tab.key} onClick={() => setActiveTab(tab.key as any)} className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === tab.key ? 'bg-gradient-to-r from-primary-500 to-rose-500 text-white shadow-lg shadow-primary-500/25' : 'text-gray-600 hover:bg-pink-50'}`}>
-                {tab.label} {(tab.count ?? 0) > 0 && activeTab === tab.key && `(${tab.count})`}
-              </button>
-            ))}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            <button onClick={()=>setTab('friends')} className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${tab==='friends'?'bg-gradient-to-r from-primary-500 to-rose-500 text-white shadow-lg':'bg-white/70 backdrop-blur-sm text-gray-700 border border-white/60 hover:bg-white'}`}>
+              Friends ({friends.length})
+            </button>
+            <button onClick={()=>setTab('requests')} className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${tab==='requests'?'bg-gradient-to-r from-primary-500 to-rose-500 text-white shadow-lg':'bg-white/70 backdrop-blur-sm text-gray-700 border border-white/60 hover:bg-white'}`}>
+              Requests ({requests.length})
+            </button>
+            <button onClick={()=>setTab('search')} className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${tab==='search'?'bg-gradient-to-r from-primary-500 to-rose-500 text-white shadow-lg':'bg-white/70 backdrop-blur-sm text-gray-700 border border-white/60 hover:bg-white'}`}>
+              Find People
+            </button>
           </div>
 
-          {/* Friends */}
-          {activeTab === 'friends' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              {friends.length === 0 ? (
-                <div className="text-center py-16 bg-white/60 backdrop-blur-xl rounded-[2rem] border border-pink-100/60">
-                  <p className="text-7xl mb-4">💕</p>
-                  <p className="text-xl font-bold text-gray-700 mb-2">No friends yet</p>
-                  <p className="text-gray-500">Discover and add friends to play games together!</p>
-                </div>
-              ) : friends.map(friend => (
-                <div key={friend.id} className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] border border-pink-100/60 shadow-lg p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-400 to-rose-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                      {friend.full_name?.[0]?.toUpperCase() || '?'}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-lg">{friend.full_name}</h3>
-                      <p className="text-gray-500 text-sm">@{friend.username}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Link href={`/birthday/${friend.username}`}><Button variant="outline" size="sm">Visit Site</Button></Link>
-                    </div>
+          <AnimatePresence mode="wait">
+            {tab==='friends' && (
+              <motion.div key="friends" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-3">
+                {friends.length===0?(
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">👥</div>
+                    <p className="text-gray-500 text-lg">No friends yet!</p>
+                    <p className="text-gray-400 text-sm">Use "Find People" to send friend requests</p>
                   </div>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          {/* Requests */}
-          {activeTab === 'requests' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              {requests.length === 0 ? (
-                <div className="text-center py-16 bg-white/60 backdrop-blur-xl rounded-[2rem] border border-pink-100/60">
-                  <p className="text-7xl mb-4">📭</p>
-                  <p className="text-xl font-bold text-gray-700">No pending requests</p>
-                </div>
-              ) : requests.map(req => (
-                <div key={req.id} className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] border border-pink-100/60 shadow-lg p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                      <Heart className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900">Someone wants to connect with you!</h3>
-                      <p className="text-sm text-gray-500">Accept to become friends and start playing together</p>
-                    </div>
-                    <button onClick={() => acceptRequest(req.id, req.sender_id)} className="p-3 bg-gradient-to-r from-primary-500 to-rose-500 text-white rounded-full hover:shadow-lg hover:scale-110 transition-all"><UserCheck className="w-5 h-5" /></button>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          {/* Discover */}
-          {activeTab === 'discover' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Input placeholder="Search users by name or username..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="mb-6" />
-              <div className="space-y-4">
-                {(searchQuery ? allUsers.filter(u => u.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || u.username.toLowerCase().includes(searchQuery.toLowerCase())) : discovered).map(person => (
-                  <div key={person.id} className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] border border-pink-100/60 shadow-lg p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                        {person.full_name?.[0]?.toUpperCase() || '?'}
+                ):friends.map(f=>(
+                  <TiltCard key={f.id} intensity={4}>
+                    <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-4 border border-pink-100/60 shadow-md flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">{f.full_name?.[0]?.toUpperCase()}</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 truncate">{f.full_name}</h3>
+                        <p className="text-sm text-gray-500">@{f.username}</p>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-900 text-lg">{person.full_name}</h3>
-                        <p className="text-gray-500 text-sm">@{person.username}</p>
+                      <div className="flex gap-2">
+                        <Link href={`/chat?user=${f.id}`}><button className="p-2 rounded-xl bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"><MessageCircle className="w-5 h-5"/></button></Link>
+                        <button onClick={()=>removeFriend(f.id)} className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"><UserMinus className="w-5 h-5"/></button>
                       </div>
-                      <button onClick={() => sendRequest(person.id)} className="flex items-center gap-2 bg-gradient-to-r from-primary-500 to-rose-500 text-white px-5 py-2.5 rounded-full hover:shadow-lg hover:scale-105 transition-all font-semibold text-sm">
-                        <UserPlus className="w-4 h-4" /> Add
-                      </button>
                     </div>
-                  </div>
+                  </TiltCard>
                 ))}
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+
+            {tab==='requests' && (
+              <motion.div key="requests" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-3">
+                {requests.length===0?(
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">📨</div>
+                    <p className="text-gray-500 text-lg">No pending requests</p>
+                  </div>
+                ):requests.map(r=>(
+                  <TiltCard key={r.id} intensity={4}>
+                    <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-4 border border-pink-100/60 shadow-md flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">{r.sender?.full_name?.[0]?.toUpperCase()}</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 truncate">{r.sender?.full_name}</h3>
+                        <p className="text-sm text-gray-500">@{r.sender?.username}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={()=>respond(r.id,'accepted')} className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100"><Check className="w-5 h-5"/></button>
+                        <button onClick={()=>respond(r.id,'rejected')} className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><X className="w-5 h-5"/></button>
+                      </div>
+                    </div>
+                  </TiltCard>
+                ))}
+              </motion.div>
+            )}
+
+            {tab==='search' && (
+              <motion.div key="search" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
+                  <input value={searchQ} onChange={e=>search(e.target.value)} placeholder="Search by name or username..." className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/80 backdrop-blur-xl border-2 border-white/60 focus:border-primary-400 outline-none text-gray-700"/>
+                </div>
+                {searching && <div className="text-center py-4"><div className="w-6 h-6 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto"/></div>}
+                {results.map(u=>(
+                  <TiltCard key={u.id} intensity={4}>
+                    <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-4 border border-pink-100/60 shadow-md flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center text-white text-xl font-bold shadow-lg">{u.full_name?.[0]?.toUpperCase()}</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 truncate">{u.full_name}</h3>
+                        <p className="text-sm text-gray-500">@{u.username}</p>
+                      </div>
+                      <Button onClick={()=>sendRequest(u.id)} isLoading={sendingTo===u.id} size="sm" variant="primary"><UserPlus className="w-4 h-4 mr-1"/> Add</Button>
+                    </div>
+                  </TiltCard>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </PremiumBackground>

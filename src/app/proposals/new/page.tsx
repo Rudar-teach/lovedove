@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -29,64 +29,19 @@ const PROPOSAL_CATEGORIES: ProposalCategory[] = [
 ];
 
 const CATEGORY_MESSAGES: Record<string, string[]> = {
-  romantic_date: [
-    'I would love to take you out on a romantic date. Would you say yes?',
-    'How about a candlelit dinner for two?',
-    'Let me take you somewhere special...',
-  ],
-  valentine: [
-    'Roses are red, violets are blue... will you be my Valentine?',
-    'My heart only beats for you. Will you be my Valentine?',
-    'This Valentine\'s, I want to spend it with you.',
-  ],
-  marriage: [
-    'From the moment I met you, I knew you were the one. Will you marry me?',
-    'You are my forever person. Say yes to forever with me.',
-    'Every love story is beautiful, but ours is my favorite. Will you marry me?',
-  ],
-  late_night: [
-    'The stars are brighter when I talk to you. Stay up late with me tonight?',
-    'I can\'t sleep without talking to you. Can we chat tonight?',
-    'Late night conversations with you are my favorite thing.',
-  ],
-  party: [
-    'Let\'s celebrate together! Will you party with me?',
-    'A party isn\'t the same without you. Will you come?',
-    'I want to dance with you tonight. Let\'s party!',
-  ],
-  love_letter: [
-    'I have so many things to say to you, and this letter is just the beginning.',
-    'Words can\'t express how much I love you, but let me try...',
-    'You deserve to know just how much you mean to me.',
-  ],
-  gift_exchange: [
-    'I have something special for you. Will you exchange gifts with me?',
-    'I want to surprise you with something. Gift exchange?',
-    'The best gift is seeing your smile. Let\'s exchange gifts!',
-  ],
-  adventure: [
-    'Pack your bags, we\'re going on an adventure together!',
-    'Life is an adventure, and I want you by my side. Come with me?',
-    'Let\'s explore the world together, one adventure at a time.',
-  ],
-  dinner: [
-    'How about dinner for two? My treat!',
-    'I want to share a meal with you and hear about your day.',
-    'Dinner, wine, and you sounds perfect to me.',
-  ],
-  movie_night: [
-    'I\'ll bring the popcorn, you bring the cozy blankets. Movie night?',
-    'Let\'s binge-watch something together tonight!',
-    'A movie under the stars with you sounds perfect.',
-  ],
-  custom: [
-    'I have something I want to ask you...',
-    'I\'ve been thinking about you a lot and...',
-    'I wrote this proposal just for you.',
-  ],
+  romantic_date: ['Would you like to go on a romantic dinner date with me?', 'Let me take you out on a beautiful evening together!'],
+  valentine: ['Will you be my Valentine this year?', 'I want to make this Valentine\'s Day special with you!'],
+  marriage: ['Will you marry me?', 'I want to spend forever with you!'],
+  late_night: ['Want to stay up and chat with me tonight?', 'Let\'s have a late-night conversation under the stars!'],
+  party: ['Let\'s throw a party together!', 'I want to celebrate with you!'],
+  love_letter: ['I want to write you a love letter...', 'There are so many things I want to tell you...'],
+  gift_exchange: ['I have a special gift for you!', 'Let\'s exchange gifts and make each other happy!'],
+  adventure: ['Want to go on an adventure with me?', 'Let\'s explore the world together!'],
+  dinner: ['Let me take you out for a romantic dinner!', 'I want to share a delicious meal with you!'],
+  movie_night: ['Want to have a movie night with me?', 'Let\'s cuddle up and watch a film together!'],
 };
 
-export default function CreateProposalPage() {
+function CreateProposalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
@@ -95,7 +50,6 @@ export default function CreateProposalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [searching, setSearching] = useState(false);
-
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('romantic_date');
@@ -181,11 +135,8 @@ export default function CreateProposalPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    if (query.trim()) {
-      searchFriends(query);
-    } else {
-      setSearchResults([]);
-    }
+    if (query.trim()) searchFriends(query);
+    else setSearchResults([]);
   };
 
   const selectReceiver = (profile: Profile) => {
@@ -218,7 +169,6 @@ export default function CreateProposalPage() {
 
       if (error) throw error;
 
-      // Create notification for receiver
       const { error: notifError } = await supabase
         .from('notifications')
         .insert({
@@ -226,44 +176,11 @@ export default function CreateProposalPage() {
           type: 'proposal_received',
           title: `${user.full_name} sent you a proposal!`,
           message: `"${title}"`,
-          link: `/proposals/${data.id}/respond`,
+          link: `/proposals/${data!.id}/respond`,
           read: false,
         });
 
       if (notifError) console.error('Notification error:', notifError);
-
-      // Send email via API
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const response = await fetch('/api/send-proposal-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              to: receiver.email,
-              proposalData: {
-                proposalId: data.id,
-                senderName: user.full_name,
-                receiverName: receiver.full_name,
-                title: title.trim(),
-                message: message.trim(),
-                category: selectedCategory.title,
-                categoryEmoji: selectedCategory.emoji,
-                responseUrl: `${window.location.origin}/proposals/${data.id}/respond`,
-              },
-            }),
-          });
-
-          if (!response.ok) {
-            console.error('Email API error:', await response.text());
-          }
-        }
-      } catch (emailError) {
-        console.error('Email send error:', emailError);
-      }
 
       toast.success('Proposal sent! 💕');
       router.push('/proposals');
@@ -279,20 +196,16 @@ export default function CreateProposalPage() {
   return (
     <PremiumBackground>
       <div className="min-h-screen pb-20">
-        {/* Navbar */}
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => router.back()}
-                    className="p-2 rounded-xl hover:bg-white/60 transition-colors"
-                  >
+                  <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-white/60 transition-colors">
                     <ArrowLeft className="w-5 h-5 text-gray-600" />
                   </button>
                   <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center shadow-lg">
                       <Heart className="w-4 h-4 text-white heart-beat" fill="white" />
                     </div>
                     <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
@@ -308,11 +221,7 @@ export default function CreateProposalPage() {
         </nav>
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-10"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <h1 className="text-3xl sm:text-4xl font-display font-black text-gray-900 mb-2">
               Create a <span className="gradient-text-animated">Proposal</span>
             </h1>
@@ -321,12 +230,8 @@ export default function CreateProposalPage() {
 
           <div className="space-y-6">
             {/* Receiver */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Heart className="w-5 h-5 text-primary-500 heart-beat" />
                 To: {receiver ? receiver.full_name : 'Select someone'}
@@ -343,13 +248,9 @@ export default function CreateProposalPage() {
                 </div>
               ) : (
                 <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
+                  <input type="text" value={searchQuery} onChange={handleSearchChange}
                     placeholder="Search for a friend by name or username..."
-                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none"
-                  />
+                    className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none" />
                   {searching && (
                     <div className="mt-3 flex justify-center">
                       <div className="w-6 h-6 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
@@ -358,11 +259,7 @@ export default function CreateProposalPage() {
                   {searchResults.length > 0 && (
                     <div className="mt-2 bg-white rounded-2xl border border-pink-100 shadow-lg overflow-hidden">
                       {searchResults.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => selectReceiver(p)}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pink-50 transition-colors"
-                        >
+                        <button key={p.id} onClick={() => selectReceiver(p)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pink-50 transition-colors">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center text-white font-bold text-xs">
                             {p.full_name?.[0]?.toUpperCase()}
                           </div>
@@ -379,27 +276,18 @@ export default function CreateProposalPage() {
             </motion.div>
 
             {/* Category */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary-500" />
                 Category
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {PROPOSAL_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategoryChange(cat.id)}
+                  <button key={cat.id} onClick={() => handleCategoryChange(cat.id)}
                     className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl border-2 transition-all duration-200 ${
-                      category === cat.id
-                        ? 'border-primary-500 bg-pink-50 shadow-lg shadow-pink-200/20'
-                        : 'border-pink-100 bg-white/50 hover:border-primary-300'
-                    }`}
-                  >
+                      category === cat.id ? 'border-primary-500 bg-pink-50 shadow-lg shadow-pink-200/20' : 'border-pink-100 bg-white/50 hover:border-primary-300'
+                    }`}>
                     <span className="text-xl">{cat.emoji}</span>
                     <span className={`text-sm font-semibold ${category === cat.id ? 'text-primary-700' : 'text-gray-700'}`}>
                       {cat.title}
@@ -410,52 +298,32 @@ export default function CreateProposalPage() {
             </motion.div>
 
             {/* Title */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary-500" />
                 Title
               </h2>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                 placeholder="What's this proposal about?"
-                className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none"
-              />
+                className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none" />
             </motion.div>
 
             {/* Message */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-primary-500" />
                 Your Message
               </h2>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your heartfelt message..."
-                rows={5}
-                className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none resize-none"
-              />
+              <textarea value={message} onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write something heartfelt..." rows={5}
+                className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none resize-none" />
             </motion.div>
 
             {/* Preview Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+              className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-6 sm:p-8">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Heart className="w-5 h-5 text-primary-500 heart-beat" />
                 Preview
@@ -464,12 +332,8 @@ export default function CreateProposalPage() {
                 <div className="absolute inset-0 bg-white/5" />
                 <div className="relative z-10">
                   <div className="text-5xl mb-4">{selectedCategory.emoji}</div>
-                  <h3 className="text-2xl font-display font-bold mb-3">
-                    {title || 'Your Proposal Title'}
-                  </h3>
-                  <p className="text-white/80 text-sm leading-relaxed italic mb-4">
-                    "{message || 'Your message will appear here...'}"
-                  </p>
+                  <h3 className="text-2xl font-display font-bold mb-3">{title || 'Your Proposal Title'}</h3>
+                  <p className="text-white/80 text-sm leading-relaxed italic mb-4">"{message || 'Your message will appear here...'}"</p>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
                       {user.full_name?.[0]?.toUpperCase()}
@@ -489,19 +353,11 @@ export default function CreateProposalPage() {
             </motion.div>
 
             {/* Submit */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-center pt-4"
-            >
-              <Button
-                onClick={handleSubmit}
-                isLoading={sending}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="text-center pt-4">
+              <Button onClick={handleSubmit} isLoading={sending}
                 disabled={!receiver || !title.trim() || !message.trim()}
-                size="lg"
-                className="px-10 py-4 text-lg"
-              >
+                size="lg" className="px-10 py-4 text-lg">
                 <Send className="w-5 h-5 mr-2" />
                 Send Proposal
               </Button>
@@ -513,5 +369,17 @@ export default function CreateProposalPage() {
         </div>
       </div>
     </PremiumBackground>
+  );
+}
+
+export default function CreateProposalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+      </div>
+    }>
+      <CreateProposalContent />
+    </Suspense>
   );
 }

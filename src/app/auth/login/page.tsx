@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Heart, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff, AlertCircle, WifiOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -17,16 +17,67 @@ export default function LoginPage() {
   const { setUser, setLoading } = useAuthStore();
   const [loading, setStateLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+
+  const checkSupabaseConnection = async (): Promise<boolean> => {
+    try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || !key || url.includes('placeholder') || key.includes('placeholder')) {
+        setConnectionError(true);
+        return false;
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch(`${url}/auth/v1/health`, {
+          method: 'GET',
+          headers: { apikey: key },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('Supabase not reachable');
+        return true;
+      } catch (e) {
+        clearTimeout(timeout);
+        // Try alternative endpoint
+        const res2 = await fetch(`${url}/rest/v1/`, {
+          method: 'GET',
+          headers: { apikey: key },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        return res2.ok;
+      }
+    } catch {
+      setConnectionError(true);
+      return false;
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setConnectionError(false);
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+
+    // Check if Supabase is configured first
+    const isConnected = await checkSupabaseConnection();
+    if (!isConnected) {
+      toast.error('Cannot connect to server. Please check your internet connection or try again later.', { duration: 5000 });
+      return;
+    }
+
     setStateLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('fetch') || error.message.includes('Failed to') || error.message.includes('Network')) {
+          setConnectionError(true);
+        }
+        throw error;
+      }
       if (!data.user) throw new Error('Login failed');
       const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
       if (profileError) throw profileError;
@@ -34,8 +85,15 @@ export default function LoginPage() {
       setLoading(false);
       toast.success(`Welcome back! 💕`);
       router.push('/dashboard');
-    } catch (error: any) { toast.error(error.message || 'Login failed. Please check your credentials.'); }
-    finally { setStateLoading(false); }
+    } catch (error: any) {
+      const msg = error.message || 'Login failed. Please check your credentials.';
+      if (msg.includes('fetch') || msg.includes('Failed to') || msg.includes('Network')) {
+        setConnectionError(true);
+        toast.error('Connection error. Please check your internet and try again.', { duration: 5000 });
+      } else {
+        toast.error(msg, { duration: 4000 });
+      }
+    } finally { setStateLoading(false); }
   };
 
   return (
@@ -64,6 +122,19 @@ export default function LoginPage() {
             transition={{ delay: 0.1, duration: 0.5 }}
             className="glass-strong rounded-[2rem] shadow-2xl shadow-pink-500/10 border border-white/60 p-8 sm:p-10"
           >
+            {connectionError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-2xl flex items-start gap-3"
+              >
+                <WifiOff className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-700">Connection Error</p>
+                  <p className="text-xs text-red-600 mt-1">Cannot connect to the server. Please check your internet connection and try again.</p>
+                </div>
+              </motion.div>
+            )}
             <form onSubmit={handleLogin} className="space-y-5">
               <Input name="email" type="email" label="Email" placeholder="you@example.com" icon={<Mail className="w-5 h-5" />} required />
               <div className="relative">

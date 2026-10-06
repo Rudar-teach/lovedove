@@ -18,7 +18,7 @@ export default function TicTacToePage() {
   const [winner, setWinner] = useState<string | null>(null);
   const [winningLine, setWinningLine] = useState<number[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [scores, setScores] = useState({ X: 0, O: 0, draw: 0 });
+  const [scores, setScores] = useState<{ X: number; O: number; draw: number; [k: string]: number }>({ X: 0, O: 0, draw: 0 });
 
   const WINNING_COMBOS = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -66,7 +66,8 @@ export default function TicTacToePage() {
       setWinner(result.winner);
       setWinningLine(result.line);
       if (result.winner !== 'draw') {
-        setScores(prev => ({ ...prev, [result.winner!]: prev[result.winner!] + 1 }));
+        const w = result.winner as 'X' | 'O';
+        setScores(prev => ({ ...prev, [w]: prev[w] + 1 }));
         saveGame(result.winner);
       } else {
         setScores(prev => ({ ...prev, draw: prev.draw + 1 }));
