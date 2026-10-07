@@ -36,3 +36,10 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Playwright / browser temp
+.playwright-mcp/
+*.png
+
+# Misc temp files
+*.ps1
