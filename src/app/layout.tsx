@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ClientProvider from '@/components/ClientProvider';
-import AuthProvider from '@/components/AuthProvider';
+import { AuthProvider } from '@/components/AuthProvider';
+import { GameSessionProvider } from '@/components/GameSessionProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body>
         <ClientProvider>
           <AuthProvider>
-            {children}
+            <GameSessionProvider>
+              {children}
+            </GameSessionProvider>
           </AuthProvider>
         </ClientProvider>
       </body>
