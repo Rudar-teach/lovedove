@@ -19,7 +19,7 @@ interface Goal {
 
 const GOALS: Goal[] = [
   { id: 1, title: '30 Days of Compliments', description: 'Give your partner at least one genuine compliment every day for 30 days.', category: 'intimacy', difficulty: 'easy', points: 100, emoji: '💝', isDaily: false },
-  { id: 2, title: 'Date Night Series', description: 'Plan and execute a creative date night every week for a month.', category: 'adventure', difficulty: 'medium', points: 150, emoji: '🌹', difficulty: 'medium', points: 150, emoji: '🌹', isDaily: false },
+  { id: 2, title: 'Date Night Series', description: 'Plan and execute a creative date night every week for a month.', category: 'adventure', difficulty: 'medium', points: 150, emoji: '🌹', isDaily: false },
   { id: 3, title: 'Communication Streak', description: 'Have a 30-minute heartfelt conversation each day for 7 days.', category: 'communication', difficulty: 'medium', points: 120, emoji: '💬', isDaily: false },
   { id: 4, title: 'Weekly Adventure', description: 'Try something new together every week for 4 weeks.', category: 'adventure', difficulty: 'hard', points: 200, emoji: '🎢', isDaily: false },
   { id: 5, title: 'Morning Love', description: 'Start each day with a hug and kind words for 14 days.', category: 'intimacy', difficulty: 'easy', points: 70, emoji: '☀️', isDaily: false },
@@ -51,6 +51,7 @@ export default function CoupleGoalsPage() {
 
   const filtered = GOALS.filter(g => filter === 'all' || g.category === filter);
   const totalPoints = completed.reduce((s, g) => s + g.points, 0);
+  const progress = completed.reduce((acc, g) => { acc[g.category] = (acc[g.category] || 0) + 1; return acc; }, {} as Record<string, number>);
 
   const startGame = () => { setPhase('goals'); };
   const selectGoal = (goal: Goal) => { setActiveGoal(goal); setPhase('active'); };
@@ -167,7 +168,7 @@ export default function CoupleGoalsPage() {
                 ))}
               </div>
               <div className="flex gap-4 justify-center">
-                <button onClick={() => { reset(); startGame(); }} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
+                <button onClick={() => { setScore(0); setStreak(0); setCompleted([]); setDailyProgress({}); startGame(); }} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
                 <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold">More Games</Link>
               </div>
             </motion.div>

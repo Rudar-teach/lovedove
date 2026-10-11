@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Misc temp files
 *.ps1
+.next
+node_modules
+.env*

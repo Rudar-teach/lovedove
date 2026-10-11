@@ -19,7 +19,7 @@ const WORDS: Word[] = [
   { hint: 'Sweet talk to woo someone', answer: 'DATE', category: 'Actions', emoji: '🍽️' },
   { hint: 'Two hearts joined', answer: 'SOUL', category: 'Feelings', emoji: '✨' },
   { hint: 'Bouquet of romantic flowers', answer: 'BLOOM', category: 'Flowers', emoji: '🌸' },
-  { hint: 'Lover's promise', answer: 'KISS', category: 'Actions', emoji: '💋' },
+  { hint: 'Lover\'s promise', answer: 'KISS', category: 'Actions', emoji: '💋' },
   { hint: 'Shining star of affection', answer: 'ADORE', category: 'Feelings', emoji: '⭐' },
 ];
 

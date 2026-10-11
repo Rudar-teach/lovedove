@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import ClientProvider from '@/components/ClientProvider';
-import { AuthProvider } from '@/components/AuthProvider';
-import { GameSessionProvider } from '@/components/GameSessionProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Love Dove - Where Hearts Connect 💕",
-  description: "Create birthday websites and play couple games with your special someone",
-  icons: {
-    icon: "🕊️",
+  title: "Love Dove - Where Hearts Connect & Play",
+  description: "Create beautiful birthday websites, play 36+ couple games, add friends, earn badges, and celebrate your love story together.",
+  keywords: ["love", "couple games", "birthday", "games", "friends", "badges"],
+  authors: [{ name: "Love Dove Team" }],
+  openGraph: {
+    title: "Love Dove - Where Hearts Connect & Play",
+    description: "Create birthday websites and play couple games together",
+    type: "website",
   },
 };
 
@@ -19,13 +21,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 antialiased">
         <ClientProvider>
-          <AuthProvider>
-            <GameSessionProvider>
-              {children}
-            </GameSessionProvider>
-          </AuthProvider>
+          {children}
         </ClientProvider>
       </body>
     </html>
