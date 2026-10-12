@@ -50,6 +50,8 @@ const config: Config = {
         'gradient-shift': 'gradient-shift 4s ease infinite',
         'scale-in': 'scaleIn 0.6s ease-out forwards',
         'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+        'bg-pan': 'bgPan 15s ease infinite',
+        'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -78,6 +80,14 @@ const config: Config = {
         fadeInUp: {
           from: { opacity: '0', transform: 'translateY(40px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        bgPan: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        bounceGentle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         },
       },
     },

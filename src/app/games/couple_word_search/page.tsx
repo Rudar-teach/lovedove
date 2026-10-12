@@ -229,7 +229,9 @@ export default function CoupleWordSearchPage() {
                         onTouchMove={(e) => {
                           const t = e.touches[0];
                           const el = document.elementFromPoint(t.clientX, t.clientY);
-                          if (el && el.dataset.row && el.dataset.col) handleCellEnter(parseInt(el.dataset.row), parseInt(el.dataset.col));
+                          const row = (el as HTMLElement | null)?.dataset?.row;
+                          const col = (el as HTMLElement | null)?.dataset?.col;
+                          if (row && col) handleCellEnter(parseInt(row), parseInt(col));
                         }}
                         onTouchEnd={handleEnd}
                         data-row={ri} data-col={ci}

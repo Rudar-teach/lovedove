@@ -87,6 +87,8 @@ export default function DashboardPage() {
                     <Link href="/dashboard" className="px-4 py-2 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl">Dashboard</Link>
                     <Link href="/games" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Games</Link>
                     <Link href="/proposals" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Proposals <Mail className="w-3.5 h-3.5" /></Link>
+                    <Link href="/find-partner" className="px-4 py-2 text-sm font-medium text-pink-600 hover:text-primary-600 hover:bg-pink-50 rounded-xl transition-colors flex items-center gap-1">💕 Find Partner</Link>
+                    <Link href="/chat" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">💬 Chat</Link>
                     <Link href="/notifications" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Alerts <Bell className="w-3.5 h-3.5" /></Link>
                     <Link href="/friends" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Friends</Link>
                   </div>

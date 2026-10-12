@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -52,10 +52,10 @@ export default function HeartsGamePage() {
     if (selected.includes(idx)) { setSelected([]); return; }
     const newSelected = [...selected, idx];
     if (newSelected.length === 2) {
-      const [a, b] = newSelected;
-      if (board[a].value === board[b].value) {
+      const [a, second] = newSelected;
+      if (board[a].value === board[second].value) {
         setTimeout(() => {
-          setBoard((b) => b.map((cell, i) => i === a || i === b ? { ...cell, matched: true } : cell));
+          setBoard((brd) => brd.map((cell, i) => i === a || i === second ? { ...cell, matched: true } : cell));
           const bonus = BONUS_SYMBOLS.includes(board[a].value) ? 30 : 10;
           setScore((s) => s + bonus);
           setMatched((m) => m + 2);

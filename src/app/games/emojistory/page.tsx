@@ -117,18 +117,6 @@ export default function EmojiStoryPage() {
             <button onClick={submit} className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold mb-6">
               Submit Story
             </button>
-            {state === 'finished' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
-                <h3 className="text-white font-semibold mb-4">Target Story:</h3>
-                <div className="flex gap-2 justify-center mb-4">
-                  {target.map((e, i) => <span key={i} className="text-4xl">{e}</span>)}
-                </div>
-                <h3 className="text-white font-semibold mb-2">Your Story:</h3>
-                <div className="flex gap-2 justify-center">
-                  {guess.map((e, i) => <span key={i} className="text-4xl">{e}</span>)}
-                </div>
-              </motion.div>
-            )}
           </motion.div>
         )}
 

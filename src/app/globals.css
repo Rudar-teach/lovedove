@@ -31,9 +31,16 @@
   }
 }
 
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 @layer utilities {
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-500 via-rose-400 to-pink-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-pink-500 via-rose-400 to-pink-400 bg-clip-text text-transparent;
   }
   .gradient-text-animated {
     background: linear-gradient(135deg, #ec4899, #f43f5e, #ec4899, #f472b6);
@@ -149,6 +156,124 @@
     background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(236, 72, 153, 0.06), transparent 40%);
     pointer-events: none;
   }
+  .card-hover-lift {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  }
+  .card-hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px -12px rgba(236, 72, 153, 0.15);
+  }
+  .btn-pulse {
+    position: relative;
+  }
+  .btn-pulse::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: pulse-ring 2s ease-out infinite;
+    z-index: -1;
+  }
+  .stat-counter {
+    transition: all 0.3s ease;
+  }
+  .stat-counter:hover {
+    transform: scale(1.1);
+  }
+  .feature-icon-wrapper {
+    transition: all 0.3s ease;
+  }
+  .feature-icon-wrapper:hover {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* ====== Love Dove Enhanced Interactive Styles ====== */
+  .btn-magnetic {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .btn-magnetic:hover {
+    transform: scale(1.05);
+  }
+  .btn-magnetic:active {
+    transform: scale(0.97);
+  }
+  .shimmer-hover {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+  }
+  .shimmer-hover:hover::before {
+    left: 100%;
+  }
+  .game-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+  }
+  .game-card:hover {
+    transform: translateY(-8px) rotateX(2deg) rotateY(2deg) scale(1.03);
+    box-shadow: 0 25px 50px -12px rgba(236, 72, 153, 0.2);
+  }
+  .card-hover-glow {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .card-hover-glow:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(236, 72, 153, 0.12), 0 0 0 1px rgba(236, 72, 153, 0.1);
+  }
+  .page-enter {
+    animation: pageEnter 0.4s ease-out;
+  }
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .heart-float {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    animation: heartFloatUp 1s ease-out forwards;
+  }
+  .responsive-text {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+  .responsive-heading {
+    font-size: clamp(1.5rem, 4vw, 3rem);
+  }
+  .responsive-heading-lg {
+    font-size: clamp(2rem, 5vw, 4.5rem);
+  }
+  .max-width-responsive {
+    max-width: min(100%, 1280px);
+  }
+  .padding-responsive {
+    padding-left: clamp(1rem, 4vw, 2rem);
+    padding-right: clamp(1rem, 4vw, 2rem);
+  }
+
+  @media (hover: none) {
+    .card-hover-lift:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+    .game-card:active {
+      transform: scale(0.97);
+      transition: transform 0.1s ease;
+    }
+    .card-hover-glow:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+  }
 }
 
 /* Keyframes */
@@ -158,18 +283,15 @@
   50% { transform: scale(1); }
   75% { transform: scale(1.05); }
 }
-
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   33% { transform: translateY(-15px) rotate(1deg); }
   66% { transform: translateY(-8px) rotate(-1deg); }
 }
-
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-
 @keyframes dove-fly-1 {
   0% { transform: translate(-100px, 0) scaleX(1); opacity: 0; }
   5% { opacity: 0.6; }
@@ -179,7 +301,6 @@
   95% { opacity: 0; }
   100% { transform: translate(calc(100vw + 100px), -50px) scaleX(1); }
 }
-
 @keyframes dove-fly-2 {
   0% { transform: translate(calc(100vw + 100px), 20px) scaleX(-1); opacity: 0; }
   5% { opacity: 0.4; }
@@ -188,7 +309,6 @@
   75% { opacity: 0.4; }
   100% { transform: translate(-100px, -40px) scaleX(-1); opacity: 0; }
 }
-
 @keyframes dove-fly-3 {
   0% { transform: translate(-100px, -20px) scaleX(1); opacity: 0; }
   4% { opacity: 0.3; }
@@ -197,101 +317,53 @@
   90% { opacity: 0.3; }
   100% { transform: translate(calc(100vw + 100px), -80px) scaleX(1); opacity: 0; }
 }
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
-
 @keyframes pulse-ring {
   0% { transform: scale(0.8); opacity: 0.5; }
   50% { transform: scale(1.2); opacity: 0; }
   100% { transform: scale(0.8); opacity: 0; }
 }
-
 @keyframes sparkle {
   0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
   50% { opacity: 1; transform: scale(1) rotate(180deg); }
 }
-
 @keyframes wave-move {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-
-/* Particles container */
-.particles-container {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+@keyframes heart-float-up {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
 }
-
-.particle {
-  position: absolute;
-  animation: particle-float linear infinite;
-  opacity: 0;
+@keyframes bg-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
-
-@keyframes particle-float {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
-
-/* 3D perspective wrapper */
-.perspective-container {
-  perspective: 1200px;
+@keyframes heartFloatUp {
+  0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-80px) scale(1.4) rotate(var(--rotate, 20deg)); opacity: 0; }
 }
-
-/* Smooth reveal animations */
-.reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Premium button shine */
-.btn-shine {
-  position: relative;
-  overflow: hidden;
-}
-.btn-shine::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -75%;
-  width: 50%;
-  height: 200%;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
-  transform: rotate(25deg);
-  transition: left 0.5s;
-}
-.btn-shine:hover::after {
-  left: 125%;
-}
-
-/* Card hover 3D */
-.card-3d {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
-}
-.card-3d:hover {
-  transform: translateY(-8px) rotateX(2deg) rotateY(2deg);
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

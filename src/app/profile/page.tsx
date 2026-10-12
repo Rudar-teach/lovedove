@@ -1,186 +1,220 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Edit, Trophy, Clock, Gamepad2, Heart, LogOut, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/useAuthStore';
-import Button from '@/components/ui/Button';
-import PremiumBackground from '@/components/PremiumBackground';
-import Input from '@/components/ui/Input';
-import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { Trophy, Clock, Gamepad2, Flame, Award, Users, Heart, Target, Star, Medal } from 'lucide-react';
 
-const GAME_NAMES: Record<string, { name: string; icon: string }> = {
-  tictactoe: { name: 'Tic-Tac-Toe', icon: '⭕❌' },
-  memory: { name: 'Memory Match', icon: '🎴' },
-  quiz: { name: 'Couple Quiz', icon: '💡' },
-  wouldyourather: { name: 'Would You Rather', icon: '🤔' },
-  wordchain: { name: 'Word Chain', icon: '🔤' },
+const BADGE_INFO: Record<string, { emoji: string; name: string; desc: string; color: string }> = {
+  'first_game': { emoji: '🎮', name: 'First Game', desc: 'Played your first game', color: 'from-blue-400 to-blue-600' },
+  'first_win': { emoji: '🏆', name: 'First Victory', desc: 'Won your first game', color: 'from-yellow-400 to-orange-500' },
+  'hour_1': { emoji: '⏱️', name: '1 Hour Together', desc: 'Played for 1 hour', color: 'from-green-400 to-green-600' },
+  'hour_5': { emoji: '⭐', name: '5 Hours Together', desc: 'Played for 5 hours', color: 'from-purple-400 to-purple-600' },
+  'hour_10': { emoji: '💎', name: '10 Hours Together', desc: 'Played for 10 hours! Amazing!', color: 'from-pink-400 to-rose-600' },
+  'hour_24': { emoji: '👑', name: '24 Hour Lovers', desc: 'Played for 24 hours together!', color: 'from-yellow-400 to-red-500' },
+  'game_5': { emoji: '🎯', name: 'Game Explorer', desc: 'Played 5 different games', color: 'from-cyan-400 to-blue-600' },
+  'streak_3': { emoji: '🔥', name: '3 Day Streak', desc: 'Played 3 days in a row', color: 'from-red-400 to-orange-600' },
+  'couple_connected': { emoji: '💕', name: 'Connected Hearts', desc: 'Found and connected with a partner', color: 'from-pink-400 to-rose-600' },
 };
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, setUser } = useAuthStore();
-  const [stats, setStats] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [gameStats, setGameStats] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
-  const [editing, setEditing] = useState(false);
-  const [bio, setBio] = useState('');
-  const [anniversary, setAnniversary] = useState('');
+  const [totalTime, setTotalTime] = useState(0);
+  const [totalWins, setTotalWins] = useState(0);
+  const [totalGames, setTotalGames] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) router.push('/auth/login');
-    else if (user) { setBio(user.bio || ''); setAnniversary(user.anniversary_date || ''); loadStats(); }
-  }, [isAuthenticated, user]);
+    loadProfile();
+  }, []);
 
-  const loadStats = async () => {
-    if (!user) return;
-    const { data: gameStats } = await supabase.from('game_stats').select('*').eq('user_id', user.id).order('total_time_played', { ascending: false });
-    if (gameStats) setStats(gameStats);
-    const { data: ubadges } = await supabase.from('user_badges').select('*, badges(*)').eq('user_id', user.id);
-    if (ubadges) setBadges(ubadges);
-  };
+  async function loadProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push('/auth/login'); return; }
+    setUser(user);
 
-  const saveProfile = async () => {
-    const { error } = await supabase.from('profiles').update({ bio, anniversary_date: anniversary || null, updated_at: new Date().toISOString() }).eq('id', user!.id);
-    if (!error) { toast.success('Profile updated! 💕'); setUser({ ...user!, bio, anniversary_date: anniversary || null }); setEditing(false); }
-  };
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (profileData) setProfile(profileData);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/');
-  };
+    const { data: stats } = await supabase
+      .from('game_stats')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('total_time_played', { ascending: false });
 
-  if (!isAuthenticated || !user) return null;
+    if (stats) {
+      setGameStats(stats);
+      setTotalTime(stats.reduce((sum, s) => sum + s.total_time_played, 0));
+      setTotalWins(stats.reduce((sum, s) => sum + s.wins, 0));
+      setTotalGames(stats.reduce((sum, s) => sum + s.games_played, 0));
+    }
 
-  const totalTime = stats.reduce((sum, s) => sum + s.total_time_played, 0);
-  const totalGames = stats.reduce((sum, s) => sum + s.games_played, 0);
-  const totalWins = stats.reduce((sum, s) => sum + s.wins, 0);
-  const hours = Math.floor(totalTime / 3600);
-  const minutes = Math.floor((totalTime % 3600) / 60);
+    const { data: userBadges } = await supabase
+      .from('user_badges')
+      .select('*, badges(*)')
+      .eq('user_id', user.id)
+      .order('earned_at', { ascending: false });
 
-  return (
-    <PremiumBackground>
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/dashboard"><button className="p-2.5 hover:bg-white/60 backdrop-blur-sm rounded-2xl transition-all"><ArrowLeft className="w-6 h-6 text-gray-700" /></button></Link>
-            <h1 className="text-2xl font-display font-black gradient-text-animated">My Profile</h1>
-            <button onClick={handleLogout} className="p-2.5 hover:bg-white/60 backdrop-blur-sm rounded-2xl transition-all text-red-500" title="Logout">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+    if (userBadges) {
+      setBadges(userBadges.map(ub => ({
+        ...BADGE_INFO[ub.badges?.badge_key || ''],
+        earnedAt: ub.earned_at,
+        id: ub.id,
+      })));
+    }
 
-          {/* Profile Card */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 overflow-hidden mb-6">
-            <div className="h-36 bg-gradient-to-r from-primary-400 via-rose-400 to-pink-500 relative">
-              <motion.div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 4, repeat: Infinity }} />
-            </div>
-            <div className="px-8 pb-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12 mb-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-rose-600 flex items-center justify-center text-white text-3xl font-black shadow-xl border-4 border-white">
-                  {user.full_name?.[0]?.toUpperCase()}
-                </div>
-                <div className="flex-1 pt-2">
-                  <h2 className="text-3xl font-display font-black text-gray-900">{user.full_name}</h2>
-                  <p className="text-gray-500">@{user.username}</p>
-                  <p className="text-sm text-gray-400 mt-0.5">📧 {user.email}</p>
-                </div>
-                <button onClick={() => setEditing(!editing)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-full transition-colors font-semibold text-sm">
-                  <Edit className="w-4 h-4" /> {editing ? 'Cancel' : 'Edit'}
-                </button>
-              </div>
+    setLoading(false);
+  }
 
-              {editing ? (
-                <div className="space-y-4 mt-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Bio</label>
-                    <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself..." className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-primary-500 outline-none resize-none bg-white/50 backdrop-blur-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Anniversary Date</label>
-                    <Input type="date" value={anniversary} onChange={(e) => setAnniversary(e.target.value)} />
-                  </div>
-                  <Button onClick={saveProfile} className="w-full">Save Changes</Button>
-                </div>
-              ) : (
-                <div className="space-y-3 mt-4">
-                  {user.bio && <p className="text-gray-700 text-lg font-light leading-relaxed">{user.bio}</p>}
-                  {user.anniversary_date && <p className="text-gray-600 flex items-center gap-2"><Heart className="w-4 h-4 text-primary-500" /> Together since {new Date(user.anniversary_date).toLocaleDateString()}</p>}
-                </div>
-              )}
-            </div>
-          </motion.div>
+  function formatTime(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[
-              { label: 'Games', value: totalGames, icon: Gamepad2, color: 'text-primary-500', bg: 'bg-primary-50' },
-              { label: 'Wins', value: totalWins, icon: Trophy, color: 'text-yellow-500', bg: 'bg-yellow-50' },
-              { label: 'Played', value: `${hours}h`, icon: Clock, color: 'text-blue-500', bg: 'bg-blue-50' },
-              { label: 'Badges', value: badges.length, icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50' },
-            ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + i * 0.05 }}>
-                <div className="bg-white/70 backdrop-blur-xl rounded-[1.5rem] border border-pink-100/60 shadow-lg p-5 text-center">
-                  <stat.icon className={`w-8 h-8 mx-auto mb-2 ${stat.color}`} />
-                  <p className="text-3xl font-black text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Games Breakdown */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6">
-              <h3 className="text-2xl font-display font-bold text-gray-900 mb-6 flex items-center gap-2"><Sparkles className="w-6 h-6 text-primary-500" /> Games Breakdown</h3>
-              {stats.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.map(s => {
-                    const hrs = Math.floor(s.total_time_played / 3600);
-                    const mins = Math.floor((s.total_time_played % 3600) / 60);
-                    return (
-                      <div key={s.id} className="flex items-center justify-between p-4 bg-pink-50/50 rounded-2xl border border-pink-100/40">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{GAME_NAMES[s.game_type]?.icon || '🎮'}</span>
-                          <div>
-                            <p className="font-semibold text-gray-900">{GAME_NAMES[s.game_type]?.name || s.game_type}</p>
-                            <p className="text-xs text-gray-500">Last played {new Date(s.last_played).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">{s.games_played} games</p>
-                          <p className="text-xs text-gray-500">{hrs}h {mins}m</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : <p className="text-center text-gray-500 py-8">No games played yet. Start playing! 🎮</p>}
-            </div>
-          </motion.div>
-
-          {/* Badges */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8">
-              <h3 className="text-2xl font-display font-bold text-gray-900 mb-6 flex items-center gap-2"><Trophy className="w-6 h-6 text-yellow-500" /> My Badges</h3>
-              {badges.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {badges.map(b => (
-                    <div key={b.id} className="text-center p-5 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200/60 hover:scale-105 transition-transform">
-                      <div className="text-5xl mb-2">{b.badges?.icon}</div>
-                      <p className="font-bold text-gray-900 text-sm">{b.badges?.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{b.badges?.description}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : <p className="text-center text-gray-500 py-8">No badges yet. Play 10 hours to earn one! 🏆</p>}
-            </div>
-          </motion.div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-spin">💕</div>
+          <p className="text-gray-600">Loading your profile...</p>
         </div>
       </div>
-    </PremiumBackground>
+    );
+  }
+
+  const hours = Math.floor(totalTime / 3600);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <button onClick={() => router.push('/dashboard')} className="text-xl">←</button>
+            <span className="text-2xl">👤</span>
+            <h1 className="text-xl font-bold gradient-text">My Profile</h1>
+          </div>
+          <button onClick={() => router.push('/dashboard')} className="text-sm text-gray-600 hover:text-pink-600">Dashboard</button>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Profile Card */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-6">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+              {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || '👤'}
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{profile?.full_name || 'User'}</h2>
+              <p className="text-gray-500">{user?.email}</p>
+              <p className="text-sm text-gray-400 mt-1">Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'recently'}</p>
+            </div>
+          </div>
+          {profile?.bio && (
+            <div className="mt-4 p-4 bg-pink-50 rounded-xl">
+              <p className="text-gray-700 italic">"{profile.bio}"</p>
+            </div>
+          )}
+        </div>
+
+        {/* Playtime Achievement Banner */}
+        <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-3xl shadow-xl p-8 mb-6 text-white">
+          <div className="text-center">
+            <div className="text-5xl mb-3">{hours >= 24 ? '👑' : hours >= 10 ? '💎' : hours >= 5 ? '⭐' : '⏱️'}</div>
+            <h3 className="text-2xl font-bold mb-1">{hours >= 24 ? 'You\'re a Legend!' : hours >= 10 ? 'Power Couple!' : hours >= 5 ? 'Great Together!' : 'Keep Playing!'}</h3>
+            <p className="text-4xl font-black mb-2">{formatTime(totalTime)}</p>
+            <p className="text-pink-100">Total time spent with your partner</p>
+            {hours > 0 && (
+              <div className="mt-4 inline-block bg-white/20 rounded-full px-6 py-2">
+                <span className="text-lg font-bold">🏆 {hours} hour{hours > 1 ? 's' : ''} of love! 🏆</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Games Played', value: totalGames, icon: Gamepad2, color: 'from-blue-500 to-blue-600' },
+            { label: 'Time Played', value: formatTime(totalTime), icon: Clock, color: 'from-green-500 to-green-600' },
+            { label: 'Wins', value: totalWins, icon: Flame, color: 'from-orange-500 to-red-600' },
+            { label: 'Badges', value: badges.length, icon: Trophy, color: 'from-yellow-500 to-orange-600' },
+          ].map((stat, i) => (
+            <div key={i} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-4 text-white shadow-lg`}>
+              <stat.icon className="w-8 h-8 mb-2 opacity-80" />
+              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-xs text-white/80">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Badges */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-6">
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-yellow-500" />
+            Achievements ({badges.length})
+          </h3>
+
+          {badges.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Medal className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No badges yet. Start playing games to earn achievements!</p>
+              <button onClick={() => router.push('/games')} className="mt-3 text-pink-600 font-semibold">
+                Start Playing →
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {badges.map(badge => (
+                <div key={badge.id} className={`bg-gradient-to-br ${badge.color || 'from-gray-400 to-gray-500'} rounded-2xl p-4 text-white text-center shadow-lg`}>
+                  <div className="text-4xl mb-2">{badge.emoji}</div>
+                  <p className="font-bold text-sm">{badge.name}</p>
+                  <p className="text-xs text-white/80 mt-1">{badge.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Game Stats */}
+        {gameStats.length > 0 && (
+          <div className="bg-white rounded-3xl shadow-xl p-8">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Star className="w-6 h-6 text-purple-500" />
+              Game Statistics
+            </h3>
+            <div className="space-y-3">
+              {gameStats.map(stat => (
+                <div key={stat.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-pink-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center text-white text-lg">
+                      🎮
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 capitalize">{stat.game_type.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-gray-500">{stat.games_played} games played</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900">{formatTime(stat.total_time_played)}</p>
+                    <p className="text-xs text-gray-500">{stat.wins} wins</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

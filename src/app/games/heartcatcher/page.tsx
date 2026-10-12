@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
@@ -20,9 +20,7 @@ export default function HeartCatcherPage() {
   const [catcher, setCatcher] = useState({ x: 50 });
   const [combo, setCombo] = useState(0);
   const [lives, setLives] = useState(3);
-  const idRef = useRef(0);
-
-  const useRef = (v: number) => ({ current: v });
+  const catcherRef = useRef({ x: 50 });
 
   const spawnItem = useCallback(() => {
     if (state !== 'playing') return;

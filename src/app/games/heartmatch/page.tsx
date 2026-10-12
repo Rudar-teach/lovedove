@@ -10,6 +10,7 @@ type Phase = 'idle' | 'playing' | 'finished';
 
 interface CardData {
   id: number;
+  cardId: number;
   emoji: string;
   label: string;
   flipped: boolean;

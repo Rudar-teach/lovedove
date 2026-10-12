@@ -23,7 +23,7 @@ const TARGETS = [
 export default function CupidsArrowPage() {
   const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');
   const [score, setScore] = useState(0);
-  const [arrows, setArrows] = useState<{ x: number; y: number; id: number }[]>([]);
+  const [arrows, setArrows] = useState<{ x: number; y: number; id: number; _used?: boolean }[]>([]);
   const [targets, setTargets] = useState<
     { x: number; y: number; type: number; id: number; hit?: boolean }[]
   >([]);
@@ -110,7 +110,7 @@ export default function CupidsArrowPage() {
             if (t.hit) return t;
             const hitArrow = updated.find(
               (a) =>
-                !a._used &&
+                !(a as any)._used &&
                 Math.abs(a.x - t.x) < 35 &&
                 Math.abs(a.y - t.y) < 35,
             );

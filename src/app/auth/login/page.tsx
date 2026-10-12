@@ -9,22 +9,44 @@ import CanvasBackground from '@/components/premium/CanvasBackground';
 import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
+import { supabase } from '@/lib/supabase';
+import { trackLogin } from '@/lib/adminApi';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: Integrate Supabase auth
-    setTimeout(() => {
-      setLoading(false);
+    setError('');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setError(error.message || 'Invalid email or password');
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // Track login
+        await trackLogin(data.user.id, email);
+      }
+
       router.push('/dashboard');
-    }, 1500);
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,7 +105,7 @@ export default function LoginPage() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
                       placeholder="you@example.com"
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-rose-100/80 bg-white/80 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-300 transition-all"
                       required
@@ -100,7 +122,7 @@ export default function LoginPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => { setPassword(e.target.value); setError(''); }}
                       placeholder="••••••••"
                       className="w-full pl-10 pr-10 py-3 rounded-xl border border-rose-100/80 bg-white/80 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-300 transition-all"
                       required
@@ -115,6 +137,12 @@ export default function LoginPage() {
                   </div>
                 </div>
               </CinematicReveal>
+
+              {error && (
+                <CinematicReveal direction="up" delay={0}>
+                  <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">{error}</p>
+                </CinematicReveal>
+              )}
 
               <CinematicReveal direction="up" delay={0.2}>
                 <motion.button

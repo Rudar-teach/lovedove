@@ -10,7 +10,7 @@ const SIZE = 4;
 const SYMBOLS = ['💕', '💖', '💗', '💓', '💘', '💝'];
 const getCellValue = (r: number, c: number) => (r * SIZE + c + 1);
 
-type Tile = { r: number; c: number; v: number };
+type Tile = { r: number; c: number; v: number; _merged: boolean };
 
 export default function Game2048Page() {
   const [state, setState] = useState<'idle' | 'playing' | 'finished'>('idle');

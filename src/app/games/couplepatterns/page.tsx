@@ -68,7 +68,6 @@ export default function CouplePatternsPage() {
         setCurrentLevel(l => l + 1);
         loadLevel(currentLevel + 1);
       } else {
-        setTimerActive(false);
         setPhase('finished');
       }
     } else {
@@ -77,7 +76,6 @@ export default function CouplePatternsPage() {
         setCurrentLevel(l => l + 1);
         loadLevel(currentLevel + 1);
       } else {
-        setTimerActive(false);
         setPhase('finished');
       }
     }
