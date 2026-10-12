@@ -9,6 +9,8 @@ import CanvasBackground from '@/components/premium/CanvasBackground';
 import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
+import { supabase } from '@/lib/supabase';
+import toast from 'react-hot-toast';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -22,14 +24,49 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert('Passwords do not match!');
+      toast.error('Passwords do not match!');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        toast.error(error.message || 'Signup failed');
+        setLoading(false);
+        return;
+      }
+      if (data.user) {
+        const fullName = name.trim() || 'User';
+        const username = email.trim().split('@')[0];
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            full_name: fullName,
+            username,
+            email: email.trim(),
+            bio: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        }
+      }
+      toast.success('Account created! Please check your email to confirm.');
+      router.push('/auth/login');
+    } catch (err) {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
-      router.push('/dashboard');
-    }, 1500);
+    }
   };
 
   return (

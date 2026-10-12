@@ -3,6 +3,7 @@ import ClientProvider from '@/components/ClientProvider';
 import Navbar from '@/components/Navbar';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
+import { AuthProvider } from '@/providers/AuthProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,12 +27,14 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased">
         <ClientProvider>
-          <LuxuryCursor />
-          <Navbar />
-          <main className="relative z-10">
-            {children}
-          </main>
-          <Chatbot />
+          <AuthProvider>
+            <LuxuryCursor />
+            <Navbar />
+            <main className="relative z-10">
+              {children}
+            </main>
+            <Chatbot />
+          </AuthProvider>
         </ClientProvider>
       </body>
     </html>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Zap, Mail, Bell } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Profile, GameStats, UserBadge } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuth } from '@/providers/AuthProvider';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import PremiumBackground from '@/components/PremiumBackground';
@@ -22,7 +22,7 @@ const GAME_INFO: Record<string, { name: string; icon: string; color: string }> =
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isAuthenticated, setUser, setLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [gameStats, setGameStats] = useState<GameStats[]>([]);
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [recentGames, setRecentGames] = useState<any[]>([]);
@@ -30,13 +30,14 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated) { router.push('/auth/login'); return; }
+    if (authLoading) return;
+    if (!isAuthenticated || !user) { router.push('/auth/login'); return; }
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good Morning');
     else if (hour < 18) setGreeting('Good Afternoon');
     else setGreeting('Good Evening');
     loadData();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading, user?.id]);
 
   const loadData = async () => {
     if (!user) return;
@@ -44,18 +45,23 @@ export default function DashboardPage() {
     if (stats) { setGameStats(stats); setTotalTime(stats.reduce((sum, s) => sum + s.total_time_played, 0)); }
     const { data: userBadges } = await supabase.from('user_badges').select('*, badges(*)').eq('user_id', user.id).order('earned_at', { ascending: false });
     if (userBadges) setBadges(userBadges);
-    const { data: sessions } = await supabase.from('game_sessions').select('*').or(`player1.eq.${user.id},player2.eq.${user.id}`).order('started_at', { ascending: false }).limit(5);
+    const { data: sessions } = await supabase.from('game_sessions').select('*').or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`).order('started_at', { ascending: false }).limit(5);
     if (sessions) setRecentGames(sessions);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setLoading(false);
     toast.success('Logged out successfully');
     router.push('/');
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+        <div className="text-6xl animate-spin">💕</div>
+      </div>
+    );
+  }
   if (!isAuthenticated || !user) return null;
 
   const hours = Math.floor(totalTime / 3600);
