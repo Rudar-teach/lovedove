@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Star, CheckCircle, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Star, CheckCircle, BarChart3, Timer } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 

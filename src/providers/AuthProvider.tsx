@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 interface AuthContextType {
   user: Profile | null;
@@ -18,9 +19,15 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<Profile | null>(null);
+  const [user, setUserState] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const setZustandUser = useAuthStore((s) => s.setUser);
+
+  const syncUser = (profile: Profile | null) => {
+    setUserState(profile);
+    setZustandUser(profile);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -34,8 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', session.user.id)
           .single();
         if (mounted) {
-          if (data) setUser(data);
-          else setUser({
+          const profile = data ?? {
             id: session.user.id,
             email: session.user.email || '',
             full_name: session.user.email || 'User',
@@ -49,7 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             theme_color: 'pink',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          };
+          syncUser(profile);
           setIsLoading(false);
         }
       } else if (mounted) {
@@ -69,8 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', session.user.id)
             .single();
           if (mounted) {
-            if (data) setUser(data);
-            else setUser({
+            const profile = data ?? {
               id: session.user.id,
               email: session.user.email || '',
               full_name: session.user.email || 'User',
@@ -84,11 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               theme_color: 'pink',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-            });
+            };
+            syncUser(profile);
             setIsLoading(false);
           }
         } else {
-          setUser(null);
+          syncUser(null);
           setIsLoading(false);
         }
       }

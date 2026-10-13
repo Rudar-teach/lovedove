@@ -31,7 +31,7 @@ export default function LoveSnakePage() {
   }, []);
 
   const spawnFood = useCallback((snakeBody: { x: number; y: number }[]) => {
-    let fx, fy;
+    let fx: number, fy: number;
     do {
       fx = Math.floor(Math.random() * GRID);
       fy = Math.floor(Math.random() * GRID);

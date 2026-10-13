@@ -17,7 +17,15 @@ export default function LoveRiddles() {
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [questions, setQuestions] = useState<typeof RIDDLES>([]);
+  const [timeLeft, setTimeLeft] = useState(60);
+
   useEffect(() => { setQuestions([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 5)); }, []);
+  useEffect(() => {
+    if (gameState === 'playing') {
+      const t = setInterval(() => { setTimeLeft(x => x <= 1 ? (clearInterval(t), 0) : x - 1); }, 1000);
+      return () => clearInterval(t);
+    }
+  }, [gameState]);
   useEffect(() => { if (gameState === 'playing' && timeLeft <= 0) setGameState('finished'); }, [timeLeft, gameState]);
 
   const handleSubmit = () => {
@@ -25,7 +33,7 @@ export default function LoveRiddles() {
     else { setShowAnswer(true); setTimeout(next, 1500); }
   };
   const next = () => { setShowAnswer(false); setShowHint(false); setInput(''); if (current < questions.length - 1) setCurrent(i => i + 1); else setGameState('finished'); };
-  const start = () => { setGameState('playing'); setCurrent(0); setScore(0); setInput(''); setShowHint(false); setShowAnswer(false); setQuestions([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 5)); };
+  const start = () => { setGameState('playing'); setCurrent(0); setScore(0); setInput(''); setShowHint(false); setShowAnswer(false); setTimeLeft(60); setQuestions([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 5)); };
 
   return (
     <PremiumBackground>

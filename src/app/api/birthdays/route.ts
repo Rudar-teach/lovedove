@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
     const insertData: Partial<BirthdaySite> = {
       user_id: user.id,
-      name: body.name,
+      person_name: body.name,
       message: body.message,
       photos: body.photos ?? [],
       theme: body.theme ?? 'default',

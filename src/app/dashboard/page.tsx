@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Zap, Mail, Bell } from 'lucide-react';
+import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Mail, Bell } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Profile, GameStats, UserBadge } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
@@ -76,44 +76,7 @@ export default function DashboardPage() {
 
   return (
     <PremiumBackground>
-      <div className="min-h-screen">
-        {/* Navbar */}
-        <nav className="relative z-50">
-          <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-8">
-                  <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                      <Heart className="w-4 h-4 text-white heart-beat" fill="white" />
-                    </div>
-                    <span className="font-display font-black text-xl gradient-text hidden sm:block">Love Dove</span>
-                  </Link>
-                  <div className="hidden md:flex items-center gap-1">
-                    <Link href="/dashboard" className="px-4 py-2 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl">Dashboard</Link>
-                    <Link href="/games" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Games</Link>
-                    <Link href="/proposals" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Proposals <Mail className="w-3.5 h-3.5" /></Link>
-                    <Link href="/find-partner" className="px-4 py-2 text-sm font-medium text-pink-600 hover:text-primary-600 hover:bg-pink-50 rounded-xl transition-colors flex items-center gap-1">💕 Find Partner</Link>
-                    <Link href="/chat" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">💬 Chat</Link>
-                    <Link href="/notifications" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center gap-1">Alerts <Bell className="w-3.5 h-3.5" /></Link>
-                    <Link href="/friends" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">Friends</Link>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link href="/birthday/new" className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-primary-500 to-rose-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg shadow-primary-500/20 hover:shadow-xl hover:scale-105 transition-all">
-                    🎂 Create
-                  </Link>
-                  <Link href="/profile">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-110 transition-transform shadow-lg text-sm">
-                      {user.full_name?.[0]?.toUpperCase()}
-                    </div>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-
+      <div className="min-h-screen pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
@@ -195,7 +158,7 @@ export default function DashboardPage() {
                           <span className="text-2xl">{GAME_INFO[game.game_type]?.icon || '🎮'}</span>
                           <div>
                             <p className="font-semibold text-gray-900">{GAME_INFO[game.game_type]?.name || game.game_type}</p>
-                            <p className="text-sm text-gray-500">{game.status === 'completed' ? `Completed` : 'In Progress'}</p>
+                            <p className="text-sm text-gray-500">{game.status === 'completed' ? 'Completed' : 'In Progress'}</p>
                           </div>
                         </div>
                         <span className="text-xs text-gray-400">{new Date(game.started_at).toLocaleDateString()}</span>

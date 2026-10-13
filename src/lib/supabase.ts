@@ -1,123 +1,126 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
-
-// Client-side factory: returns the same singleton
-export function createClient() {
-  return supabase;
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables');
 }
 
-export type Profile = {
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+
+export interface Profile {
   id: string;
-  email: string;
-  full_name: string;
   username: string;
+  full_name: string;
+  email: string;
   avatar_url: string | null;
   cover_image_url: string | null;
-  partner_id: string | null;
   bio: string | null;
   date_of_birth: string | null;
   anniversary_date: string | null;
+  partner_id: string | null;
   theme_color: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type BirthdaySite = {
+export interface Badge {
   id: string;
-  user_id: string;
-  name: string;
-  message: string;
-  photos: string[];
-  theme: string;
   slug: string;
-  is_public: boolean;
-  view_count: number;
-  created_at: string;
-};
-
-export type FriendRequest = {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  created_at: string;
-};
-
-export type GameSession = {
-  id: string;
-  game_type: string;
-  players: string[];
-  current_turn: string;
-  game_state: Record<string, any>;
-  status: 'waiting' | 'active' | 'completed';
-  winner_id: string | null;
-  started_at: string;
-  ended_at: string | null;
-};
-
-export type Badge = {
-  id: string;
   name: string;
   description: string;
   icon: string;
   requirement_type: string;
   requirement_value: number;
-};
+  category: string;
+  rarity: string;
+}
 
-export type UserBadge = {
-  id: string;
-  user_id: string;
-  badge_id: string;
-  earned_at: string;
-  badge?: Badge;
-};
-
-export type GameStats = {
-  id: string;
+export interface GameStats {
+  id?: string;
   user_id: string;
   game_type: string;
-  games_played: number;
   total_time_played: number;
+  games_played: number;
   wins: number;
   losses: number;
   last_played: string;
-};
+}
 
-export type Proposal = {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  title: string;
-  message: string;
-  category: string;
-  response: 'yes' | 'no' | 'maybe' | null;
-  responded_at: string | null;
-  created_at: string;
-  email_sent: boolean;
-  sender?: Profile;
-  receiver?: Profile;
-};
-
-export type Notification = {
-  id: string;
+export interface UserBadge {
+  id?: string;
   user_id: string;
-  type: 'proposal_received' | 'proposal_accepted' | 'proposal_declined' | 'friend_request' | 'game_invite';
+  badge_id: string;
+  earned_at: string;
+  progress: number;
+  is_earned: boolean;
+  badges?: Badge;
+}
+
+export interface GameSession {
+  id?: string;
+  player1_id: string;
+  player2_id: string;
+  game_type: string;
+  status: string;
+  started_at: string;
+  ended_at: string;
+  result: string;
+}
+
+export interface BirthdaySite {
+  id: string;
+  slug: string;
+  user_id: string;
+  person_name: string;
+  date_of_birth: string | null;
+  headline: string | null;
+  message: string | null;
+  theme: string;
+  photos: string[];
+  music_url: string | null;
+  is_public: boolean;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Friendship {
+  id?: string;
+  user_id: string;
+  friend_id: string;
+  status: string;
+  created_at: string;
+}
+
+export type FriendRequest = Friendship;
+
+export interface Notification {
+  id?: string;
+  user_id: string;
   title: string;
   message: string;
-  link: string | null;
+  type: string;
   read: boolean;
+  link?: string | null;
   created_at: string;
-};
+}
 
-export type ProposalCategory = {
+export interface Proposal {
+  id?: string;
+  from_user_id: string;
+  to_user_id: string;
+  message: string;
+  status: string;
+  created_at: string;
+}
+
+export interface ProposalCategory {
   id: string;
   title: string;
   emoji: string;
   description: string;
   gradient: string;
   isCustom?: boolean;
-};
+}

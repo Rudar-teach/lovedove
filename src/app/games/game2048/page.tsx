@@ -32,7 +32,7 @@ export default function Game2048Page() {
       for (let c = 0; c < SIZE; c++) positions.push([r, c]);
     const shuffled = positions.sort(() => Math.random() - 0.5);
     const start = shuffled.slice(0, 2);
-    const t: Tile[] = start.map(([r, c], i) => ({ r, c, v: getCellValue(r, c) }));
+    const t: Tile[] = start.map(([r, c], i) => ({ r, c, v: getCellValue(r, c), _merged: false }));
     setGrid(t);
     setScore(0);
     setTimeLeft(120);
@@ -106,7 +106,7 @@ export default function Game2048Page() {
           const pick = free.sort(() => Math.random() - 0.5).slice(0, 1);
           if (pick.length > 0) {
             const [r, c] = pick[0];
-            result.push({ r, c, v: getCellValue(r, c) });
+            result.push({ r, c, v: getCellValue(r, c), _merged: false });
           }
         }
 

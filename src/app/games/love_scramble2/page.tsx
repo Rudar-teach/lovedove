@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Lightbulb, Sparkles, Star, Zap, Flame } from 'lucide-react';
@@ -8,11 +8,14 @@ import PremiumBackground from '@/components/PremiumBackground';
 
 interface Phrase {
   original: string;
-  scrambled: string;
   hint: string;
   category: string;
   difficulty: number;
   points: number;
+}
+
+interface GamePhrase extends Phrase {
+  scrambled: string;
 }
 
 const PHRASES: Phrase[] = [
@@ -47,8 +50,8 @@ export default function LoveScramble2Page() {
   const router = useRouter();
   const [phase, setPhase] = useState<'start' | 'playing' | 'finished'>('start');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [pool, setPool] = useState<Phrase[]>([]);
-  const [current, setCurrent] = useState<Phrase | null>(null);
+  const [pool, setPool] = useState<GamePhrase[]>([]);
+  const [current, setCurrent] = useState<GamePhrase | null>(null);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState(0);
@@ -64,14 +67,14 @@ export default function LoveScramble2Page() {
   const startGame = () => {
     let available = difficulty === 'easy' ? PHRASES.filter(p => p.difficulty === 1) : difficulty === 'medium' ? PHRASES.filter(p => p.difficulty <= 2) : [...PHRASES];
     const shuffled = available.sort(() => Math.random() - 0.5).slice(0, maxRounds);
-    const prepared = shuffled.map(p => ({ ...p, scrambled: scramblePhrase(p.original) }));
+    const prepared: GamePhrase[] = shuffled.map(p => ({ ...p, scrambled: scramblePhrase(p.original) }));
     setPool(prepared); setScore(0); setRoundNum(0); setHintsLeft(difficulty === 'easy' ? 3 : 2);
     nextWord(prepared);
     setTimer(timeLimit); setTimerOn(false);
     setPhase('playing');
   };
 
-  const nextWord = (p: Phrase[]) => {
+  const nextWord = (p: GamePhrase[]) => {
     if (roundNum + 1 >= p.length) { setPhase('finished'); return; }
     const next = p[roundNum + 1];
     setCurrent(next);

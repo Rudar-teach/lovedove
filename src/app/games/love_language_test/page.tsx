@@ -31,7 +31,7 @@ type LoveLang = 'Words of Affirmation' | 'Physical Touch' | 'Acts of Service' | 
 
 const LOVE_LANGS: LoveLang[] = ['Words of Affirmation', 'Physical Touch', 'Acts of Service', 'Quality Time', 'Receiving Gifts'];
 
-const LANG_EMOJI: Record<number, string> = [0, '💬', '🤗', '🎁', '⏳', '💝'];
+const LANG_EMOJI: Record<number, string> = { 0: '💬', 1: '🤗', 2: '🎁', 3: '⏳', 4: '💝' };
 const LANG_DESC: Record<string, string> = {
   'Words of Affirmation': 'You feel loved when you hear kind, affirming words from your partner. Compliments, encouragement, and verbal expressions mean the most.',
   'Physical Touch': 'You feel loved through physical closeness. Hugs, hand-holding, and affectionate touch speak louder than words.',
@@ -176,7 +176,7 @@ export default function LoveLanguageTest() {
                     <div className="space-y-2">
                       {LOVE_LANGS.map((lang, i) => {
                         const pct = maxScore > 0 ? Math.round((scores[i] / maxScore) * 100) : 0;
-                        const emoji = LANG_EMOJI[i + 1] || '💬';
+                        const emoji = LANG_EMOJI[i] || '💬';
                         return (
                           <div key={lang}>
                             <div className="flex justify-between text-sm font-semibold mb-1">

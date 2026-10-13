@@ -28,50 +28,67 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
+    // Safety: never let the page spin forever.
+    const timeout = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 4000);
+
     loadProfile();
+
+    async function loadProfile() {
+      try {
+        // 1) Fast auth read (local session first, no network round-trip on happy path)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!session?.user) {
+          clearTimeout(timeout);
+          router.replace('/auth/login');
+          return;
+        }
+        const u = session.user;
+        if (cancelled) return;
+        setUser(u);
+
+        // 2) Fire ALL three queries in parallel — this is the big speed win.
+        const [profileRes, statsRes, badgeRes] = await Promise.all([
+          supabase.from('profiles').select('id, full_name, username, email, avatar_url, bio, created_at').eq('id', u.id).maybeSingle(),
+          supabase.from('game_stats').select('id, game_type, games_played, total_time_played, wins, losses, last_played').eq('user_id', u.id).order('total_time_played', { ascending: false }),
+          supabase.from('user_badges').select('id, earned_at, badge_id, badges(badge_key, name, description)').eq('user_id', u.id).order('earned_at', { ascending: false }),
+        ]);
+        if (cancelled) return;
+
+        if (profileRes.data) setProfile(profileRes.data);
+
+        const stats = statsRes.data || [];
+        setGameStats(stats);
+        setTotalTime(stats.reduce((s, x) => s + (x.total_time_played || 0), 0));
+        setTotalWins(stats.reduce((s, x) => s + (x.wins || 0), 0));
+        setTotalGames(stats.reduce((s, x) => s + (x.games_played || 0), 0));
+
+        if (badgeRes.data) {
+          setBadges(badgeRes.data.map((ub: any) => {
+            const key = ub.badges?.badge_key || '';
+            return {
+              ...BADGE_INFO[key],
+              name: ub.badges?.name || BADGE_INFO[key]?.name || 'Badge',
+              desc: ub.badges?.description || BADGE_INFO[key]?.desc || '',
+              earnedAt: ub.earned_at,
+              id: ub.id,
+            };
+          }));
+        }
+      } catch (err) {
+        console.error('Profile load failed', err);
+      } finally {
+        clearTimeout(timeout);
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, []);
-
-  async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/auth/login'); return; }
-    setUser(user);
-
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (profileData) setProfile(profileData);
-
-    const { data: stats } = await supabase
-      .from('game_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('total_time_played', { ascending: false });
-
-    if (stats) {
-      setGameStats(stats);
-      setTotalTime(stats.reduce((sum, s) => sum + s.total_time_played, 0));
-      setTotalWins(stats.reduce((sum, s) => sum + s.wins, 0));
-      setTotalGames(stats.reduce((sum, s) => sum + s.games_played, 0));
-    }
-
-    const { data: userBadges } = await supabase
-      .from('user_badges')
-      .select('*, badges(*)')
-      .eq('user_id', user.id)
-      .order('earned_at', { ascending: false });
-
-    if (userBadges) {
-      setBadges(userBadges.map(ub => ({
-        ...BADGE_INFO[ub.badges?.badge_key || ''],
-        earnedAt: ub.earned_at,
-        id: ub.id,
-      })));
-    }
-
-    setLoading(false);
-  }
 
   function formatTime(seconds: number) {
     const h = Math.floor(seconds / 3600);
@@ -197,17 +214,19 @@ export default function ProfilePage() {
               {gameStats.map(stat => (
                 <div key={stat.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-pink-50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center text-white text-lg">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-lg">
                       🎮
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 capitalize">{stat.game_type.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-gray-500">{stat.games_played} games played</p>
+                      <p className="font-semibold text-gray-800 capitalize">{stat.game_type?.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-gray-400">
+                        {stat.games_played} games · {formatTime(stat.total_time_played || 0)}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatTime(stat.total_time_played)}</p>
-                    <p className="text-xs text-gray-500">{stat.wins} wins</p>
+                    <p className="font-bold text-green-600">{stat.wins}W</p>
+                    <p className="text-xs text-red-500">{stat.losses}L</p>
                   </div>
                 </div>
               ))}

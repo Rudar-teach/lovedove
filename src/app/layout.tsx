@@ -30,7 +30,7 @@ export default function RootLayout({
           <AuthProvider>
             <LuxuryCursor />
             <Navbar />
-            <main className="relative z-10">
+            <main className="relative z-10 pt-16 sm:pt-20">
               {children}
             </main>
             <Chatbot />

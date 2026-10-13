@@ -63,7 +63,7 @@ export async function getAdminStats(): Promise<AdminStats | null> {
     .gte('logged_in_at', monthStart.toISOString());
 
   const dailyMap: Record<string, number> = {};
-  dailyData?.forEach((item: LoginTracking) => {
+  dailyData?.forEach((item: { logged_in_at: string }) => {
     const date = new Date(item.logged_in_at);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     dailyMap[key] = (dailyMap[key] || 0) + 1;
@@ -81,7 +81,7 @@ export async function getAdminStats(): Promise<AdminStats | null> {
     .gte('logged_in_at', weekStart.toISOString());
 
   const hourlyMap: Record<number, number> = {};
-  hourlyRaw?.forEach((item: LoginTracking) => {
+  hourlyRaw?.forEach((item: { logged_in_at: string }) => {
     const h = new Date(item.logged_in_at).getHours();
     hourlyMap[h] = (hourlyMap[h] || 0) + 1;
   });

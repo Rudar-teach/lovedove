@@ -38,8 +38,10 @@ export default function LoveMathPage() {
     const val = parseInt(guess);
     if (val === correct) {
       const pts = 10 + streak * 5;
+      const ns = streak + 1;
       setScore(s => s + pts);
-      setStreak(s => { const ns = s + 1; if (ns > bestStreak) setBestStreak(ns); return ns; });
+      if (ns > bestStreak) setBestStreak(ns);
+      setStreak(ns);
       setComboText(ns > 1 ? `🔥 ${ns}x Combo! +${pts}` : `+${pts}`);
     } else {
       setStreak(0);

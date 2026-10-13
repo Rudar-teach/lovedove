@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Sparkles, Star, Grid3x3, Sun, Moon } from 'lucide-react';
@@ -201,7 +201,7 @@ export default function LoveWordSearch2Page() {
                     const isSelected = selected.some(s => s.row === ri && s.col === ci);
                     const inFoundWord = placements.some(p => p.found && p.cells.some(c => c.row === ri && c.col === ci));
                     return (
-                      <button key={`${ri}-${ci}`} onMouseDown={() => handleCellStart(ri, ci)} onMouseEnter={() => handleCellEnter(ri, ci)} onMouseUp={handleEnd} onTouchStart={() => handleCellStart(ri, ci)} onTouchMove={(e) => { const t = e.touches[0]; const el = document.elementFromPoint(t.clientX, t.clientY); if (el && el.dataset.row && el.dataset.col) handleCellEnter(parseInt(el.dataset.row), parseInt(el.dataset.col)); }} onTouchEnd={handleEnd} data-row={ri} data-col={ci} className={`aspect-square rounded-md text-xs sm:text-sm font-black flex items-center justify-center transition ${isSelected ? 'bg-purple-500 text-white scale-110 z-10 relative' : inFoundWord ? 'bg-green-100 text-green-700' : 'bg-white text-gray-700 hover:bg-purple-100'}`}>
+                      <button key={`${ri}-${ci}`} onMouseDown={() => handleCellStart(ri, ci)} onMouseEnter={() => handleCellEnter(ri, ci)} onMouseUp={handleEnd} onTouchStart={() => handleCellStart(ri, ci)} onTouchMove={(e) => { const t = e.touches[0]; const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null; if (el && el.dataset.row && el.dataset.col) handleCellEnter(parseInt(el.dataset.row), parseInt(el.dataset.col)); }} onTouchEnd={handleEnd} data-row={ri} data-col={ci} className={`aspect-square rounded-md text-xs sm:text-sm font-black flex items-center justify-center transition ${isSelected ? 'bg-purple-500 text-white scale-110 z-10 relative' : inFoundWord ? 'bg-green-100 text-green-700' : 'bg-white text-gray-700 hover:bg-purple-100'}`}>
                         {letter}
                       </button>
                     );

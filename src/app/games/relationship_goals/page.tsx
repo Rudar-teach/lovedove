@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Calendar, Star, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Calendar, Star, CheckCircle, Target } from 'lucide-react';
 import Link from 'next/link';
 import PremiumBackground from '@/components/PremiumBackground';
 

@@ -61,7 +61,7 @@ export default function LoveChallengesPage() {
   const [completed, setCompleted] = useState<Challenge[]>([]);
   const [streak, setStreak] = useState(0);
   const [completedCategories, setCompletedCategories] = useState<string[]>([]);
-  const [progress, setProgress] = useState({ communication: 0, fun: 0, romance: 0, adventure: 0 });
+  const [progress, setProgress] = useState<Record<string, number>>({ communication: 0, fun: 0, romance: 0, adventure: 0 });
 
   const filtered = CHALLENGES.filter(c => {
     if (categoryFilter !== 'all' && c.category !== categoryFilter) return false;
@@ -70,7 +70,9 @@ export default function LoveChallengesPage() {
   });
 
   const getDailyChallenge = () => {
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const now = Date.now();
+    const yearStart = new Date(new Date().getFullYear(), 0, 0).getTime();
+    const dayOfYear = Math.floor((now - yearStart) / 86400000);
     const cats = Object.keys(CATEGORY_META);
     const cat = cats[dayOfYear % cats.length];
     const catChallenges = CHALLENGES.filter(c => c.category === cat);
@@ -223,9 +225,9 @@ export default function LoveChallengesPage() {
                     <div key={cat} className="flex items-center gap-2">
                       <span className="text-xl">{meta.icon}</span>
                       <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${Math.min(progress[cat] * 25, 100)}%` }} />
+                        <motion.div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${Math.min(progress[cat as keyof typeof progress] * 25, 100)}%` }} />
                       </div>
-                      <span className="text-sm font-bold text-gray-700">{progress[cat]}</span>
+                      <span className="text-sm font-bold text-gray-700">{progress[cat as keyof typeof progress]}</span>
                     </div>
                   ))}
                 </div>
