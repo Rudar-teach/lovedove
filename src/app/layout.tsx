@@ -8,12 +8,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Love Dove - Where Hearts Connect & Play",
-  description: "Create beautiful birthday websites, play 101 couple games, add friends, earn badges, and celebrate your love story together.",
-  keywords: ["love", "couple games", "birthday", "games", "friends", "badges", "love dove", "couples"],
+  description: "Play 101 couple games, add friends, earn badges, track your playtime, and celebrate your love story together.",
+  keywords: ["love", "couple games", "games", "friends", "badges", "love dove", "couples"],
   authors: [{ name: "Rudar Salaria" }],
   openGraph: {
     title: "Love Dove - Where Hearts Connect & Play",
-    description: "Create birthday websites and play couple games together",
+    description: "Play couple games together and celebrate your love",
     type: "website",
   },
 };

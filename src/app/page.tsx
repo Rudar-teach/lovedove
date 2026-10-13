@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Heart, Gamepad2, Trophy, Users, Sparkles, ChevronRight, Gift,
-  Camera, MessageCircle, Star, Filter, Search, Zap, HeartHandshake, ArrowRight,
+  MessageCircle, Star, Filter, Search, Zap, HeartHandshake, ArrowRight,
   Play, ExternalLink, Award, Flame, Target, Crown, Rocket,
   PartyPopper, Music, Palette, Dumbbell, BookOpen, Coffee,
   Globe, Shield, Clock, Users2, HeartPulse, Smile
@@ -132,12 +132,11 @@ const categoryColors: Record<string, string> = {
 };
 
 const features = [
-  { icon: Camera, title: 'Birthday Websites', desc: 'Upload photos, add messages, and create stunning personalized birthday pages for your loved ones.', color: 'from-pink-500 to-rose-500', href: '/dashboard' },
   { icon: Gamepad2, title: '101 Couple Games', desc: 'From classics to party games, trivia to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500', href: '/games' },
   { icon: Users, title: 'Add Friends', desc: 'Connect with your partner or friends, challenge them to games, and compete together.', color: 'from-rose-500 to-red-500', href: '/friends' },
   { icon: Trophy, title: 'Earn Badges', desc: 'Unlock achievements like "10 Hours Together", "Game Master", and "Love Champions".', color: 'from-amber-400 to-orange-500', href: '/badges' },
   { icon: Clock, title: 'Track Playtime', desc: 'See how much time you spend playing together. Every moment counts on your love journey.', color: 'from-sky-400 to-blue-500', href: '/profile' },
-  { icon: HeartHandshake, title: 'Share & Connect', desc: 'Share birthday pages and game links with your loved ones. Spread the love everywhere.', color: 'from-red-400 to-rose-500', href: '/find-partner' },
+  { icon: HeartHandshake, title: 'Share & Connect', desc: 'Share game links with your loved ones. Spread the love everywhere.', color: 'from-red-400 to-rose-500', href: '/find-partner' },
 ];
 
 const badges = [
@@ -313,7 +312,7 @@ export default function HomePage() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4"
           >
-            Create beautiful birthday websites, play <span className="font-bold text-pink-600">101 couple games</span>,
+            Play <span className="font-bold text-pink-600">101 couple games</span>,
             connect with friends, and celebrate your love story together. 💑
           </motion.p>
 
@@ -410,7 +409,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Love Dove brings couples together with beautiful birthday pages, exciting games, and meaningful connections.
+              Love Dove brings couples together with exciting games, and meaningful connections.
             </p>
           </motion.div>
 
@@ -846,26 +845,17 @@ export default function HomePage() {
           </h2>
           <p className="text-white/80 text-base sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10">
             {isLoggedIn
-              ? 'Build a beautiful birthday site for your loved one, or jump into a couple game right now.'
+              ? 'Jump into a couple game, or find your partner and play together.'
               : 'Join thousands of couples who are already playing, connecting, and celebrating their love on Love Dove.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             {isLoggedIn ? (
               <>
-                <Link href="/dashboard">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-pink-600 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-sm sm:text-base"
-                  >
-                    🎂 Make a Birthday Website
-                  </motion.button>
-                </Link>
                 <Link href="/games">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-2xl border border-white/30 hover:bg-white/30 transition-all duration-300 text-sm sm:text-base"
+                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-pink-600 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-sm sm:text-base"
                   >
                     🎮 Play a Game
                   </motion.button>
@@ -909,7 +899,7 @@ export default function HomePage() {
                 <span className="text-xl font-display font-black">Love Dove</span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                Where hearts connect & play. Create beautiful birthday websites and play couple games together.
+                Where hearts connect & play. Play couple games together and celebrate your love.
               </p>
               <div className="flex gap-3">
                 {['💕', '💖', '💗', '💓'].map((emoji, i) => (

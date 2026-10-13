@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Heart, LogOut, Gift, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Mail, Bell } from 'lucide-react';
+import { Heart, LogOut, Gamepad2, Trophy, Users, Settings, Clock, Sparkles, ChevronRight, Flame, Mail, Bell } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Profile, GameStats, UserBadge } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
@@ -209,7 +209,6 @@ export default function DashboardPage() {
                     <Link href="/friends"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Users className="w-4 h-4" /> Manage Friends</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <Link href="/proposals"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Mail className="w-4 h-4" /> Proposals</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <Link href="/notifications"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Bell className="w-4 h-4" /> Notifications</span><ChevronRight className="w-4 h-4" /></Button></Link>
-                    <Link href="/birthday/new"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Gift className="w-4 h-4" /> Birthday Site</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <Link href="/profile"><Button variant="outline" className="w-full justify-between"><span className="flex items-center gap-2"><Settings className="w-4 h-4" /> Edit Profile</span><ChevronRight className="w-4 h-4" /></Button></Link>
                     <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-full transition-colors font-medium text-sm">
                       <LogOut className="w-4 h-4" /> Log Out

@@ -69,23 +69,6 @@ export interface GameSession {
   result: string;
 }
 
-export interface BirthdaySite {
-  id: string;
-  slug: string;
-  user_id: string;
-  person_name: string;
-  date_of_birth: string | null;
-  headline: string | null;
-  message: string | null;
-  theme: string;
-  photos: string[];
-  music_url: string | null;
-  is_public: boolean;
-  view_count: number;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Friendship {
   id?: string;
   user_id: string;

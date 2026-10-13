@@ -48,6 +48,7 @@ export default function Navbar() {
   const [recentGames, setRecentGames] = useState<any[]>([]);
   const [totalTime, setTotalTime] = useState(0);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [lifetimeHours, setLifetimeHours] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -84,6 +85,15 @@ export default function Navbar() {
         setRecentGames(stats);
         setTotalTime(stats.reduce((sum, s) => sum + (s.total_time_played || 0), 0));
       }
+
+      // Total hours across all games (drives the 10-hour badge teaser)
+      const { data: allStats } = await supabase
+        .from('game_stats')
+        .select('total_time_played')
+        .eq('user_id', user.id);
+      if (allStats) {
+        setLifetimeHours(allStats.reduce((s, x) => s + (x.total_time_played || 0), 0));
+      }
     } catch {
       // silent
     }
@@ -112,11 +122,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/#games', label: 'Games', icon: Gamepad2 },
-    { href: '/#features', label: 'Features', icon: Sparkles },
-    { href: '/find-partner', label: 'Find Partner', icon: Heart },
+    { href: '/create', label: 'Birthday Site', icon: Gift },
+    { href: '/add-friends', label: 'Friends', icon: Users },
     { href: '/games', label: 'All Games', icon: Gamepad2 },
     { href: '/#badges', label: 'Badges', icon: Trophy },
-    { href: '/#community', label: 'Community', icon: Users },
+    { href: '/find-partner', label: 'Find Partner', icon: Heart },
     { href: '/contact', label: 'Contact', icon: Mail },
   ];
 
@@ -240,18 +250,21 @@ export default function Navbar() {
                                 </motion.div>
                               </div>
                             ) : recentGames.length > 0 ? (
-                              recentGames.map((stat, i) => (
+                              recentGames.map((stat, i) => {
+                                const game = GAME_TYPE_MAP[stat.game_type] || { name: stat.game_type, emoji: '🎮' };
+                                return (
                                 <motion.div
                                   key={stat.id || i}
                                   initial={{ opacity: 0, x: -10 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ delay: i * 0.05 }}
                                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-pink-50/80 transition-colors cursor-pointer group"
+                                  onClick={() => { setProfileOpen(false); window.location.href = `/games/${stat.game_type}`; }}
                                 >
-                                  <span className="text-xl">{stat.game_icon || '🎮'}</span>
+                                  <span className="text-xl">{game.emoji}</span>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-700 truncate group-hover:text-pink-600 transition-colors">
-                                      {stat.game_name || 'Game'}
+                                      {game.name}
                                     </p>
                                     <p className="text-xs text-gray-400 flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
@@ -260,7 +273,8 @@ export default function Navbar() {
                                   </div>
                                   <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-pink-400 transition-colors" />
                                 </motion.div>
-                              ))
+                                );
+                              })
                             ) : (
                               <p className="text-sm text-gray-400 text-center py-3">No games played yet</p>
                             )}
@@ -284,7 +298,31 @@ export default function Navbar() {
                             className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-pink-600 hover:bg-pink-50/80 rounded-xl transition-all"
                           >
                             <User className="w-4 h-4" />
-                            Profile
+                            My Profile
+                          </Link>
+                          <Link
+                            href="/my-sites"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-pink-600 hover:bg-pink-50/80 rounded-xl transition-all"
+                          >
+                            <Gift className="w-4 h-4" />
+                            Birthday Sites
+                          </Link>
+                          <Link
+                            href="/add-friends"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-pink-600 hover:bg-pink-50/80 rounded-xl transition-all"
+                          >
+                            <Users className="w-4 h-4" />
+                            Add Friends
+                          </Link>
+                          <Link
+                            href="/badges"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-pink-600 hover:bg-pink-50/80 rounded-xl transition-all"
+                          >
+                            <Trophy className="w-4 h-4" />
+                            Badges
                           </Link>
                           <button
                             onClick={handleLogout}

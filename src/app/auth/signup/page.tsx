@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Heart, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
+import {
+  Eye, EyeOff, Heart, Mail, Lock, User, ArrowRight, Sparkles,
+  AtSign, Check, X as XIcon, Loader2
+} from 'lucide-react';
 import CanvasBackground from '@/components/premium/CanvasBackground';
 import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
@@ -12,14 +15,51 @@ import CinematicReveal from '@/components/premium/CinematicReveal';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+
 export default function SignupPage() {
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Username availability check (debounced)
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const clean = username.trim().toLowerCase();
+    if (!clean) { setUsernameStatus('idle'); return; }
+    if (!USERNAME_RE.test(clean)) { setUsernameStatus('invalid'); return; }
+
+    setUsernameStatus('checking');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', clean)
+          .maybeSingle();
+        if (error) {
+          // Treat DB errors as "unknown" — let the server validate on submit
+          setUsernameStatus('idle');
+        } else if (data) {
+          setUsernameStatus('taken');
+        } else {
+          setUsernameStatus('available');
+        }
+      } catch {
+        setUsernameStatus('idle');
+      }
+    }, 400);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,43 +71,103 @@ export default function SignupPage() {
       toast.error('Password must be at least 6 characters');
       return;
     }
+    const cleanUsername = username.trim().toLowerCase();
+    if (!USERNAME_RE.test(cleanUsername)) {
+      toast.error('Username must be 3-20 characters, letters, numbers, and underscores only');
+      return;
+    }
+    if (usernameStatus === 'taken') {
+      toast.error('That username is already taken');
+      return;
+    }
     setLoading(true);
     try {
+      // Server-side guard: re-check username uniqueness right before sign-up
+      const { data: taken } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', cleanUsername)
+        .maybeSingle();
+      if (taken) {
+        toast.error('That username was just taken. Please pick another one.');
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
+        options: {
+          data: {
+            full_name: name.trim() || 'User',
+            username: cleanUsername,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
+
       if (error) {
         toast.error(error.message || 'Signup failed');
         setLoading(false);
         return;
       }
-      if (data.user) {
-        const fullName = name.trim() || 'User';
-        const username = email.trim().split('@')[0];
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            full_name: fullName,
-            username,
-            email: email.trim(),
-            bio: '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
+      if (!data.user) {
+        toast.error('Signup failed — please try again');
+        setLoading(false);
+        return;
+      }
+
+      // Create the profile row immediately (the auth trigger also creates one,
+      // but we want to control the username and update the auth metadata copy).
+      const fullName = name.trim() || 'User';
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          full_name: fullName,
+          username: cleanUsername,
+          email: email.trim(),
+          bio: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        // 23505 = unique_violation on username
+        if (profileError.code === '23505') {
+          toast.error('That username was just taken. Please pick another one.');
+          setLoading(false);
+          return;
         }
       }
-      toast.success('Account created! Please check your email to confirm.');
-      router.push('/auth/login');
+
+      // If the project has email confirmation OFF, signInWithPassword works now.
+      // If it's ON, the user will land on /auth/callback after confirming.
+      // Either way, route to /add-friends so they can find their first partner.
+      if (data.session) {
+        toast.success('Account created! Let\'s add your first friend 💕');
+        router.push('/add-friends');
+      } else {
+        toast.success('Account created! Check your email to confirm, then sign in.');
+        router.push('/auth/login');
+      }
     } catch (err) {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const usernameHint = (() => {
+    switch (usernameStatus) {
+      case 'checking': return <span className="text-gray-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Checking…</span>;
+      case 'available': return <span className="text-emerald-600 flex items-center gap-1"><Check className="w-3 h-3" /> @{username.trim().toLowerCase()} is available!</span>;
+      case 'taken': return <span className="text-red-500 flex items-center gap-1"><XIcon className="w-3 h-3" /> That username is already taken</span>;
+      case 'invalid': return <span className="text-red-500 flex items-center gap-1"><XIcon className="w-3 h-3" /> 3-20 chars · letters, numbers, underscores</span>;
+      default: return <span className="text-gray-400">3-20 characters · letters, numbers, underscores</span>;
+    }
+  })();
 
   return (
     <>
@@ -92,7 +192,7 @@ export default function SignupPage() {
               <ShinyText text="Love Dove" className="text-5xl xl:text-6xl" color="from-white via-pink-100 to-white" />
             </h2>
             <p className="text-white/80 text-lg max-w-md mx-auto leading-relaxed">
-              Create beautiful birthday websites, play couple games, and celebrate love together.
+              Pick a unique username, add friends, and play couple games together in real time.
             </p>
           </div>
         </div>
@@ -116,7 +216,7 @@ export default function SignupPage() {
             </CinematicReveal>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-              <CinematicReveal direction="up" delay={0.1}>
+              <CinematicReveal direction="up" delay={0.05}>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
                   <div className="relative">
@@ -130,6 +230,37 @@ export default function SignupPage() {
                       required
                     />
                   </div>
+                </div>
+              </CinematicReveal>
+
+              <CinematicReveal direction="up" delay={0.1}>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Username <span className="text-pink-600">*</span>
+                  </label>
+                  <div className="relative">
+                    <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      placeholder="pick_a_username"
+                      maxLength={20}
+                      autoComplete="username"
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl border bg-white/80 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 transition-all ${
+                        usernameStatus === 'available' ? 'border-emerald-300 focus:ring-emerald-500/30' :
+                        usernameStatus === 'taken' || usernameStatus === 'invalid' ? 'border-red-300 focus:ring-red-500/30' :
+                        'border-rose-100/80 focus:ring-pink-500/30 focus:border-pink-300'
+                      }`}
+                      required
+                    />
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                      {usernameStatus === 'checking' && <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />}
+                      {usernameStatus === 'available' && <Check className="w-4 h-4 text-emerald-500" />}
+                      {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <XIcon className="w-4 h-4 text-red-500" />}
+                    </div>
+                  </div>
+                  <p className="text-xs mt-1.5 px-1">{usernameHint}</p>
                 </div>
               </CinematicReveal>
 
@@ -194,10 +325,10 @@ export default function SignupPage() {
               <CinematicReveal direction="up" delay={0.3}>
                 <motion.button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || usernameStatus === 'taken' || usernameStatus === 'invalid'}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
