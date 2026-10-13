@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Heart, Gamepad2, Trophy, Users, Sparkles, ChevronRight, Gift,
@@ -11,11 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import LuxuryCursor from '@/components/premium/LuxuryCursor';
-import CanvasBackground from '@/components/premium/CanvasBackground';
-import CinematicReveal from '@/components/premium/CinematicReveal';
-import MagneticButton from '@/components/premium/MagneticButton';
-import GlassCard from '@/components/premium/GlassCard';
 import ShinyText from '@/components/premium/ShinyText';
 import ChatBot from '@/components/chat/ChatBot';
 
@@ -191,8 +186,18 @@ export default function HomePage() {
     setTimeout(() => heart.remove(), 1000);
   }, []);
 
+  const rafRef = useRef<number | null>(null);
+  const lastPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const dx = e.clientX - lastPos.current.x;
+      const dy = e.clientY - lastPos.current.y;
+      if (dx * dx + dy * dy < 64) return;
+      lastPos.current = { x: e.clientX, y: e.clientY };
+      setMousePos({ x: e.clientX, y: e.clientY });
+    });
   }, []);
 
   const filteredGames = games.filter(game => {
