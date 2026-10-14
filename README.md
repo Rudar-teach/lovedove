@@ -140,6 +140,28 @@ Games are organized by category:
 
 Each game records play time and results to the `game_sessions` table.
 
+### Playing together
+
+Games are built for two people, so the entry screen is a friend picker rather
+than a code box. Opening a game loads your friend list and marks each person
+online or offline from the `user_presence` table, which the app heartbeats
+every 25 seconds while you are on the page.
+
+Pick a friend and send an invite. Two things happen on their side:
+
+- A browser notification, if they have granted that permission. The first time
+  they load the app a small button in the corner offers to turn it on.
+- A banner at the bottom of the screen with Accept and Later buttons.
+
+Either button resolves the invite. Accepting sends you both into the same
+started session, so you arrive at the game together rather than one of you
+waiting on a code. Invites arrive through Supabase realtime on the
+`play_invites` table, which needs that table added to the realtime publication
+(the migration does this).
+
+If someone has no friends yet, the picker shows a link to `/add-friends`
+instead of an empty list.
+
 ---
 
 ## 🚢 Deployment
