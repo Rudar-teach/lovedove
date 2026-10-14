@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,7 +39,7 @@ function timeAgo(iso: string | null) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export default function AddFriendsPage() {
+function AddFriendsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteCode = searchParams.get('invite');
@@ -617,5 +617,22 @@ export default function AddFriendsPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function AddFriendsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-rose-50 to-purple-50">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-pink-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-purple-600 mt-4 font-medium">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <AddFriendsContent />
+    </Suspense>
   );
 }
