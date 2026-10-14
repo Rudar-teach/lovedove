@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { PlayInviteProvider } from '@/components/PlayInviteProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,12 +29,14 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <ClientProvider>
           <AuthProvider>
-            <LuxuryCursor />
-            <Navbar />
-            <main className="relative z-10 pt-16 sm:pt-20">
-              {children}
-            </main>
-            <Chatbot />
+            <PlayInviteProvider>
+              <LuxuryCursor />
+              <Navbar />
+              <main className="relative z-10 pt-16 sm:pt-20">
+                {children}
+              </main>
+              <Chatbot />
+            </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
       </body>

@@ -94,30 +94,56 @@ export default function CreateBirthdaySite() {
   }, [step, recipientName, message]);
 
   // ── Photo upload to Supabase Storage ────────────────────────────────
+  // Uploads go through /api/upload, which attaches the signed-in user's
+  // access token. Uploading straight from the browser with the anon key
+  // hits the storage RLS policy "Auth users upload photos" and fails,
+  // because a raw anon client has no auth.role() of 'authenticated'.
   const handlePhotoUpload = async (files: FileList | null) => {
     if (!files || !user) return;
+    const picked = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!picked.length) { toast.error('Please choose image files only'); return; }
+
+    const room = 6 - photos.length;
+    if (room <= 0) { toast.error('You can add up to 6 photos'); return; }
+
     setUploading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Your session expired. Please sign in again.');
+        router.replace('/auth/login');
+        return;
+      }
+
       const newUrls: string[] = [];
-      for (const file of Array.from(files).slice(0, 6 - photos.length)) {
-        if (!file.type.startsWith('image/')) continue;
-        const ext = file.name.split('.').pop();
-        const path = `birthday/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error } = await supabase.storage
-          .from('photos')
-          .upload(path, file, { cacheControl: '3600', upsert: false });
-        if (error) {
-          toast.error(`Could not upload ${file.name}`);
+      for (const file of picked.slice(0, room)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} is larger than 10 MB`);
           continue;
         }
-        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path);
-        newUrls.push(publicUrl);
+
+        const form = new FormData();
+        form.append('file', file);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: form,
+        });
+
+        const body = await res.json().catch(() => null);
+        if (!res.ok || !body?.url) {
+          toast.error(body?.error || `Could not upload ${file.name}`);
+          continue;
+        }
+        newUrls.push(body.url as string);
       }
+
       if (newUrls.length) {
         setPhotos(prev => [...prev, ...newUrls]);
         toast.success(`Uploaded ${newUrls.length} photo${newUrls.length !== 1 ? 's' : ''}!`);
       }
-    } catch (e: any) {
+    } catch {
       toast.error('Upload failed. Please try again.');
     } finally {
       setUploading(false);

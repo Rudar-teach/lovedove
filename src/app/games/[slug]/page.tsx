@@ -1,14 +1,24 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Heart, ArrowLeft, Share2, Users, Trophy, Sparkles, Play } from 'lucide-react';
+import {
+  Heart, ArrowLeft, Share2, Users, Trophy, Sparkles, Play,
+  UserPlus, Check, X, Clock, Loader2, Bell, BellRing
+} from 'lucide-react';
 import CanvasBackground from '@/components/premium/CanvasBackground';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
+import { supabase } from '@/lib/supabase';
+import {
+  fetchFriendRelations,
+  sendPlayInvite,
+  respondToPlayInvite,
+  FriendRelation,
+} from '@/lib/social';
 
 const gameData: Record<string, { name: string; icon: string; desc: string; gradient: string; category: string; players: string; color: string }> = {
   tictactoe: { name: 'Tic-Tac-Toe', icon: '⭕❌', desc: 'Classic strategy', gradient: 'from-pink-400 to-rose-500', category: 'Classic', players: '2 Players', color: '#ec4899' },
@@ -118,12 +128,126 @@ export default function GamePage() {
   const params = useParams();
   const slug = params.slug as string;
   const [mounted, setMounted] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
+
+  // Couple games need a real second player. The flow is:
+  // pick friend -> invite sent -> friend sees a notification -> on accept
+  // the game starts for both at once.
+  const [user, setUser] = useState<any>(null);
+  const [friends, setFriends] = useState<FriendRelation[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(true);
+
+  const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [invitedFriendId, setInvitedFriendId] = useState<string | null>(null);
+  const [invitedFriendName, setInvitedFriendName] = useState('');
   const [sessionCode, setSessionCode] = useState('');
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ── Load the signed-in user and their accepted friends ──────────────
+  useEffect(() => {
+    if (!mounted) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (!session?.user) {
+        setLoadingFriends(false);
+        return;
+      }
+      const u = session.user;
+      if (!cancelled) setUser(u);
+
+      const { friends: list } = await fetchFriendRelations(u.id);
+      if (cancelled) return;
+      setFriends(list);
+      setLoadingFriends(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [mounted]);
+
+  // ── Presence heartbeat: marks this user online every 25s so friends
+  //    see a green dot and know they are available to play. ────────────
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const beat = async () => {
+      if (cancelled || !user) return;
+      try {
+        await supabase.rpc('heartbeat_presence', { p_user_id: user.id });
+        await supabase.rpc('expire_stale_presence');
+      } catch {
+        // Presence is best-effort; never block the game on it.
+      }
+    };
+
+    beat();
+    const timer = setInterval(beat, 25000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [user]);
+
+  // ── Watch for the invite being accepted, then auto-start ────────────
+  useEffect(() => {
+    if (!invitedFriendId || !user) return;
+
+    const channel = supabase
+      .channel(`invite-${slug}-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'play_invites',
+          filter: `from_user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          const row = payload.new;
+          if (row?.game_slug !== slug || row?.to_user_id !== invitedFriendId) return;
+          if (row.status === 'accepted') {
+            setGameStarted(true);
+          } else if (row.status === 'declined') {
+            setInvitedFriendId(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [invitedFriendId, user, slug]);
+
+  const sendInvite = async () => {
+    if (!selectedFriend || !user) return;
+    setSending(true);
+    try {
+      const res = await sendPlayInvite(user.id, selectedFriend, slug);
+      if (!res.ok) {
+        alert(res.error || 'Could not send the invite');
+        return;
+      }
+      const friend = friends.find(f => f.friend.id === selectedFriend);
+      setInvitedFriendId(selectedFriend);
+      setInvitedFriendName(friend?.friend.full_name || 'your friend');
+      setSessionCode(res.sessionCode || '');
+    } catch {
+      alert('Could not send the invite');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const cancelInvite = async () => {
+    if (!invitedFriendId || !user) return;
+    await respondToPlayInvite(invitedFriendId, false);
+    setInvitedFriendId(null);
+    setInvitedFriendName('');
+    setSessionCode('');
+  };
 
   const game = gameData[slug];
 
@@ -156,6 +280,9 @@ export default function GamePage() {
     setSessionCode(code);
     setGameStarted(true);
   };
+
+  const onlineFriends = friends.filter(f => f.friend.is_online);
+  const offlineFriends = friends.filter(f => !f.friend.is_online);
 
   return (
     <>
@@ -203,23 +330,139 @@ export default function GamePage() {
                     </span>
                   </div>
 
-                  <div className="bg-rose-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 max-w-md mx-auto">
-                    <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">How to Play</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      Share the game code with your partner and start playing together!
-                      Create a session and send the code to your loved one.
-                    </p>
-                  </div>
+                  {/* ── Waiting on the invited friend ─────────────────── */}
+                  {invitedFriendId ? (
+                    <div className="max-w-md mx-auto">
+                      <div className="bg-rose-50 rounded-2xl p-6 mb-5">
+                        <Loader2 className="w-10 h-10 text-rose-500 animate-spin mx-auto mb-3" />
+                        <h3 className="font-bold text-gray-900 mb-1">
+                          Waiting for {invitedFriendName}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          They got a notification. The game starts the moment they accept.
+                        </p>
+                        <div className="bg-white rounded-xl px-4 py-3 inline-block border border-rose-100">
+                          <p className="text-xs text-gray-500 mb-1">Session code</p>
+                          <p className="text-2xl font-black tracking-widest text-rose-600">{sessionCode}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={cancelInvite}
+                        className="text-sm text-gray-500 hover:text-rose-600 font-semibold"
+                      >
+                        Cancel invite
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* ── Friend picker ─────────────────────────────── */}
+                      <div className="bg-rose-50/80 rounded-2xl p-4 sm:p-6 mb-5 max-w-lg mx-auto text-left">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                            <UserPlus className="w-4 h-4 text-rose-500" />
+                            Play with a friend
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {onlineFriends.length} online
+                          </span>
+                        </div>
 
-                  <motion.button
-                    onClick={startGame}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 sm:px-12 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 mx-auto"
-                  >
-                    <Play className="w-5 h-5" />
-                    Start Game
-                  </motion.button>
+                        {loadingFriends ? (
+                          <p className="text-sm text-gray-500 py-4 text-center">Loading friends…</p>
+                        ) : friends.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-gray-600 mb-3">
+                              You have no friends yet. Add someone to play together!
+                            </p>
+                            <Link
+                              href="/add-friends"
+                              className="inline-block bg-rose-500 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-rose-600 transition-colors"
+                            >
+                              Add a friend
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                            {onlineFriends.map(f => (
+                              <button
+                                key={f.id}
+                                onClick={() => setSelectedFriend(f.friend.id)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                                  selectedFriend === f.friend.id
+                                    ? 'border-rose-400 bg-white shadow-md'
+                                    : 'border-transparent bg-white/60 hover:bg-white'
+                                }`}
+                              >
+                                <div className="relative shrink-0">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold">
+                                    {f.friend.avatar_url
+                                      ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                      : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
+                                  </div>
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-gray-900 text-sm truncate">
+                                    {f.friend.full_name || 'Friend'}
+                                  </p>
+                                  <p className="text-xs text-green-600 font-medium">Online now</p>
+                                </div>
+                                {selectedFriend === f.friend.id && (
+                                  <Check className="w-5 h-5 text-rose-500 shrink-0" />
+                                )}
+                              </button>
+                            ))}
+
+                            {offlineFriends.map(f => (
+                              <div
+                                key={f.id}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/40 opacity-60"
+                              >
+                                <div className="relative shrink-0">
+                                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                                    {f.friend.avatar_url
+                                      ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                      : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
+                                  </div>
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gray-400 border-2 border-white rounded-full" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-gray-900 text-sm truncate">
+                                    {f.friend.full_name || 'Friend'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Offline
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <motion.button
+                        onClick={sendInvite}
+                        disabled={!selectedFriend || sending}
+                        whileHover={selectedFriend ? { scale: 1.05 } : {}}
+                        whileTap={selectedFriend ? { scale: 0.95 } : {}}
+                        className={`px-8 sm:px-12 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-xl transition-all flex items-center gap-2 mx-auto ${
+                          selectedFriend && !sending
+                            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:shadow-2xl'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                        }`}
+                      >
+                        {sending ? (
+                          <><Loader2 className="w-5 h-5 animate-spin" /> Sending…</>
+                        ) : (
+                          <><Bell className="w-5 h-5" /> Invite to Play</>
+                        )}
+                      </motion.button>
+
+                      <p className="text-xs text-gray-500 mt-3">
+                        They will get a notification. The game starts automatically when they accept.
+                      </p>
+                    </>
+                  )}
                 </GlassCard>
               </CinematicReveal>
             ) : (
@@ -227,7 +470,7 @@ export default function GamePage() {
                 <GlassCard glow="pink" className="p-6 sm:p-10 text-center">
                   <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">{game.icon}</div>
                   <h2 className="text-2xl sm:text-3xl font-display font-black text-gray-900 mb-3 sm:mb-4">{game.name}</h2>
-                  <p className="text-gray-600 mb-4 sm:mb-6">Share this code with your partner:</p>
+                  <p className="text-gray-600 mb-4 sm:mb-6">You're playing with {invitedFriendName}!</p>
 
                   <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-3xl sm:text-5xl font-black tracking-widest px-6 sm:px-10 py-4 sm:py-6 rounded-2xl mb-4 sm:mb-6 inline-block shadow-2xl">
                     {sessionCode}
@@ -243,9 +486,10 @@ export default function GamePage() {
                       <Share2 className="w-4 h-4" />
                       Copy Code
                     </motion.button>
-                    <button className="bg-gray-100 text-gray-700 px-6 sm:px-8 py-3 rounded-xl font-bold text-sm sm:text-base hover:bg-gray-200 transition-all">
-                      Waiting for partner...
-                    </button>
+                    <div className="bg-green-50 text-green-700 px-6 sm:px-8 py-3 rounded-xl font-bold text-sm sm:text-base border-2 border-green-200 flex items-center gap-2">
+                      <BellRing className="w-4 h-4" />
+                      Both players in!
+                    </div>
                   </div>
 
                   <div className="mt-6 sm:mt-8 p-4 bg-amber-50 rounded-xl border border-amber-100">
