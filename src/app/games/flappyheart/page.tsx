@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const GAME_WIDTH = 320;
 const GAME_HEIGHT = 480;
@@ -205,14 +204,13 @@ export default function FlappyHeartPage() {
   }, []);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Flappy Heart
             </h1>
             <div className="w-16" />
@@ -225,12 +223,12 @@ export default function FlappyHeartPage() {
           >
             <div className="flex justify-between items-center mb-3">
               <div className="text-center">
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div className="text-center">
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
             </div>
 
@@ -251,8 +249,8 @@ export default function FlappyHeartPage() {
                   className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl"
                 >
                   <Heart className="text-pink-400 mb-2" size={48} />
-                  <p className="text-white text-lg font-bold">Tap or Space to Fly</p>
-                  <p className="text-white/60 text-sm">Avoid the purple pipes!</p>
+                  <p className="text-pink-700 text-lg font-bold">Tap or Space to Fly</p>
+                  <p className="text-pink-700/60 text-sm">Avoid the purple pipes!</p>
                 </motion.div>
               )}
 
@@ -262,10 +260,10 @@ export default function FlappyHeartPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl"
                 >
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                  <h2 className="text-2xl font-bold text-pink-700 mb-2">
                     {score >= 20 ? '🏆 Amazing!' : score >= 10 ? '💖 Great!' : '💕 Good Try!'}
                   </h2>
-                  <p className="text-white/80 mb-4">Score: {score}</p>
+                  <p className="text-pink-700/80 mb-4">Score: {score}</p>
                   <button
                     onClick={restart}
                     className="px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
@@ -277,11 +275,11 @@ export default function FlappyHeartPage() {
             </div>
 
             {state === 'playing' && (
-              <p className="text-center text-white/50 text-sm mt-2">Tap / Space to flap</p>
+              <p className="text-center text-pink-700/50 text-sm mt-2">Tap / Space to flap</p>
             )}
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

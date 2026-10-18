@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Star, Users, Zap, Timer, Target } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 interface Dare {
   text: string;
@@ -109,7 +108,6 @@ export default function LoveDares2Page() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -148,7 +146,7 @@ export default function LoveDares2Page() {
                   <button key={f} onClick={() => startGame(f)} className="px-4 py-2 rounded-full bg-white/70 text-sm font-bold text-gray-700 hover:bg-white transition">{f === 'all' ? 'All' : f}</button>
                 ))}
               </div>
-              <button onClick={() => startGame('all')} className="px-10 py-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={() => startGame('all')} className="px-10 py-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -160,11 +158,11 @@ export default function LoveDares2Page() {
                 <span className="text-sm font-bold text-gray-700">Score: {score}</span>
               </div>
 
-              <div className={`bg-gradient-to-br ${COLORS[current.difficulty].grad} rounded-[2rem] shadow-2xl p-8 mb-4 text-white text-center`}>
+              <div className={`bg-gradient-to-br ${COLORS[current.difficulty].grad} rounded-[2rem] shadow-2xl p-8 mb-4 text-pink-700 text-center`}>
                 <div className="text-5xl mb-4">{current.emoji}</div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white mb-4 inline-block`}>{current.difficulty.toUpperCase()}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-pink-700 mb-4 inline-block`}>{current.difficulty.toUpperCase()}</span>
                 <p className="text-xl font-black leading-relaxed mb-3">{current.text}</p>
-                <p className="text-sm text-white/70">+{current.points} pts{streak > 0 ? ` (+${streak * 5} streak bonus)` : ''}</p>
+                <p className="text-sm text-pink-700/70">+{current.points} pts{streak > 0 ? ` (+${streak * 5} streak bonus)` : ''}</p>
               </div>
 
               <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-4 mb-4">
@@ -176,7 +174,7 @@ export default function LoveDares2Page() {
               </div>
 
               <div className="flex gap-3">
-                <button onClick={completeDare} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Done! +{current.points + streak * 5} pts</button>
+                <button onClick={completeDare} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Done! +{current.points + streak * 5} pts</button>
                 <button onClick={skipDare} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
             </motion.div>
@@ -190,13 +188,13 @@ export default function LoveDares2Page() {
               <p className="text-5xl font-black bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-6">{score} pts</p>
               <div className="flex gap-4 justify-center">
                 <button onClick={() => startGame(filter)} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

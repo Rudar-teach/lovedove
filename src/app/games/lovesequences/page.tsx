@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -18,7 +18,6 @@ export default function LovesequencesPage() {
   const start = () => { setIdx(0); setScore(0); setSelected(null); setPhase('playing'); };
   const answer = (i: number) => { if (selected !== null) return; setSelected(i); if (i === qs[idx].a) setScore(s => s + 10); setTimeout(() => { if (idx + 1 >= qs.length) setPhase('result'); else { setIdx(i2 => i2 + 1); setSelected(null); } }, 1000); };
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -51,6 +50,6 @@ export default function LovesequencesPage() {
           </TiltCard>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Feather } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const POEM_TEMPLATES = [
   { name: 'Acrostic', emoji: '🔤', desc: 'Use your name as the first letter of each line' },
@@ -67,17 +66,16 @@ export default function CouplePoetryPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-700 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <Feather className="w-20 h-20 text-amber-300 mx-auto mb-6" />
-            <h1 className="text-5xl font-bold text-white mb-4">Couple Poetry</h1>
-            <p className="text-white/80 mb-8 text-lg">Write love poems together in beautiful styles. Choose a form, set a tone, weave your words.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Couple Poetry</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Write love poems together in beautiful styles. Choose a form, set a tone, weave your words.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-amber-400 to-rose-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Begin Poem
             </button>
@@ -86,13 +84,13 @@ export default function CouplePoetryPage() {
 
         {state === 'choosing' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto mt-8">
-            <h2 className="text-3xl font-bold text-white text-center mb-6">Choose a Poetry Form</h2>
+            <h2 className="text-3xl font-bold text-pink-700 text-center mb-6">Choose a Poetry Form</h2>
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               {POEM_TEMPLATES.map((t) => (
                 <button key={t.name} onClick={() => chooseTemplate(t)} className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-6 text-left transition-all hover:scale-105">
                   <div className="text-3xl mb-2">{t.emoji}</div>
                   <div className="text-xl font-bold text-white">{t.name}</div>
-                  <div className="text-white/70 text-sm mt-1">{t.desc}</div>
+                  <div className="text-pink-700/70 text-sm mt-1">{t.desc}</div>
                 </button>
               ))}
             </div>
@@ -101,7 +99,7 @@ export default function CouplePoetryPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Whose name inspires you?"
-                className="bg-white/10 text-white placeholder-white/50 rounded-2xl px-4 py-3 outline-none w-64 text-center"
+                className="bg-white/10 text-white placeholder-pink-300 rounded-2xl px-4 py-3 outline-none w-64 text-center"
               />
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
                 {STYLES.map((s) => (
@@ -135,10 +133,10 @@ export default function CouplePoetryPage() {
                 ))}
               </div>
             </div>
-            <div className="text-center mt-4 text-white/70 text-sm">Need inspiration?</div>
+            <div className="text-center mt-4 text-pink-700/70 text-sm">Need inspiration?</div>
             <div className="flex flex-wrap gap-2 justify-center my-3">
               {SAMPLE_LINES.slice(0, 3).map((sl, i) => (
-                <button key={i} onClick={() => updateLine(i, sl)} className="text-xs bg-white/10 text-white/80 hover:bg-white/20 px-3 py-2 rounded-full">
+                <button key={i} onClick={() => updateLine(i, sl)} className="text-xs bg-white/10 text-pink-700/80 hover:bg-white/20 px-3 py-2 rounded-full">
                   {sl}
                 </button>
               ))}
@@ -160,18 +158,18 @@ export default function CouplePoetryPage() {
             </div>
             <div className="text-center">
               <Sparkles className="w-12 h-12 text-yellow-300 mx-auto mb-2" />
-              <div className="text-white text-xl mb-1">+{score} points</div>
-              <div className="text-white/60 text-sm mb-6">{poems} poem{poems !== 1 ? 's' : ''} written</div>
+              <div className="text-pink-700 text-xl mb-1">+{score} points</div>
+              <div className="text-pink-700/60 text-sm mb-6">{poems} poem{poems !== 1 ? 's' : ''} written</div>
               <div className="flex gap-4 justify-center">
-                <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-amber-400 to-rose-500 text-white rounded-2xl flex items-center gap-2">
+                <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-amber-400 to-rose-500 text-pink-700 rounded-2xl flex items-center gap-2">
                   <RotateCcw size={18} /> Write Another
                 </button>
-                <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+                <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
               </div>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

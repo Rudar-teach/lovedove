@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { a: 'Have breakfast in bed together every weekend', b: 'Go on a surprise weekend getaway every month' },
@@ -41,17 +40,16 @@ export default function WouldYouRatherPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-700 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <Heart className="w-20 h-20 text-pink-400 mx-auto mb-6" fill="currentColor" />
-            <h1 className="text-5xl font-bold text-white mb-4">Would You Rather</h1>
-            <p className="text-white/80 mb-8 text-lg">Pick the perfect romantic dilemma together. Discover how aligned your hearts truly are.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Would You Rather</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Pick the perfect romantic dilemma together. Discover how aligned your hearts truly are.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Start Playing
             </button>
@@ -60,13 +58,13 @@ export default function WouldYouRatherPage() {
 
         {state === 'playing' && (
           <motion.div key={index} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-3xl mx-auto mt-12">
-            <div className="text-white/70 text-center mb-6">Question {index + 1} / {QUESTIONS.length}</div>
-            <h2 className="text-3xl font-bold text-white text-center mb-10">What would you rather do?</h2>
+            <div className="text-pink-700/70 text-center mb-6">Question {index + 1} / {QUESTIONS.length}</div>
+            <h2 className="text-3xl font-bold text-pink-700 text-center mb-10">What would you rather do?</h2>
             <div className="grid md:grid-cols-2 gap-6">
-              <button onClick={() => choose('a')} className="bg-gradient-to-br from-pink-500/30 to-purple-500/30 hover:from-pink-500/50 hover:to-purple-500/50 border-2 border-pink-400/50 rounded-3xl p-8 text-white text-xl font-semibold transition-all hover:scale-105 min-h-[180px]">
+              <button onClick={() => choose('a')} className="bg-gradient-to-br from-pink-500/30 to-purple-500/30 hover:from-pink-500/50 hover:to-purple-500/50 border-2 border-pink-400/50 rounded-3xl p-8 text-pink-700 text-xl font-semibold transition-all hover:scale-105 min-h-[180px]">
                 {QUESTIONS[index].a}
               </button>
-              <button onClick={() => choose('b')} className="bg-gradient-to-br from-rose-500/30 to-orange-500/30 hover:from-rose-500/50 hover:to-orange-500/50 border-2 border-rose-400/50 rounded-3xl p-8 text-white text-xl font-semibold transition-all hover:scale-105 min-h-[180px]">
+              <button onClick={() => choose('b')} className="bg-gradient-to-br from-rose-500/30 to-orange-500/30 hover:from-rose-500/50 hover:to-orange-500/50 border-2 border-rose-400/50 rounded-3xl p-8 text-pink-700 text-xl font-semibold transition-all hover:scale-105 min-h-[180px]">
                 {QUESTIONS[index].b}
               </button>
             </div>
@@ -76,11 +74,11 @@ export default function WouldYouRatherPage() {
         {state === 'finished' && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
             <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6">Your Heart Map</h2>
+            <h2 className="text-4xl font-bold text-pink-700 mb-6">Your Heart Map</h2>
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
               <div className="grid grid-cols-2 gap-6 text-white">
                 <div>
-                  <div className="text-5xl font-bold text-pink-300">{aCount}</div>
+                  <div className="text-5xl font-bold text-pink-600">{aCount}</div>
                   <div className="opacity-70">Choice A</div>
                 </div>
                 <div>
@@ -88,17 +86,17 @@ export default function WouldYouRatherPage() {
                   <div className="opacity-70">Choice B</div>
                 </div>
               </div>
-              <p className="mt-6 text-white/80 italic">"True love is in the choices we make together."</p>
+              <p className="mt-6 text-pink-700/80 italic">"True love is in the choices we make together."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> Play Again
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

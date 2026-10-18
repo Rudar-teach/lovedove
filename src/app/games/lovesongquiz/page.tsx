@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Share2, RotateCcw, Trophy, Zap, Star, Flame } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -178,7 +178,6 @@ export default function LoveSongQuizPage() {
   const progress = shuffledSongs.length > 0 ? ((current + (showResult ? 1 : 0)) / shuffledSongs.length) * 100 : 0;
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -344,8 +343,8 @@ export default function LoveSongQuizPage() {
             </Button>
           </div>
         </div>
-      </div>
             <GameSharePanel gameSlug="lovesongquiz" />
-      </GameBackground>
-  );
+      </div>
+      
+);
 }

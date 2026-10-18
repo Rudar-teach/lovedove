@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Timer, Sparkles, Zap, Star, Volume2 } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface Segment {
   label: string;
@@ -129,7 +129,6 @@ export default function LoveWheelEnhanced() {
     : 'transparent';
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -182,7 +181,7 @@ export default function LoveWheelEnhanced() {
                 ))}
               </div>
 
-              <button onClick={spinWheel} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+              <button onClick={spinWheel} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105">
                 <Play className="w-5 h-5 inline mr-2" /> Spin!
               </button>
             </motion.div>
@@ -204,7 +203,7 @@ export default function LoveWheelEnhanced() {
                   {segments.map((seg, i) => {
                     const angle = (360 / segments.length) * i + (360 / segments.length) / 2;
                     return (
-                      <div key={i} className="absolute top-1/2 left-1/2 text-white font-bold text-xs text-center whitespace-nowrap" style={{ transform: `rotate(${angle}deg) translateY(-105px) rotate(-${angle}deg)`, transformOrigin: 'center' }}>
+                      <div key={i} className="absolute top-1/2 left-1/2 text-pink-700 font-bold text-xs text-center whitespace-nowrap" style={{ transform: `rotate(${angle}deg) translateY(-105px) rotate(-${angle}deg)`, transformOrigin: 'center' }}>
                         <span className="block text-lg">{seg.emoji}</span>
                         <span className="block text-[10px]">{seg.label}</span>
                       </div>
@@ -232,19 +231,19 @@ export default function LoveWheelEnhanced() {
           {gameState === 'result' && currentSegment && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
               <div className="flex items-center justify-between mb-4">
-                <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white text-sm font-bold">Score: {score}</span>
+                <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-pink-700 text-sm font-bold">Score: {score}</span>
                 <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-600'}`}><Timer className="w-4 h-4 inline mr-1" /> {formatTime(timeLeft)}</span>
               </div>
 
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }} className={`bg-gradient-to-br ${currentSegment.bgColor} rounded-[2rem] shadow-2xl p-10 mb-6 text-white text-center`}>
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }} className={`bg-gradient-to-br ${currentSegment.bgColor} rounded-[2rem] shadow-2xl p-10 mb-6 text-pink-700 text-center`}>
                 <div className="text-6xl mb-4">{currentSegment.emoji}</div>
                 <h2 className="text-3xl font-black mb-2">{currentSegment.label}</h2>
-                <p className="text-white/70">+{currentSegment.points} points when completed</p>
+                <p className="text-pink-700/70">+{currentSegment.points} points when completed</p>
                 {currentSegment.category !== 'all' && <span className="mt-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold inline-block">{currentSegment.category}</span>}
               </motion.div>
 
               <div className="flex gap-3">
-                <button onClick={completeChallenge} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Done! +{currentSegment.points} pts</button>
+                <button onClick={completeChallenge} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Done! +{currentSegment.points} pts</button>
                 <button onClick={() => { setCurrentSegment(null); setGameState('idle'); }} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
             </motion.div>
@@ -275,7 +274,7 @@ export default function LoveWheelEnhanced() {
                 <button onClick={() => { setScore(0); setCompleted([]); setRotation(0); setGameState('idle'); }} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition">
                   <RotateCcw className="w-5 h-5 inline mr-2" /> Play Again
                 </button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold hover:shadow-xl transition">
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold hover:shadow-xl transition">
                   More Games
                 </Link>
               </div>
@@ -283,6 +282,6 @@ export default function LoveWheelEnhanced() {
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

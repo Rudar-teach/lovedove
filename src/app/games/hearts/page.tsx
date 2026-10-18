@@ -1,15 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Play, RotateCcw, Trophy, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const GRID = 9;
 const SYMBOLS = ['💖', '💕', '💗', '💘', '❤️', '💝', '💓', '💞'];
 const BONUS_SYMBOLS = ['⭐', '💎', '💫'];
-const BONUS_MATCH_COUNT = 3;
 
 type Board = { value: string; matched: boolean; row: number; col: number };
 
@@ -79,34 +77,32 @@ export default function HeartsGamePage() {
   }, [time, state, matched, total]);
 
   return (
-    <GameBackground>
-      <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
-          <ArrowLeft size={20} /> Back to Games
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-600 mb-6">
+          <ArrowLeft size={20}/> Back to Games
         </button>
 
         {state === 'idle' && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
-            <div className="grid grid-cols-3 gap-1 max-w-[200px] mx-auto mb-6 opacity-60">
-              {[0,1,2,3,4,5,6,7,8].map(i => <div key={i} className="aspect-square bg-white/30 rounded-lg" />)}
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-4">Hearts Match</h1>
-            <p className="text-white/80 mb-8 text-lg">Match all the hearts before time runs out. Bonus symbols give extra points!</p>
-            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
-              <Play size={20} /> Start Game
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-10">
+            <div className="text-7xl mb-4">💗</div>
+            <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-rose-500 to-pink-500 bg-clip-text text-transparent">Hearts Match</h1>
+            <p className="text-gray-600 mb-8 text-lg">Match all the hearts before time runs out. Bonus symbols give extra points!</p>
+            <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-bold hover:shadow-lg hover:shadow-rose-500/30 transition transform hover:scale-105">
+              <Play className="inline mr-2"/> Start Game
             </button>
           </motion.div>
         )}
 
         {state === 'playing' && (
-          <div className="max-w-lg mx-auto">
-            <div className="flex justify-between items-center mb-4 text-white flex-wrap gap-2">
-              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
-              <span className="bg-white/10 px-4 py-2 rounded-full">Moves: {moves}</span>
-              <span className="bg-white/10 px-4 py-2 rounded-full">{time}s</span>
-              <span className="bg-white/10 px-4 py-2 rounded-full">{matched}/{total}</span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="flex justify-between items-center mb-4 text-pink-600 flex-wrap gap-2">
+              <span className="bg-pink-100 px-4 py-2 rounded-full text-sm font-semibold">Score: {score}</span>
+              <span className="bg-pink-100 px-4 py-2 rounded-full text-sm font-semibold">Moves: {moves}</span>
+              <span className={`bg-pink-100 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1 ${time <= 10 ? 'text-rose-500' : ''}`}><Timer size={14}/> {time}s</span>
+              <span className="bg-pink-100 px-4 py-2 rounded-full text-sm font-semibold">{matched}/{total}</span>
             </div>
-            <div className="grid grid-cols-9 gap-1 bg-white/10 p-2 rounded-3xl">
+            <div className="grid grid-cols-6 md:grid-cols-9 gap-2 p-3 bg-rose-50 rounded-3xl">
               {board.map((cell, idx) => (
                 <motion.button
                   key={idx}
@@ -117,37 +113,37 @@ export default function HeartsGamePage() {
                     opacity: cell.matched ? 0 : 1,
                   }}
                   transition={{ duration: 0.2 }}
-                  className={`aspect-square rounded-xl flex items-center justify-center text-lg md:text-2xl transition-all ${
-                    cell.matched ? 'bg-white/5' : selected.includes(idx) ? 'bg-white/40 ring-2 ring-white' : 'bg-white/10 hover:bg-white/20'
+                  className={`aspect-square rounded-2xl flex items-center justify-center text-2xl transition-all ${
+                    cell.matched ? 'bg-white/40' : selected.includes(idx) ? 'bg-white ring-2 ring-rose-400' : 'bg-white/60 hover:bg-white shadow-sm'
                   }`}
                 >
                   {!cell.matched && cell.value}
                 </motion.button>
               ))}
             </div>
-            <p className="text-white/50 text-center mt-3 text-sm">Match pairs of identical symbols. Bonus symbols are worth more!</p>
-          </div>
+            <p className="text-gray-500 text-center mt-3 text-sm">Match pairs of identical symbols. Bonus symbols are worth more!</p>
+          </motion.div>
         )}
 
         {state === 'finished' && (
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
-            <Trophy className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6">Game Complete!</h2>
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
-              <div className="text-6xl font-bold text-red-300">{score}</div>
-              <div className="text-white/80 mt-2">Final Score</div>
-              <div className="text-white/60 mt-2">{moves} moves taken</div>
-              <p className="mt-6 text-white/80 italic">"In the game of love, every match is a connection."</p>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10">
+            <div className="text-7xl mb-4">🏆</div>
+            <h2 className="text-3xl font-black mb-4">Game Complete!</h2>
+            <div className="bg-white p-6 rounded-3xl mb-8 border-2 border-rose-100">
+              <div className="text-6xl font-black bg-gradient-to-r from-rose-500 to-pink-500 bg-clip-text text-transparent">{score}</div>
+              <div className="text-gray-500 mt-2">Final Score</div>
+              <div className="text-gray-400 mt-2 text-sm">{moves} moves taken</div>
+              <p className="mt-4 text-gray-600 italic text-sm">"In the game of love, every match is a connection."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl flex items-center gap-2">
-                <RotateCcw size={18} /> Play Again
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-semibold hover:shadow-lg transition">
+                <RotateCcw className="inline mr-2"/> Play Again
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-rose-100 text-pink-700 rounded-full font-semibold hover:bg-rose-200 transition">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
+    </div>
   );
 }

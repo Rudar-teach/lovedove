@@ -19,7 +19,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Zap } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 import * as Matter from 'matter-js';
 
 const W = 560;
@@ -450,14 +449,13 @@ export default function LovePongPage() {
   }, [phase, endGame, resizeCanvas, scorePoint]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-xl">
           <div className="flex items-center justify-between mb-5">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
+            <h1 className="text-2xl font-black text-pink-600 flex items-center gap-2 tracking-tight">
               <Heart className="text-pink-400" fill="currentColor" /> LOVE PONG
             </h1>
             <div className="w-16" />
@@ -475,23 +473,23 @@ export default function LovePongPage() {
           >
             <div className="flex justify-between items-end mb-3 px-1">
               <div>
-                <div className="text-pink-300 text-[10px] uppercase tracking-[0.2em] font-bold">You</div>
-                <div className="text-4xl font-black text-pink-300 leading-none" style={{ textShadow: '0 0 18px rgba(236,72,153,0.8)' }}>
+                <div className="text-pink-600 text-[10px] uppercase tracking-[0.2em] font-bold">You</div>
+                <div className="text-4xl font-black text-pink-600 leading-none">
                   {playerScore}
                 </div>
               </div>
               <div className="flex flex-col items-center gap-0.5">
-                <div className="text-white/50 text-[10px] uppercase tracking-[0.2em]">Time</div>
-                <div className={`text-3xl font-black tab-nums ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-white/80'}`}>
+                <div className="text-pink-700/50 text-[10px] uppercase tracking-[0.2em]">Time</div>
+                <div className={`text-3xl font-black tab-nums ${timeLeft <= 10 ? 'text-rose-500 animate-pulse' : 'text-pink-700/80'}`}>
                   {timeLeft}
                 </div>
-                <div className="text-[9px] text-purple-300/70 flex items-center gap-1">
+                <div className="text-[9px] text-purple-500/70 flex items-center gap-1">
                   <Zap size={9} /> REAL PHYSICS
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-purple-300 text-[10px] uppercase tracking-[0.2em] font-bold">Rival</div>
-                <div className="text-4xl font-black text-purple-300 leading-none" style={{ textShadow: '0 0 18px rgba(139,92,246,0.8)' }}>
+                <div className="text-purple-600 text-[10px] uppercase tracking-[0.2em] font-bold">Rival</div>
+                <div className="text-4xl font-black text-purple-600 leading-none">
                   {aiScore}
                 </div>
               </div>
@@ -515,13 +513,13 @@ export default function LovePongPage() {
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-xl backdrop-blur-sm"
                   >
                     <Heart className="text-pink-400 mb-4 animate-pulse" size={56} fill="currentColor" />
-                    <p className="text-white text-2xl font-black tracking-tight">NEON ARCADE</p>
-                    <p className="text-white/60 text-sm mb-5 px-8 text-center">
+                    <p className="text-pink-600 text-2xl font-black tracking-tight">LOVE PONG</p>
+                    <p className="text-pink-700/60 text-sm mb-5 px-8 text-center">
                       Rigid-body physics. The ball never moves the same way twice.
                     </p>
                     <button
                       onClick={startGame}
-                      className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-pink-600/40"
+                      className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-pink-700 font-bold rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-pink-600/40"
                     >
                       <Play size={18} fill="currentColor" /> Start Rally
                     </button>
@@ -537,15 +535,15 @@ export default function LovePongPage() {
                     <div className="text-5xl mb-2">
                       {winner === 'player' ? '💖' : winner === 'ai' ? '💜' : '🤝'}
                     </div>
-                    <p className="text-white text-2xl font-black mb-1">
+                    <p className="text-pink-600 text-2xl font-black mb-1">
                       {winner === 'player' ? 'You Win!' : winner === 'ai' ? 'Rival Wins' : 'It\'s a Tie'}
                     </p>
-                    <p className="text-white/60 mb-5">
+                    <p className="text-pink-700/60 mb-5">
                       {playerScore} — {aiScore}
                     </p>
                     <button
                       onClick={startGame}
-                      className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-pink-600/40"
+                      className="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-pink-700 font-bold rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-pink-600/40"
                     >
                       <RotateCcw size={18} /> Play Again
                     </button>
@@ -554,12 +552,12 @@ export default function LovePongPage() {
               </AnimatePresence>
             </div>
 
-            <p className="text-white/40 text-center text-xs mt-3">
+            <p className="text-pink-700/40 text-center text-xs mt-3">
               Move your mouse or finger to aim
             </p>
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

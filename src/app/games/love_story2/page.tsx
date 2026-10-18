@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const CHAPTERS = [
   { title: 'Once Upon a Time', desc: 'Write the opening of your love story...', wordCount: [20, 100] },
@@ -49,17 +48,16 @@ export default function LoveStory2Page() {
   const currentChapter = CHAPTERS[chapterIndex];
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-700 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <BookOpen className="w-20 h-20 text-rose-300 mx-auto mb-6" />
-            <h1 className="text-5xl font-bold text-white mb-4">Love Story 2</h1>
-            <p className="text-white/80 mb-8 text-lg">Write a 5-chapter love story together. Each chapter is a new page in your forever.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Love Story 2</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Write a 5-chapter love story together. Each chapter is a new page in your forever.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-purple-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Begin Story
             </button>
@@ -78,9 +76,9 @@ export default function LoveStory2Page() {
               ))}
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 mb-4 border border-white/20">
-              <h2 className="text-2xl font-bold text-white mb-2">{currentChapter.title}</h2>
-              <p className="text-white/70 italic mb-2">{currentChapter.desc}</p>
-              <p className="text-white/50 text-xs">{currentChapter.wordCount[0]}-{currentChapter.wordCount[1]} words</p>
+              <h2 className="text-2xl font-bold text-pink-700 mb-2">{currentChapter.title}</h2>
+              <p className="text-pink-700/70 italic mb-2">{currentChapter.desc}</p>
+              <p className="text-pink-700/50 text-xs">{currentChapter.wordCount[0]}-{currentChapter.wordCount[1]} words</p>
             </div>
             <textarea
               value={current}
@@ -89,7 +87,7 @@ export default function LoveStory2Page() {
               className="w-full bg-white/95 text-gray-800 rounded-3xl p-6 outline-none resize-none shadow-2xl"
               placeholder="Once upon a time..."
             />
-            <div className="text-right text-white/60 text-sm mt-2">{current.trim().split(/\s+/).filter(Boolean).length} words</div>
+            <div className="text-right text-pink-700/60 text-sm mt-2">{current.trim().split(/\s+/).filter(Boolean).length} words</div>
             <button onClick={submitChapter} className="w-full mt-4 py-4 bg-gradient-to-r from-rose-500 to-purple-500 text-white rounded-2xl font-semibold">
               {chapterIndex + 1 >= CHAPTERS.length ? 'Complete Story ✨' : 'Save Chapter →'}
             </button>
@@ -99,10 +97,10 @@ export default function LoveStory2Page() {
         {state === 'finished' && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-3xl mx-auto">
             <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6 text-center">Your Love Story</h2>
+            <h2 className="text-4xl font-bold text-pink-700 mb-6 text-center">Your Love Story</h2>
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-6 border border-white/20">
               <div className="text-6xl font-bold text-rose-300 mb-2">{score}</div>
-              <div className="text-white/80">Story Score</div>
+              <div className="text-pink-700/80">Story Score</div>
             </div>
             <div className="space-y-6 mb-8">
               {chapters.map((ch, i) => (
@@ -113,14 +111,14 @@ export default function LoveStory2Page() {
               ))}
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-purple-500 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-purple-500 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> Write New Story
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

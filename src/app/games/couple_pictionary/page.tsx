@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const WORDS = ['Sunset', 'Beach', 'Heart', 'Flower', 'Rainbow', 'Star', 'Kite', 'Birthday Cake', 'Treasure', 'Magic', 'Wedding', 'Bouquet'];
 
@@ -23,7 +23,6 @@ export default function CouplePictionary() {
   const startGame = () => { setGameState('playing'); setCurrentIndex(0); setTimeLeft(60); setWords([...WORDS].sort(() => Math.random() - 0.5).slice(0, 5)); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -37,7 +36,7 @@ export default function CouplePictionary() {
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">🎨</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Couple Pictionary</h1><p className="text-gray-600 mb-3 text-lg">Draw these words for your partner!</p>
             <p className="text-sm text-gray-500 mb-8">One person draws, the other guesses. Pass the phone after each word!</p>
-            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex justify-between items-center mb-4"><span className="text-sm font-medium text-gray-600">Word {currentIndex + 1}/{words.length}</span><div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-white/70'}`}><Timer className="w-4 h-4" /><span className="font-bold">{timeLeft}s</span></div></div>
@@ -50,10 +49,10 @@ export default function CouplePictionary() {
           </motion.div>)}
           {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <div className="text-6xl mb-6">🎨</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">All Done!</h2><p className="text-gray-600 mb-8">Great drawing session!</p>
-            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold">More Games</Link></div>
+            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold">More Games</Link></div>
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

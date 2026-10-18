@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Palette } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const CATEGORIES = [
   { name: 'Emoji Portraits', emoji: '😀', prompts: ['Draw each other using only emojis', 'Draw your first meeting', 'Draw your dream home', 'Draw your wedding'] },
@@ -77,17 +76,16 @@ export default function DrawingChallengePage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-700 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <Palette className="w-20 h-20 text-green-400 mx-auto mb-6" />
-            <h1 className="text-5xl font-bold text-white mb-4">Drawing Challenge</h1>
-            <p className="text-white/80 mb-8 text-lg">Take turns drawing romantic prompts. Paint with love in the pixel canvas.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Drawing Challenge</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Take turns drawing romantic prompts. Paint with love in the pixel canvas.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Pick Category
             </button>
@@ -96,10 +94,10 @@ export default function DrawingChallengePage() {
 
         {state === 'picking' && category && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center mt-10">
-            <h2 className="text-3xl font-bold text-white mb-2">Category: {category.emoji} {category.name}</h2>
+            <h2 className="text-3xl font-bold text-pink-700 mb-2">Category: {category.emoji} {category.name}</h2>
             <div className="space-y-2">
               {category.prompts.map((p, i) => (
-                <button key={i} onClick={() => { setRoundIndex(i); setTimeLeft(ROUND_TIME); setState('playing'); }} className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-4 text-white text-left">
+                <button key={i} onClick={() => { setRoundIndex(i); setTimeLeft(ROUND_TIME); setState('playing'); }} className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-4 text-pink-700 text-left">
                   <span className="text-lg">🎨 {p}</span>
                 </button>
               ))}
@@ -140,21 +138,21 @@ export default function DrawingChallengePage() {
         {state === 'finished' && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
             <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6">Gallery Complete!</h2>
+            <h2 className="text-4xl font-bold text-pink-700 mb-6">Gallery Complete!</h2>
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
               <div className="text-6xl font-bold text-green-300">{score}</div>
-              <div className="text-white/80 mt-2">Total Score</div>
-              <p className="mt-6 text-white/80 italic">"Together you painted a masterpiece of love."</p>
+              <div className="text-pink-700/80 mt-2">Total Score</div>
+              <p className="mt-6 text-pink-700/80 italic">"Together you painted a masterpiece of love."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> New Gallery
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

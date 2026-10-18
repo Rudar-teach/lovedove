@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const GRID_SIZE = 3;
 const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
@@ -83,9 +82,8 @@ export default function TicTacToePage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
@@ -102,11 +100,11 @@ export default function TicTacToePage() {
               <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
               <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
             </div>
-            <h1 className="text-5xl font-bold text-white mb-4">Love Tic Tac Toe</h1>
-            <p className="text-white/80 mb-8 text-lg">Play with X and O, but make it romantic. Race to three in a row.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Love Tic Tac Toe</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Play with X and O, but make it romantic. Race to three in a row.</p>
             <div className="max-w-xs mx-auto mb-6 space-y-2">
-              <input value={p1} onChange={(e) => setP1(e.target.value)} placeholder="Player X name" className="w-full bg-white/10 text-white placeholder-white/50 rounded-2xl px-4 py-3 outline-none text-center" />
-              <input value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Player O name" className="w-full bg-white/10 text-white placeholder-white/50 rounded-2xl px-4 py-3 outline-none text-center" />
+              <input value={p1} onChange={(e) => setP1(e.target.value)} placeholder="Player X name" className="w-full bg-pink-100 text-pink-700 placeholder-pink-300 rounded-2xl px-4 py-3 outline-none text-center" />
+              <input value={p2} onChange={(e) => setP2(e.target.value)} placeholder="Player O name" className="w-full bg-pink-100 text-pink-700 placeholder-pink-300 rounded-2xl px-4 py-3 outline-none text-center" />
             </div>
             <button onClick={startGame} className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Start Game
@@ -117,7 +115,7 @@ export default function TicTacToePage() {
         {state === 'playing' && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-lg mx-auto text-center">
             <div className="flex justify-between items-center mb-4 text-white">
-              <span className="bg-white/10 px-4 py-2 rounded-full">Round {round}</span>
+              <span className="bg-pink-100 px-4 py-2 rounded-full">Round {round}</span>
               <span className={`px-4 py-2 rounded-full font-semibold ${turn === 'X' ? 'bg-pink-500/50' : 'bg-rose-500/50'}`}>
                 {turn === 'X' ? p1 : p2}'s turn ({turn})
               </span>
@@ -126,7 +124,7 @@ export default function TicTacToePage() {
               <div className="bg-pink-500/30 px-4 py-2 rounded-full text-white">
                 <span className="font-bold">{p1}:</span> {score.p1}
               </div>
-              <div className="bg-white/10 px-4 py-2 rounded-full text-white">
+              <div className="bg-pink-100 px-4 py-2 rounded-full text-white">
                 Ties: {score.ties}
               </div>
               <div className="bg-rose-500/30 px-4 py-2 rounded-full text-white">
@@ -147,7 +145,7 @@ export default function TicTacToePage() {
                     winLine.includes(idx) ? 'border-yellow-300' : 'border-white/20'
                   }`}
                 >
-                  {cell === 'X' && <span className="text-pink-300">{cell}</span>}
+                  {cell === 'X' && <span className="text-pink-600">{cell}</span>}
                   {cell === 'O' && <span className="text-rose-300">{cell}</span>}
                 </motion.button>
               ))}
@@ -158,28 +156,28 @@ export default function TicTacToePage() {
         {state === 'finished' && winner && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
             <Heart className="w-20 h-20 text-pink-400 mx-auto mb-6" fill="currentColor" />
-            <h2 className="text-4xl font-bold text-white mb-2">
+            <h2 className="text-4xl font-bold text-pink-700 mb-2">
               {winner === 'tie' ? "It's a Tie!" : `${winner === 'X' ? p1 : p2} Wins!`}
             </h2>
             {winner !== 'tie' && <Sparkles className="w-8 h-8 text-yellow-300 mx-auto mb-4" />}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
-              <div className="text-6xl font-bold text-pink-300">
+            <div className="bg-pink-100 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+              <div className="text-6xl font-bold text-pink-600">
                 {winner === 'tie' ? '🤝' : '👑'}
               </div>
-              <p className="text-white/80 mt-2">{winner === 'tie' ? 'Perfectly matched!' : 'Victory!'}</p>
-              <p className="text-white/80 mt-1">Score: {winner === 'X' ? score.p1 : score.p2} - {score.ties} - {winner === 'O' ? score.p2 : score.p1}</p>
-              <p className="mt-6 text-white/80 italic">"In love as in games — two can play, but only one can win the heart."</p>
+              <p className="text-pink-700/80 mt-2">{winner === 'tie' ? 'Perfectly matched!' : 'Victory!'}</p>
+              <p className="text-pink-700/80 mt-1">Score: {winner === 'X' ? score.p1 : score.p2} - {score.ties} - {winner === 'O' ? score.p2 : score.p1}</p>
+              <p className="mt-6 text-pink-700/80 italic">"In love as in games — two can play, but only one can win the heart."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={resetBoard} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={resetBoard} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> Next Round
               </button>
-              <button onClick={resetAll} className="px-6 py-3 bg-white/20 text-white rounded-2xl">Reset Score</button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <button onClick={resetAll} className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">Reset Score</button>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -321,7 +321,7 @@ export default function GamePage() {
                   <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-gray-900 mb-3 sm:mb-4">{game.name}</h1>
                   <p className="text-base sm:text-lg text-gray-600 mb-2">{game.desc}</p>
                   <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-                    <span className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${game.gradient} text-white text-xs sm:text-sm font-semibold`}>
+                    <span className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${game.gradient} text-pink-700 text-xs sm:text-sm font-semibold`}>
                       {game.category}
                     </span>
                     <span className="px-4 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs sm:text-sm font-semibold flex items-center gap-1.5">
@@ -376,7 +376,7 @@ export default function GamePage() {
                             </p>
                             <Link
                               href="/add-friends"
-                              className="inline-block bg-rose-500 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-rose-600 transition-colors"
+                              className="inline-block bg-rose-500 text-pink-700 px-5 py-2 rounded-xl text-sm font-bold hover:bg-rose-600 transition-colors"
                             >
                               Add a friend
                             </Link>
@@ -394,7 +394,7 @@ export default function GamePage() {
                                 }`}
                               >
                                 <div className="relative shrink-0">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-pink-700 font-bold">
                                     {f.friend.avatar_url
                                       ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
                                       : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
@@ -419,7 +419,7 @@ export default function GamePage() {
                                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/40 opacity-60"
                               >
                                 <div className="relative shrink-0">
-                                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-pink-700 font-bold">
                                     {f.friend.avatar_url
                                       ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
                                       : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
@@ -472,7 +472,7 @@ export default function GamePage() {
                   <h2 className="text-2xl sm:text-3xl font-display font-black text-gray-900 mb-3 sm:mb-4">{game.name}</h2>
                   <p className="text-gray-600 mb-4 sm:mb-6">You're playing with {invitedFriendName}!</p>
 
-                  <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-3xl sm:text-5xl font-black tracking-widest px-6 sm:px-10 py-4 sm:py-6 rounded-2xl mb-4 sm:mb-6 inline-block shadow-2xl">
+                  <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-pink-700 text-3xl sm:text-5xl font-black tracking-widest px-6 sm:px-10 py-4 sm:py-6 rounded-2xl mb-4 sm:mb-6 inline-block shadow-2xl">
                     {sessionCode}
                   </div>
 

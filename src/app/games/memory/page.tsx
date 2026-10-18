@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw, Trophy, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -99,7 +99,6 @@ export default function MemoryPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           {/* Premium Header */}
@@ -165,8 +164,8 @@ export default function MemoryPage() {
             </Link>
           </div>
         </div>
-      </div>
             <GameSharePanel gameSlug="memory" />
-      </GameBackground>
-  );
+      </div>
+      
+);
 }

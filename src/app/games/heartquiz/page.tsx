@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Trophy, Timer, Clock } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -152,7 +152,6 @@ export default function HeartquizPage() {
   const title = pct >= 80 ? '🏆 Romance Scholar!' : pct >= 60 ? '⭐ Love Expert!' : pct >= 40 ? '💖 Amateur Romantic!' : '💕 Keep Learning!';
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -279,6 +278,6 @@ export default function HeartquizPage() {
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

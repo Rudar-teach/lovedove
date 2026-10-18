@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Users, Sparkles, Zap, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const WORDS = ['LOVE', 'KISS', 'HUGS', 'HEART', 'DREAM', 'SOUL', 'PASSION', 'TENDER', 'FOREVER', 'ADORE', 'CUDDLE', 'CHERISH'];
 
@@ -80,7 +80,6 @@ export default function CoupleScramblePage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -114,7 +113,7 @@ export default function CoupleScramblePage() {
                   <li>Race through 8 rounds total!</li>
                 </ul>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start Race</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start Race</button>
             </motion.div>
           )}
 
@@ -127,9 +126,9 @@ export default function CoupleScramblePage() {
               </div>
 
               <motion.div key={currentWord} initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-[2rem] shadow-2xl p-8 mb-4 text-center">
-                <p className="text-white text-sm mb-2">UNSCRAMBLE:</p>
-                <div className="text-6xl font-black text-white tracking-widest mb-3 break-all">{scrambled}</div>
-                <p className="text-sm text-white/70">Race to type the correct word!</p>
+                <p className="text-pink-700 text-sm mb-2">UNSCRAMBLE:</p>
+                <div className="text-6xl font-black text-pink-700 tracking-widest mb-3 break-all">{scrambled}</div>
+                <p className="text-sm text-pink-700/70">Race to type the correct word!</p>
               </motion.div>
 
               {roundWinner ? (
@@ -171,13 +170,13 @@ export default function CoupleScramblePage() {
               <p className="text-2xl font-display font-black gradient-text mb-6">{p1Score > p2Score ? 'Partner 1 Wins!' : p2Score > p1Score ? 'Partner 2 Wins!' : "It's a Tie!"}</p>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Race Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const WORDS = [
   { word: 'LOVE', hint: 'The strongest feeling' },
@@ -107,14 +106,13 @@ export default function LoveHangmanPage() {
     : '';
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Love Hangman
             </h1>
             <div className="w-16" />
@@ -127,15 +125,15 @@ export default function LoveHangmanPage() {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-2xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Time</div>
+                <div className="text-pink-700/60 text-xs uppercase">Time</div>
                 <div className={`text-2xl font-bold ${timeLeft <= 20 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                   {timeLeft}s
                 </div>
@@ -159,7 +157,7 @@ export default function LoveHangmanPage() {
             <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
               {currentWord && (
                 <>
-                  <p className="text-white/60 text-sm mb-2 italic">"{currentWord.hint}"</p>
+                  <p className="text-pink-700/60 text-sm mb-2 italic">"{currentWord.hint}"</p>
                   <p className="text-3xl font-bold tracking-widest text-white font-mono">
                     {displayWord}
                   </p>
@@ -181,8 +179,8 @@ export default function LoveHangmanPage() {
                       isGuessed
                         ? isCorrect
                           ? 'bg-green-500 text-white'
-                          : 'bg-red-500/50 text-white/50 line-through'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
+                          : 'bg-red-500/50 text-pink-700/50 line-through'
+                        : 'bg-white/10 hover:bg-rose-100 text-pink-700'
                     }`}
                   >
                     {letter}
@@ -210,11 +208,11 @@ export default function LoveHangmanPage() {
                   className="space-y-3"
                 >
                   <div className="text-center">
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 100 ? '🏆 Amazing!' : score >= 50 ? '💖 Great!' : '💕 Good Try!'}
                     </h2>
-                    <p className="text-white/70">Score: <span className="text-pink-300 font-bold">{score}</span></p>
-                    {currentWord && <p className="text-white/50 text-sm">Word was: {currentWord.word}</p>}
+                    <p className="text-pink-700/70">Score: <span className="text-pink-600 font-bold">{score}</span></p>
+                    {currentWord && <p className="text-pink-700/50 text-sm">Word was: {currentWord.word}</p>}
                   </div>
                   <button
                     onClick={startGame}
@@ -228,6 +226,6 @@ export default function LoveHangmanPage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

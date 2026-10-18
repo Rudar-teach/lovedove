@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Camera, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const MILESTONES = [
   { year: "The First Meeting", emoji: "👋", desc: "When you first laid eyes on each other" },
@@ -72,7 +72,6 @@ export default function CouplePhotoStory() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -112,7 +111,7 @@ export default function CouplePhotoStory() {
                   <li>💕 Relive the magic!</li>
                 </ul>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
                 <Play className="w-5 h-5 inline mr-2" /> Start
               </button>
             </motion.div>
@@ -180,7 +179,7 @@ export default function CouplePhotoStory() {
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold text-gray-700 shadow-lg">
                   <RotateCcw className="w-5 h-5 inline mr-2" /> Create Again
                 </button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold shadow-lg">
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold shadow-lg">
                   More Games
                 </Link>
               </div>
@@ -188,6 +187,6 @@ export default function CouplePhotoStory() {
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

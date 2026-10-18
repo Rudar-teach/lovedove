@@ -70,7 +70,7 @@ export default function RomanticCalculator() {
               <p className="text-2xl">💖</p>
               <input type="text" value={name2} onChange={e => setName2(e.target.value)} placeholder="Partner's name" className="w-full px-4 py-3 rounded-xl border-2 border-rose-200 focus:border-rose-500 focus:outline-none text-center text-lg" />
             </div>
-            <button onClick={() => { if (name1 && name2) { setGameState('playing'); calculate(); } }} disabled={!name1 || !name2} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full text-white font-bold hover:shadow-lg hover:shadow-rose-500/30 transition transform hover:scale-105 disabled:opacity-50">
+            <button onClick={() => { if (name1 && name2) { setGameState('playing'); calculate(); } }} disabled={!name1 || !name2} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full text-pink-700 font-bold hover:shadow-lg hover:shadow-rose-500/30 transition transform hover:scale-105 disabled:opacity-50">
               <Play className="inline mr-2" /> Calculate Love
             </button>
           </motion.div>

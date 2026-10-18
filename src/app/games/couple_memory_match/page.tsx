@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const EMOJIS = ['💕', '💖', '💝', '💘', '🌹', '💐', '💌', '💍'];
 
@@ -47,7 +47,6 @@ export default function CoupleMemoryMatch() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -60,18 +59,18 @@ export default function CoupleMemoryMatch() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">🎴</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Couple Memory Match</h1><p className="text-gray-600 mb-8 text-lg">Match the pairs of love emojis!</p>
-            <button onClick={initGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={initGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex justify-between items-center mb-4"><span className="text-sm font-medium text-gray-600">Moves: {moves}</span><div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-white/70'}`}><Timer className="w-4 h-4" /><span className="font-bold">{timeLeft}s</span></div></div>
             <div className="grid grid-cols-4 gap-3">{cards.map((c, i) => (<button key={i} onClick={() => flipCard(i)} className={`aspect-square rounded-2xl text-4xl font-bold transition-all ${c.flipped || c.matched ? 'bg-gradient-to-br from-purple-400 to-pink-500' : 'bg-white/70'}`}>{c.flipped || c.matched ? c.emoji : '?'}</button>))}</div>
             {gameState === 'finished' && (<div className="text-center mt-8">
               <p className="text-3xl font-bold gradient-text mb-4">Done in {moves} moves!</p>
-              <div className="flex gap-4 justify-center"><button onClick={initGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link></div>
+              <div className="flex gap-4 justify-center"><button onClick={initGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link></div>
             </div>)}
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

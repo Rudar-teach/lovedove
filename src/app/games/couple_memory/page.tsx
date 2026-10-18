@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const CARD_PAIRS = [
   '💘', '💖', '💗', '💓', '💕', '💝', '❤️', '💞',
@@ -82,7 +82,6 @@ export default function CoupleMemory() {
   }, [matches, gameState]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -111,7 +110,7 @@ export default function CoupleMemory() {
                   <li>🧠 Test your memory together!</li>
                 </ul>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Play className="w-5 h-5 inline mr-2" /> Start Game</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Play className="w-5 h-5 inline mr-2" /> Start Game</button>
             </motion.div>
           )}
           {gameState === 'playing' && (
@@ -145,7 +144,7 @@ export default function CoupleMemory() {
                           animate={{ rotateY: 0 }}
                           className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center"
                         >
-                          <Heart className="w-8 h-8 text-white/50" />
+                          <Heart className="w-8 h-8 text-pink-700/50" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -168,12 +167,12 @@ export default function CoupleMemory() {
               </div>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const RIDDLES_LIST = [
   { q: "I'm full of holes but can still hold water. What am I?", a: "A sponge" },
@@ -59,7 +59,6 @@ export default function RomanticRiddles2() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -90,7 +89,7 @@ export default function RomanticRiddles2() {
               <div className="text-6xl mb-6">🧠</div>
               <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Romantic Riddles 2</h1>
               <p className="text-gray-600 mb-8 text-lg">More romantic riddles!</p>
-              <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl">
+              <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl">
                 <Play className="w-5 h-5 inline mr-2" /> Start
               </button>
             </motion.div>
@@ -135,6 +134,6 @@ export default function RomanticRiddles2() {
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

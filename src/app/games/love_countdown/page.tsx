@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -57,7 +57,6 @@ export default function LoveCountdownPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -151,6 +150,6 @@ export default function LoveCountdownPage() {
           </div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

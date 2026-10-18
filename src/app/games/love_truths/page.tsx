@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, MessageCircle, Shuffle } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const TRUTHS = [
   'What is the first thing you noticed about your partner?',
@@ -78,7 +78,6 @@ export default function LoveTruthsPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -112,7 +111,7 @@ export default function LoveTruthsPage() {
                   <li>Answer honestly and openly</li>
                 </ul>
               </div>
-              <button onClick={() => { reset(); setPhase('playing'); }} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={() => { reset(); setPhase('playing'); }} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -133,7 +132,7 @@ export default function LoveTruthsPage() {
                     <div className="absolute inset-4 rounded-full border-4 border-white/40"></div>
                     <div className="text-6xl z-10">💭</div>
                     {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((letter, i) => (
-                      <div key={i} className="absolute text-white font-black" style={{ transform: `rotate(${i * 45}deg) translateY(-100px)`, transformOrigin: 'center' }}>{letter}</div>
+                      <div key={i} className="absolute text-pink-700 font-black" style={{ transform: `rotate(${i * 45}deg) translateY(-100px)`, transformOrigin: 'center' }}>{letter}</div>
                     ))}
                   </motion.div>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-8 border-r-8 border-t-12 border-l-transparent border-r-transparent border-t-rose-600"></div>
@@ -146,7 +145,7 @@ export default function LoveTruthsPage() {
                 </AnimatePresence>
               </div>
 
-              <button onClick={spinWheel} disabled={isSpinning} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition disabled:opacity-50">
+              <button onClick={spinWheel} disabled={isSpinning} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition disabled:opacity-50">
                 <Sparkles className="w-5 h-5 inline mr-2" /> {isSpinning ? 'Spinning...' : 'Spin Wheel'}
               </button>
 
@@ -156,6 +155,6 @@ export default function LoveTruthsPage() {
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

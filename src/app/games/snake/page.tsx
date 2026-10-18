@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const GAME_W = 400;
 const GAME_H = 400;
@@ -209,14 +208,13 @@ export default function LoveSnakePage() {
   }, [state, snake, food, spawnFood, best]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Love Snake
             </h1>
             <div className="w-16" />
@@ -229,15 +227,15 @@ export default function LoveSnakePage() {
           >
             <div className="flex justify-between items-center mb-3">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Length</div>
+                <div className="text-pink-700/60 text-xs uppercase">Length</div>
                 <div className="text-xl font-bold text-white">{snake.length}</div>
               </div>
             </div>
@@ -260,8 +258,8 @@ export default function LoveSnakePage() {
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl"
                   >
                     <Heart className="text-pink-400 mb-3" size={48} />
-                    <p className="text-white text-lg font-bold">Love Snake</p>
-                    <p className="text-white/60 text-sm">Arrow keys or WASD to move</p>
+                    <p className="text-pink-700 text-lg font-bold">Love Snake</p>
+                    <p className="text-pink-700/60 text-sm">Arrow keys or WASD to move</p>
                     <button
                       onClick={startGame}
                       className="mt-4 px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
@@ -278,10 +276,10 @@ export default function LoveSnakePage() {
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl"
                   >
                     <Trophy className="text-yellow-400 mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 200 ? '🏆 Incredible!' : score >= 100 ? '💖 Great!' : '💕 Good Try!'}
                     </h2>
-                    <p className="text-white/80 mb-4">Score: {score}</p>
+                    <p className="text-pink-700/80 mb-4">Score: {score}</p>
                     <button
                       onClick={startGame}
                       className="px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
@@ -295,6 +293,6 @@ export default function LoveSnakePage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

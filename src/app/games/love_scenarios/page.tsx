@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Play, RotateCcw, Trophy, Users, Sparkles, Flame, Star } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface Scenario {
   id: number;
@@ -60,7 +60,6 @@ export default function LoveScenariosPage() {
   const compatibilityScore = partner1.answers.reduce((acc, a, i) => acc + (a === partner2.answers[i] ? 100 : 50), 0) / partner1.answers.length;
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -94,7 +93,7 @@ export default function LoveScenariosPage() {
                   <li>Reveal compatibility at the end</li>
                 </ul>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -155,13 +154,13 @@ export default function LoveScenariosPage() {
 
               <div className="flex gap-4 justify-center mt-6">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

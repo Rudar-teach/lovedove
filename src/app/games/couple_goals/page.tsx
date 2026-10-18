@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Target, Calendar, Star, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 interface Goal {
   id: number;
@@ -67,7 +66,6 @@ export default function CoupleGoalsPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -101,7 +99,7 @@ export default function CoupleGoalsPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Begin</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Begin</button>
             </motion.div>
           )}
 
@@ -139,15 +137,15 @@ export default function CoupleGoalsPage() {
 
           {phase === 'active' && activeGoal && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-[2rem] shadow-2xl p-8 text-white mb-6">
+              <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-[2rem] shadow-2xl p-8 text-pink-700 mb-6">
                 <span className="text-5xl block mb-4">{activeGoal.emoji}</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 mb-4 inline-block`}>{activeGoal.difficulty.toUpperCase()}</span>
                 <h2 className="text-2xl font-black mb-2">{activeGoal.title}</h2>
-                <p className="text-white/80">{activeGoal.description}</p>
-                <p className="text-sm text-white/60 mt-2">+{activeGoal.points} pts{streak > 0 ? ` (+${streak * 5} streak bonus)` : ''}</p>
+                <p className="text-pink-700/80">{activeGoal.description}</p>
+                <p className="text-sm text-pink-700/60 mt-2">+{activeGoal.points} pts{streak > 0 ? ` (+${streak * 5} streak bonus)` : ''}</p>
               </div>
               <div className="flex gap-3">
-                <button onClick={completeGoal} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Complete! +{activeGoal.points + streak * 5} pts</button>
+                <button onClick={completeGoal} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Complete! +{activeGoal.points + streak * 5} pts</button>
                 <button onClick={() => { setActiveGoal(null); setPhase('goals'); setStreak(0); }} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
             </motion.div>
@@ -169,13 +167,13 @@ export default function CoupleGoalsPage() {
               </div>
               <div className="flex gap-4 justify-center">
                 <button onClick={() => { setScore(0); setStreak(0); setCompleted([]); setDailyProgress({}); startGame(); }} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

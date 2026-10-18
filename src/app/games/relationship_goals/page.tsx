@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Calendar, Star, CheckCircle, Target } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface Milestone {
   id: number;
@@ -50,7 +50,6 @@ export default function RelationshipGoalsPage() {
   const allDone = milestones.every(m => m.completed);
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -75,7 +74,7 @@ export default function RelationshipGoalsPage() {
               <div className="text-7xl mb-6">🗺️</div>
               <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Relationship Goals</h1>
               <p className="text-gray-600 mb-8 text-lg">Track relationship milestones from month 1 to year 1!</p>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -117,6 +116,6 @@ export default function RelationshipGoalsPage() {
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

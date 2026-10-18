@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const MISSIONS = [
   { name: 'Peck on the Cheek', emoji: '😘', points: 10, time: 5 },
@@ -64,17 +63,16 @@ export default function KissingGamePage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-700 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <div className="text-8xl mb-6">💋</div>
-            <h1 className="text-5xl font-bold text-white mb-4">The Kissing Game</h1>
-            <p className="text-white/80 mb-8 text-lg">Spin to discover your next kiss mission. Complete 6 rounds for a perfect love score.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">The Kissing Game</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Spin to discover your next kiss mission. Complete 6 rounds for a perfect love score.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Play size={20} /> Start Game
             </button>
@@ -84,7 +82,7 @@ export default function KissingGamePage() {
         {state === 'spinning' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto text-center mt-20">
             <div className="text-7xl mb-8 animate-pulse">💖</div>
-            <h2 className="text-3xl font-bold text-white mb-4">Choosing your kiss...</h2>
+            <h2 className="text-3xl font-bold text-pink-700 mb-4">Choosing your kiss...</h2>
             <div className="w-64 mx-auto bg-white/10 rounded-full h-3 overflow-hidden">
               <motion.div
                 key={spin}
@@ -94,7 +92,7 @@ export default function KissingGamePage() {
                 className="h-full bg-gradient-to-r from-rose-400 to-pink-500"
               />
             </div>
-            <p className="text-white/60 mt-4">{SPIN_TIME}s</p>
+            <p className="text-pink-700/60 mt-4">{SPIN_TIME}s</p>
           </motion.div>
         )}
 
@@ -106,7 +104,7 @@ export default function KissingGamePage() {
             </div>
             <div className="bg-gradient-to-br from-rose-500/40 to-pink-500/40 backdrop-blur-md rounded-3xl p-10 border-2 border-rose-300/50">
               <div className="text-9xl mb-4">{current.emoji}</div>
-              <h2 className="text-3xl font-bold text-white mb-3">{current.name}</h2>
+              <h2 className="text-3xl font-bold text-pink-700 mb-3">{current.name}</h2>
               <div className="flex items-center justify-center gap-2 text-rose-200 text-lg">
                 <Timer size={20} /> <span className="text-3xl font-bold">{missionTime}s</span>
               </div>
@@ -121,21 +119,21 @@ export default function KissingGamePage() {
         {state === 'finished' && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
             <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6">Sweet Kisses! 💋</h2>
+            <h2 className="text-4xl font-bold text-pink-700 mb-6">Sweet Kisses! 💋</h2>
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
               <div className="text-7xl font-bold text-rose-300">{score}</div>
-              <div className="text-white/80 mt-2">Total Love Points</div>
-              <p className="mt-6 text-white/80 italic">"Every kiss is a love letter written with lips."</p>
+              <div className="text-pink-700/80 mt-2">Total Love Points</div>
+              <p className="mt-6 text-pink-700/80 italic">"Every kiss is a love letter written with lips."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> Play Again
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Sparkles, Grid3x3, Shuffle, Calendar } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const MILESTONES = [
   'First Date', 'First I Love You', 'First Road Trip', 'Met Family',
@@ -104,7 +104,6 @@ export default function RelationshipBingoPage() {
   useEffect(() => { if (wins.length >= 3) setPhase('finished'); }, [wins]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -129,14 +128,14 @@ export default function RelationshipBingoPage() {
               <div className="text-7xl mb-6">🗺️</div>
               <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Milestone Bingo</h1>
               <p className="text-gray-600 mb-8 text-lg">Mark off relationship milestones as you achieve them!</p>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
           {phase === 'playing' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {bonus && (
-                <motion.div initial={{ y: -50 }} animate={{ y: 0 }} className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl p-3 text-white text-center font-bold mb-4">
+                <motion.div initial={{ y: -50 }} animate={{ y: 0 }} className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl p-3 text-pink-700 text-center font-bold mb-4">
                   Called: {bonus}
                 </motion.div>
               )}
@@ -175,13 +174,13 @@ export default function RelationshipBingoPage() {
               <p className="text-5xl font-black bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">{score} pts</p>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

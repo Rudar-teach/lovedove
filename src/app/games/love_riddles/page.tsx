@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const RIDDLES = [{ q: "I have cities, but no houses. Forests, but no trees. Water, but no fish. What am I?", a: "A map", hint: "You look at me before traveling" }, { q: "What has keys but no locks? Space but no room? You can enter, but can't go inside?", a: "A keyboard", hint: "You type on me" }, { q: "I speak without a mouth and hear without ears. I have no body, but come alive with the wind.", a: "An echo", hint: "I repeat what you say" }, { q: "The more you take, the more you leave behind. What am I?", a: "Footsteps", hint: "You make these when walking" }, { q: "What gets wetter the more it dries?", a: "A towel", hint: "You use me after a shower" }, { q: "What has a head and a tail but no body?", a: "A coin", hint: "You flip me to decide" }, { q: "I'm tall when I'm young and short when I'm old. What am I?", a: "A candle", hint: "I give light" }, { q: "What has many needles but doesn't sew?", a: "A pine tree", hint: "I grow in winter" }];
 
@@ -36,7 +36,6 @@ export default function LoveRiddles() {
   const start = () => { setGameState('playing'); setCurrent(0); setScore(0); setInput(''); setShowHint(false); setShowAnswer(false); setTimeLeft(60); setQuestions([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 5)); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -49,7 +48,7 @@ export default function LoveRiddles() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">🧩</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Riddles</h1><p className="text-gray-600 mb-8 text-lg">Solve romantic riddles together!</p>
-            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex justify-between items-center mb-4"><span className="text-sm font-medium text-gray-600">Q {current + 1}/{questions.length}</span><span className="text-sm font-medium text-purple-600">Score: {score}</span></div>
@@ -68,11 +67,11 @@ export default function LoveRiddles() {
             </div>
             {gameState === 'finished' && (<div className="text-center mt-8">
               <div className="text-6xl mb-6">🧠</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Complete!</h2><p className="text-5xl font-black gradient-text mb-4">{score}</p>
-              <div className="flex gap-4 justify-center"><button onClick={start} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link></div>
+              <div className="flex gap-4 justify-center"><button onClick={start} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link></div>
             </div>)}
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

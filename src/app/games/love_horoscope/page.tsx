@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Star, Calendar, TrendingUp, HeartPulse } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -77,7 +77,6 @@ export default function LoveHoroscopeEnhanced() {
   const refreshTip = () => setTip(DAILY_TIPS[Math.floor(Math.random() * DAILY_TIPS.length)]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -137,7 +136,7 @@ export default function LoveHoroscopeEnhanced() {
             {tab === 'forecast' && (
               <motion.div key="forecast" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <TiltCard intensity={5} glowColor="rgba(236, 72, 153, 0.1)">
-                  <div className={`bg-gradient-to-br from-pink-400 to-rose-500 rounded-[2rem] shadow-2xl p-8 text-white text-center space-y-3`}>
+                  <div className={`bg-gradient-to-br from-pink-400 to-rose-500 rounded-[2rem] shadow-2xl p-8 text-pink-700 text-center space-y-3`}>
                     <span className="text-5xl">{mySign.symbol}</span>
                     <h2 className="text-2xl font-bold">{myForecast.title}</h2>
                     <p className="text-white/90">{myForecast.desc}</p>
@@ -191,6 +190,6 @@ export default function LoveHoroscopeEnhanced() {
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

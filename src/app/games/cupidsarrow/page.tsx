@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const GAME_W = 500;
 const GAME_H = 600;
@@ -171,14 +170,13 @@ export default function CupidsArrowPage() {
   }, [handleKeyDown]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Sparkles className="text-yellow-400" /> Cupid's Arrow
             </h1>
             <div className="w-16" />
@@ -191,15 +189,15 @@ export default function CupidsArrowPage() {
           >
             <div className="flex justify-between items-center mb-3">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-2xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-2xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-2xl font-bold text-pink-600">{best}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Time</div>
+                <div className="text-pink-700/60 text-xs uppercase">Time</div>
                 <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                   {timeLeft}s
                 </div>
@@ -228,8 +226,8 @@ export default function CupidsArrowPage() {
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl"
                   >
                     <Sparkles className="text-yellow-400 mb-3" size={48} />
-                    <p className="text-white text-lg font-bold">Click or Space to Shoot</p>
-                    <p className="text-white/60 text-sm">Hit the hearts for points!</p>
+                    <p className="text-pink-700 text-lg font-bold">Click or Space to Shoot</p>
+                    <p className="text-pink-700/60 text-sm">Hit the hearts for points!</p>
                   </motion.div>
                 )}
 
@@ -240,10 +238,10 @@ export default function CupidsArrowPage() {
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl"
                   >
                     <Trophy className="text-yellow-400 mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 200 ? '🏆 Cupid Champion!' : score >= 100 ? '💖 Great Shot!' : '💕 Nice Aim!'}
                     </h2>
-                    <p className="text-white/80 mb-4">Score: {score}</p>
+                    <p className="text-pink-700/80 mb-4">Score: {score}</p>
                     <button
                       onClick={startGame}
                       className="px-6 py-3 bg-pink-500 text-white rounded-xl font-bold flex items-center gap-2"
@@ -257,6 +255,6 @@ export default function CupidsArrowPage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

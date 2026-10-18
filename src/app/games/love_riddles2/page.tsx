@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const RIDDLES = [{ q: "I have a heart that doesn't beat. I have a face that never smiles. What am I?", a: "A playing card", hint: "Used in card games" }, { q: "What belongs to you but others use it more than you?", a: "Your name", hint: "People call you by it" }, { q: "What gets bigger the more you take away?", a: "A hole", hint: "Digging" }];
 
@@ -23,7 +23,6 @@ export default function LoveRiddles2() {
   const start = () => { setGameState('playing'); setCurrent(0); setScore(0); setInput(''); setShowHint(false); setShowAnswer(false); setQ([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 3)); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -36,7 +35,7 @@ export default function LoveRiddles2() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">🧩</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Asked Riddles</h1><p className="text-gray-600 mb-8 text-lg">Solve fun riddles!</p>
-            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={start} className="px-10 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState !== 'idle' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <p className="text-center text-sm font-medium text-gray-600 mb-4">Q {current + 1}/{q.length} • Score: {score}</p>
@@ -54,6 +53,6 @@ export default function LoveRiddles2() {
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

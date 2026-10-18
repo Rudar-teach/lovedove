@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Share2 } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -107,7 +107,6 @@ export default function CompatibilityTestPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           {/* Header */}
@@ -254,14 +253,14 @@ export default function CompatibilityTestPage() {
           <AnimatePresence>
             {toast && (
               <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-pink-700 px-6 py-3 rounded-full shadow-2xl z-50">
                 Link copied! Share with your partner 💕
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </div>
             <GameSharePanel gameSlug="compatibilitytest" />
-      </GameBackground>
-  );
+      </div>
+      
+);
 }

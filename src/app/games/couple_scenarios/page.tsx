@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const SCENARIOS = [
   {
@@ -125,14 +124,13 @@ export default function CoupleScenariosPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Scenarios
             </h1>
             <div className="w-16" />
@@ -145,16 +143,16 @@ export default function CoupleScenariosPage() {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Scenario</div>
+                <div className="text-pink-700/60 text-xs uppercase">Scenario</div>
                 <div className="text-xl font-bold text-white">{currentS + 1}/{scenarios.length}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
             </div>
 
@@ -165,8 +163,8 @@ export default function CoupleScenariosPage() {
                 className="text-center"
               >
                 <Heart className="text-pink-400 mx-auto mb-4" size={48} />
-                <p className="text-white text-lg mb-2">What Would You Do?</p>
-                <p className="text-white/60 text-sm mb-4">
+                <p className="text-pink-700 text-lg mb-2">What Would You Do?</p>
+                <p className="text-pink-700/60 text-sm mb-4">
                   Choose how you'd respond to each scenario
                 </p>
                 <button
@@ -186,11 +184,11 @@ export default function CoupleScenariosPage() {
                 className="space-y-4"
               >
                 <div className="bg-black/30 rounded-xl p-4">
-                  <p className="text-pink-300 text-xs uppercase mb-2">Scenario {currentS + 1}</p>
-                  <p className="text-white text-lg italic">"{scenarios[currentS].scenario}"</p>
+                  <p className="text-pink-600 text-xs uppercase mb-2">Scenario {currentS + 1}</p>
+                  <p className="text-pink-700 text-lg italic">"{scenarios[currentS].scenario}"</p>
                 </div>
 
-                <p className="text-white/60 text-sm text-center">What would you do?</p>
+                <p className="text-pink-700/60 text-sm text-center">What would you do?</p>
 
                 <div className="space-y-2">
                   {scenarios[currentS].choices.map((choice, idx) => {
@@ -211,7 +209,7 @@ export default function CoupleScenariosPage() {
                         <div className="flex items-center justify-between">
                           <span>{choice.text}</span>
                           {showResult && (
-                            <span className="text-pink-300 text-sm">+{choice.points}</span>
+                            <span className="text-pink-600 text-sm">+{choice.points}</span>
                           )}
                         </div>
                       </button>
@@ -230,10 +228,10 @@ export default function CoupleScenariosPage() {
                 >
                   <div className="text-center">
                     <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 300 ? '🏆 Perfect Partner!' : score >= 200 ? '💖 Romantic!' : '💕 Sweet!'}
                     </h2>
-                    <p className="text-white/70">Score: <span className="text-pink-300 font-bold">{score}</span></p>
+                    <p className="text-pink-700/70">Score: <span className="text-pink-600 font-bold">{score}</span></p>
                   </div>
                   <button
                     onClick={startGame}
@@ -247,6 +245,6 @@ export default function CoupleScenariosPage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

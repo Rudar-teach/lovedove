@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, MessageCircle, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
+
 
 type Phase = 'idle' | 'playing' | 'finished';
 type Intensity = 'sweet' | 'deep' | 'spicy' | 'all';
@@ -98,7 +98,6 @@ export default function LoveQnAPage() {
   const meta = INTENSITY_META[currentIntensity];
 
   return (
-    <GameBackground>
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
@@ -123,7 +122,7 @@ export default function LoveQnAPage() {
                   </div>
                 </div>
 
-                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-pink-700 px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
                   <Play className="w-5 h-5" /> Start Q&A
                 </button>
               </motion.div>
@@ -148,15 +147,15 @@ export default function LoveQnAPage() {
                         <div className="bg-rose-500 h-2 rounded-full transition-all" style={{ width: `${(timeLeft / 15) * 100}%` }} />
                       </div>
                       <div className="flex justify-center gap-3">
-                        <button onClick={answerYes} className="bg-green-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Yes! ❤️</button>
-                        <button onClick={answerYes} className="bg-blue-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Haha, exactly! 😂</button>
-                        <button onClick={answerYes} className="bg-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition">100% agree! 💯</button>
+                        <button onClick={answerYes} className="bg-green-500 text-pink-700 px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Yes! ❤️</button>
+                        <button onClick={answerYes} className="bg-blue-500 text-pink-700 px-8 py-3 rounded-full font-semibold hover:scale-105 transition">Haha, exactly! 😂</button>
+                        <button onClick={answerYes} className="bg-purple-500 text-pink-700 px-8 py-3 rounded-full font-semibold hover:scale-105 transition">100% agree! 💯</button>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center">
                       <p className="text-pink-600 font-semibold mb-4">+{10 + streak * 5 + Math.floor(timeLeft / 3) * 2} points! Great answer! 💕</p>
-                      <button onClick={nextQuestion} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition">
+                      <button onClick={nextQuestion} className="bg-rose-500 text-pink-700 px-6 py-3 rounded-full font-semibold hover:scale-105 transition">
                         {queue.length > 1 ? 'Next Question' : 'See Results'}
                       </button>
                     </div>
@@ -172,7 +171,7 @@ export default function LoveQnAPage() {
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
                 <p className="text-xl text-pink-600 mb-6">{streak} max streak</p>
                 <div className="flex gap-3 justify-center">
-                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                  <button onClick={startGame} className="bg-rose-500 text-pink-700 px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Play Again
                   </button>
                   <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
@@ -182,6 +181,6 @@ export default function LoveQnAPage() {
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const EMOJI_QUIZ = [
   { emojis: "💕💍", answer: "Marriage proposal", options: ["Wedding", "Marriage proposal", "Date night", "Anniversary"] },
@@ -32,7 +32,6 @@ export default function LoveEmojiQuiz() {
   const startGame = () => { setGameState('playing'); setCurrentIndex(0); setScore(0); setSelected(null); setQuestions(prev => [...prev].sort(() => Math.random() - 0.5)); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -45,7 +44,7 @@ export default function LoveEmojiQuiz() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">😍</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Emoji Quiz</h1><p className="text-gray-600 mb-8 text-lg">Guess the romantic phrase from emojis!</p>
-            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex justify-between items-center mb-4"><span className="text-sm font-medium text-gray-600">Q {currentIndex + 1}/{questions.length}</span><span className="text-sm font-medium text-rose-600">Score: {score}</span></div>
@@ -55,10 +54,10 @@ export default function LoveEmojiQuiz() {
           </motion.div>)}
           {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <div className="text-6xl mb-6">🏆</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Quiz Complete!</h2><p className="text-5xl font-black gradient-text mb-4">{score}</p><p className="text-gray-600 mb-8">points</p>
-            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link></div>
+            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link></div>
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

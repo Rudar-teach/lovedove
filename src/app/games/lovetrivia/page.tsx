@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Share2, RotateCcw, Trophy, Flame, Clock, Flame as FlameIcon, Star } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -225,7 +225,6 @@ export default function LoveTriviaPage() {
   const diffColor = q.difficulty === 'easy' ? 'text-green-600' : q.difficulty === 'medium' ? 'text-yellow-600' : 'text-red-600';
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -320,6 +319,6 @@ export default function LoveTriviaPage() {
           </div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

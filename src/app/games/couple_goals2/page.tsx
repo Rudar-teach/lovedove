@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Calendar, CheckCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface Goal {
   id: number;
@@ -83,7 +83,6 @@ export default function CoupleGoals2Page() {
   const skipDay = () => { setStreak(0); if (currentDay >= 30) setPhase('finished'); else setCurrentDay(d => d + 1); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -125,7 +124,7 @@ export default function CoupleGoals2Page() {
                   ))}
                 </div>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -169,7 +168,7 @@ export default function CoupleGoals2Page() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={completeDay} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Complete +{10 + streak * 2} pts</button>
+                  <button onClick={completeDay} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Complete +{10 + streak * 2} pts</button>
                   <button onClick={skipDay} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
                 </div>
               </motion.div>
@@ -197,13 +196,13 @@ export default function CoupleGoals2Page() {
 
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

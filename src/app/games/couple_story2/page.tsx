@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
+
 
 type Phase = 'idle' | 'playing' | 'finished';
 
@@ -95,7 +95,6 @@ export default function CoupleStoryPage() {
   const currentPart = STORY_PARTS[round];
 
   return (
-    <GameBackground>
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
@@ -119,7 +118,7 @@ export default function CoupleStoryPage() {
                     ))}
                   </div>
                 </div>
-                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-pink-700 px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
                   <Play className="w-5 h-5" /> Begin Our Story
                 </button>
               </motion.div>
@@ -170,7 +169,7 @@ export default function CoupleStoryPage() {
                 </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
                 <div className="flex gap-3 justify-center">
-                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                  <button onClick={startGame} className="bg-rose-500 text-pink-700 px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Write New Story
                   </button>
                   <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
@@ -180,6 +179,6 @@ export default function CoupleStoryPage() {
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

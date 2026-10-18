@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const SIZE = 4;
 const SYMBOLS = ['💕', '💖', '💗', '💓', '💘', '💝'];
@@ -192,14 +191,13 @@ export default function Game2048Page() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Love 2048
             </h1>
             <div className="w-16" />
@@ -213,15 +211,15 @@ export default function Game2048Page() {
             {/* Stats */}
             <div className="flex justify-between items-center mb-4">
               <div className="text-center">
-                <div className="text-white/60 text-xs uppercase tracking-wider">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase tracking-wider">Score</div>
                 <div className="text-2xl font-bold text-white">{score}</div>
               </div>
               <div className="text-center">
-                <div className="text-white/60 text-xs uppercase tracking-wider">Best</div>
-                <div className="text-2xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase tracking-wider">Best</div>
+                <div className="text-2xl font-bold text-pink-600">{best}</div>
               </div>
               <div className="text-center">
-                <div className="text-white/60 text-xs uppercase tracking-wider">Time</div>
+                <div className="text-pink-700/60 text-xs uppercase tracking-wider">Time</div>
                 <div className={`text-2xl font-bold ${timeLeft <= 20 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                 </div>
@@ -262,7 +260,7 @@ export default function Game2048Page() {
             )}
 
             {state === 'playing' && (
-              <div className="text-center text-white/60 text-sm">
+              <div className="text-center text-pink-700/60 text-sm">
                 Use arrow keys or WASD to move tiles 💕
               </div>
             )}
@@ -274,10 +272,10 @@ export default function Game2048Page() {
                 className="space-y-3"
               >
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white mb-1">
+                  <h2 className="text-2xl font-bold text-pink-700 mb-1">
                     {score >= 500 ? '🏆 Amazing!' : score >= 200 ? '💖 Great Job!' : '💕 Nice Try!'}
                   </h2>
-                  <p className="text-white/70">Final Score: <span className="text-pink-300 font-bold">{score}</span></p>
+                  <p className="text-pink-700/70">Final Score: <span className="text-pink-600 font-bold">{score}</span></p>
                   {score >= best && score > 0 && <p className="text-yellow-300 font-bold">🎉 New Best!</p>}
                 </div>
                 <button
@@ -291,6 +289,6 @@ export default function Game2048Page() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

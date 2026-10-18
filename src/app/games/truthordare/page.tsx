@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Shield, Flame } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -125,7 +124,6 @@ export default function TruthOrDarePage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -175,7 +173,7 @@ export default function TruthOrDarePage() {
                 </div>
                 <TiltCard intensity={4} glowColor="rgba(236, 72, 153, 0.08)">
                   <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 text-center">
-                    <div className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white mb-4 bg-gradient-to-r from-rose-500 to-red-500">
+                    <div className="inline-block px-3 py-1 rounded-full text-xs font-bold text-pink-700 mb-4 bg-gradient-to-r from-rose-500 to-red-500">
                       DARE #{idx + 1}
                     </div>
                     <p className="text-xl font-bold text-gray-800 leading-relaxed">{current}</p>
@@ -217,13 +215,13 @@ export default function TruthOrDarePage() {
           <AnimatePresence>
             {toast && (
               <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-pink-700 px-6 py-3 rounded-full shadow-2xl z-50">
                 Link copied! Share with your partner 💕
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

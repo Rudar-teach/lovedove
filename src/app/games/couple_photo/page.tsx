@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Camera } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const CHALLENGES = [
   { title: "Cute Selfie", desc: "Take a silly selfie together!", emoji: '🤳' },
@@ -55,7 +54,6 @@ export default function CouplePhoto() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -75,7 +73,7 @@ export default function CouplePhoto() {
               <div className="text-7xl mb-6">📸</div>
               <h1 className="text-4xl font-display font-black text-gray-900 mb-4">Couple Photo Challenge</h1>
               <p className="text-gray-600 mb-8 text-lg">Capture fun moments with these photo challenges!</p>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Camera className="w-5 h-5 inline mr-2" /> Start Challenge</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl transition-all"><Camera className="w-5 h-5 inline mr-2" /> Start Challenge</button>
             </motion.div>
           )}
           {gameState === 'playing' && challenges[currentIdx] && (
@@ -89,7 +87,7 @@ export default function CouplePhoto() {
               <div className="bg-gradient-to-br from-purple-500 to-indigo-500 rounded-[2rem] shadow-2xl p-12 mb-6 text-center text-white">
                 <div className="text-7xl mb-4">{challenges[currentIdx].emoji}</div>
                 <h2 className="text-2xl font-black mb-2">{challenges[currentIdx].title}</h2>
-                <p className="text-lg text-white/80">{challenges[currentIdx].desc}</p>
+                <p className="text-lg text-pink-700/80">{challenges[currentIdx].desc}</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={skipChallenge} className="flex-1 px-4 py-4 bg-white/50 rounded-2xl font-bold text-gray-600 hover:bg-white/70 transition-colors">Skip</button>
@@ -113,12 +111,12 @@ export default function CouplePhoto() {
               </div>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

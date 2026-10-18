@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const IMAGES = [
   'A beautiful sunset at the beach',
@@ -91,14 +90,13 @@ export default function LovePuzzlePage() {
   }, [pieces, state, swaps, best]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Heart className="text-pink-400" /> Love Puzzle
             </h1>
             <div className="w-16" />
@@ -111,21 +109,21 @@ export default function LovePuzzlePage() {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Moves</div>
+                <div className="text-pink-700/60 text-xs uppercase">Moves</div>
                 <div className="text-xl font-bold text-white">{swaps}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
             </div>
 
             <div className="bg-black/30 rounded-2xl p-4 mb-4">
-              <p className="text-white/60 text-sm text-center mb-3 italic">"{IMAGES[imageIdx]}"</p>
+              <p className="text-pink-700/60 text-sm text-center mb-3 italic">"{IMAGES[imageIdx]}"</p>
               <div
                 className="grid gap-1"
                 style={{ gridTemplateColumns: `repeat(${GRID}, 1fr)` }}
@@ -167,7 +165,7 @@ export default function LovePuzzlePage() {
             )}
 
             {state === 'playing' && (
-              <p className="text-center text-white/50 text-sm">
+              <p className="text-center text-pink-700/50 text-sm">
                 Click tiles to swap them. Arrange them correctly!
               </p>
             )}
@@ -180,11 +178,11 @@ export default function LovePuzzlePage() {
                   className="space-y-3"
                 >
                   <div className="text-center">
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {swaps <= 3 ? '🏆 Puzzle Master!' : swaps <= 6 ? '💖 Great Job!' : '💕 Completed!'}
                     </h2>
-                    <p className="text-white/70">
-                      Score: <span className="text-pink-300 font-bold">{score}</span> in {swaps} moves
+                    <p className="text-pink-700/70">
+                      Score: <span className="text-pink-600 font-bold">{score}</span> in {swaps} moves
                     </p>
                   </div>
                   <button
@@ -199,6 +197,6 @@ export default function LovePuzzlePage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

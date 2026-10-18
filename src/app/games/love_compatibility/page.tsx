@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const COMPAT_QUESTIONS = [
   "Do you prefer nights in or going out?",
@@ -54,7 +54,6 @@ export default function LoveCompatibility() {
   const startGame = () => { setGameState('playing'); setCurrentIndex(0); setP1Answers([]); setP2Answers([]); setPhase('p1'); setCurrentAnswer(null); setQuestions(prev => [...prev].sort(() => Math.random() - 0.5).slice(0, 8)); };
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -67,7 +66,7 @@ export default function LoveCompatibility() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {gameState === 'idle' && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-6">💖</div><h1 className="text-4xl font-display font-black text-gray-900 mb-4">Love Compatibility</h1><p className="text-gray-600 mb-8 text-lg">How compatible are you two?</p>
-            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl text-white font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+            <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl"><Play className="w-5 h-5 inline mr-2" /> Start</button>
           </motion.div>)}
           {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="text-center mb-4"><span className="px-3 py-1 rounded-full bg-white/70 text-sm font-semibold">{phase === 'p1' ? '💕 Partner 1' : '💖 Partner 2'} answering</span></div>
@@ -82,10 +81,10 @@ export default function LoveCompatibility() {
             <div className="text-6xl mb-6">💕</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Compatibility Score</h2>
             <p className="text-7xl font-black gradient-text mb-4">{calculateScore()}%</p>
             <p className="text-gray-600 mb-8">{calculateScore() >= 70 ? "Perfect match! 💕" : calculateScore() >= 40 ? "You have potential! 💖" : "Opposites attract? 😅"}</p>
-            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl text-white font-bold">More Games</Link></div>
+            <div className="flex gap-4 justify-center"><button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold"><RotateCcw className="w-5 h-5 inline mr-2" /> Again</button><Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl text-pink-700 font-bold">More Games</Link></div>
           </motion.div>)}
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

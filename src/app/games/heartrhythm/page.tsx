@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -22,7 +22,6 @@ export default function HeartrhythmPage() {
   const tap = () => { if (phase === 'playing') setScore(s => s + 1); };
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -39,12 +38,12 @@ export default function HeartrhythmPage() {
               </div>
               
       {phase === 'start' && (<div className="text-center py-8"><div className="text-6xl mb-4">💓</div><p className="text-gray-600 mb-4">Tap the button!</p><Button onClick={start} variant="primary" size="lg">Start 💓</Button></div>)}
-      {phase === 'playing' && (<div className="text-center py-8 space-y-4"><div className="text-6xl animate-pulse">💓</div><button onClick={tap} className="w-40 h-40 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 text-white text-3xl font-bold shadow-2xl shadow-primary-500/40 hover:scale-105 active:scale-95 transition-all">TAP!</button><p className="text-lg text-gray-700 font-semibold">Score: {score} · Time: {time}s</p></div>)}
+      {phase === 'playing' && (<div className="text-center py-8 space-y-4"><div className="text-6xl animate-pulse">💓</div><button onClick={tap} className="w-40 h-40 rounded-full bg-gradient-to-br from-primary-500 to-rose-500 text-pink-700 text-3xl font-bold shadow-2xl shadow-primary-500/40 hover:scale-105 active:scale-95 transition-all">TAP!</button><p className="text-lg text-gray-700 font-semibold">Score: {score} · Time: {time}s</p></div>)}
       {phase === 'result' && (<div className="text-center py-8 space-y-4"><div className="text-6xl">🏆</div><h2 className="text-2xl font-bold text-gray-800">Rhythm Master!</h2><p className="text-xl text-gray-700 font-semibold">{score} taps</p><Button onClick={start} variant="primary">Play Again 💓</Button></div>)}
             </div>
           </TiltCard>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Music } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { q: 'Which artist sang "Perfect"?', options: ['Ed Sheeran', 'Bruno Mars', 'Shawn Mendes', 'Justin Bieber'], answer: 0, artist: 'Ed Sheeran' },
@@ -70,14 +69,13 @@ export default function CoupleMusicQuizPage() {
   }, [showResult, currentQ, questions, selected, score, best, state]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Music className="text-purple-400" /> Music Quiz
             </h1>
             <div className="w-16" />
@@ -90,16 +88,16 @@ export default function CoupleMusicQuizPage() {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Question</div>
+                <div className="text-pink-700/60 text-xs uppercase">Question</div>
                 <div className="text-xl font-bold text-white">{questions.length > 0 ? `${currentQ + 1}/${questions.length}` : '-'}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
             </div>
 
@@ -110,8 +108,8 @@ export default function CoupleMusicQuizPage() {
                 className="text-center"
               >
                 <Music className="text-purple-400 mx-auto mb-4" size={48} />
-                <p className="text-white text-lg mb-2">Romantic Music Quiz</p>
-                <p className="text-white/60 text-sm mb-4">Test your knowledge of love songs!</p>
+                <p className="text-pink-700 text-lg mb-2">Romantic Music Quiz</p>
+                <p className="text-pink-700/60 text-sm mb-4">Test your knowledge of love songs!</p>
                 <button
                   onClick={startGame}
                   className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg mx-auto"
@@ -129,7 +127,7 @@ export default function CoupleMusicQuizPage() {
                 className="space-y-4"
               >
                 <div className="bg-black/30 rounded-xl p-4">
-                  <p className="text-purple-300 text-xs uppercase mb-1">Artist: {questions[currentQ].artist}</p>
+                  <p className="text-purple-600 text-xs uppercase mb-1">Artist: {questions[currentQ].artist}</p>
                   <h3 className="text-xl font-bold text-white">{questions[currentQ].q}</h3>
                 </div>
 
@@ -176,10 +174,10 @@ export default function CoupleMusicQuizPage() {
                 >
                   <div className="text-center">
                     <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 100 ? '🏆 Music Expert!' : score >= 60 ? '💖 Great!' : '💕 Good!'}
                     </h2>
-                    <p className="text-white/70">
+                    <p className="text-pink-700/70">
                       {answers.filter((a) => a).length}/{answers.length} correct
                     </p>
                   </div>
@@ -195,6 +193,6 @@ export default function CoupleMusicQuizPage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

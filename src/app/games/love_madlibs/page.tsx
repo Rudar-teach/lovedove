@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Wand2, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
+
 
 type Phase = 'idle' | 'playing' | 'finished';
 
@@ -156,7 +156,6 @@ export default function LoveMadLibsPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
@@ -180,7 +179,7 @@ export default function LoveMadLibsPage() {
                     ))}
                   </div>
                 </div>
-                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
+                <button onClick={startGame} className="bg-gradient-to-r from-rose-500 to-pink-500 text-pink-700 px-8 py-4 rounded-full font-semibold shadow-lg hover:scale-105 transition inline-flex items-center gap-2">
                   <Play className="w-5 h-5" /> Start Mad Libs
                 </button>
               </motion.div>
@@ -209,7 +208,7 @@ export default function LoveMadLibsPage() {
                       className="border-2 border-rose-200 rounded-full px-4 py-2 text-center focus:outline-none focus:border-rose-500 w-64"
                       autoFocus
                     />
-                    <button type="submit" className="bg-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-rose-600 transition">Next</button>
+                    <button type="submit" className="bg-rose-500 text-pink-700 px-6 py-2 rounded-full font-semibold hover:bg-rose-600 transition">Next</button>
                   </form>
 
                   {WORD_SUGGESTIONS[currentBlank?.wordType || ''] && (
@@ -257,7 +256,7 @@ export default function LoveMadLibsPage() {
                 </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent my-4">{score}</div>
                 <div className="flex gap-3 justify-center">
-                  <button onClick={startGame} className="bg-rose-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
+                  <button onClick={startGame} className="bg-rose-500 text-pink-700 px-6 py-3 rounded-full font-semibold hover:scale-105 transition inline-flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" /> Play Again
                   </button>
                   <Link href="/games" className="bg-pink-100 text-rose-700 px-6 py-3 rounded-full font-semibold hover:bg-pink-200 transition">More Games</Link>
@@ -267,6 +266,6 @@ export default function LoveMadLibsPage() {
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Trophy, Share2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -86,7 +86,6 @@ export default function WhoKnowsWho() {
   const verdict = pct >= 90 ? 'Soulmate level! 🌟' : pct >= 70 ? 'You really know each other! 💕' : pct >= 50 ? 'Solid connection! 💖' : 'Lots to discover! 💬';
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -215,13 +214,13 @@ export default function WhoKnowsWho() {
           <AnimatePresence>
             {toast && (
               <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-50">
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-pink-700 px-6 py-3 rounded-full shadow-2xl z-50">
                 Link copied! 💕
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

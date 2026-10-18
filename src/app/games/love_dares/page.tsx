@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Star, CheckCircle, BarChart3, Timer } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface Dare {
   text: string;
@@ -124,7 +124,6 @@ export default function LoveDaresEnhanced() {
   const percent = pool.length > 0 ? Math.round((completed.length / (completed.length + pool.length)) * 100) : 100;
 
   return (
-    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -172,10 +171,10 @@ export default function LoveDaresEnhanced() {
               <div className="w-full h-3 bg-white/50 rounded-full mb-6 overflow-hidden">
                 <motion.div className="h-full bg-gradient-to-r from-red-500 to-pink-500 rounded-full" style={{ width: `${percent}%` }} />
               </div>
-              <div className={`bg-gradient-to-br ${COLORS[current.difficulty].grad} rounded-[2rem] shadow-2xl p-8 mb-4 text-white text-center`}>
+              <div className={`bg-gradient-to-br ${COLORS[current.difficulty].grad} rounded-[2rem] shadow-2xl p-8 mb-4 text-pink-700 text-center`}>
                 <span className="text-4xl block mb-3">{COLORS[current.difficulty].icon}</span>
                 <p className="text-xl font-black leading-relaxed mb-2">{current.text}</p>
-                <p className="text-sm text-white/70">+{POINTS[current.difficulty]} pts{streak > 1 ? ` (+${streak * 5} bonus)` : ''}</p>
+                <p className="text-sm text-pink-700/70">+{POINTS[current.difficulty]} pts{streak > 1 ? ` (+${streak * 5} bonus)` : ''}</p>
               </div>
               <div className="flex gap-2 justify-center mb-4">
                 {Object.entries(CATEGORY_META).map(([key, cat]) => (
@@ -192,7 +191,7 @@ export default function LoveDaresEnhanced() {
                 </div>
               )}
               <div className="flex gap-3">
-                <button onClick={completeDare} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Done! +{POINTS[current.difficulty] + streak * 5} pts</button>
+                <button onClick={completeDare} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Done! +{POINTS[current.difficulty] + streak * 5} pts</button>
                 <button onClick={skipDare} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
             </motion.div>
@@ -235,13 +234,13 @@ export default function LoveDaresEnhanced() {
               </div>
               <div className="flex gap-4 justify-center">
                 <button onClick={() => startGame(filter)} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

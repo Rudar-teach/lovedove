@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import GameBackground from '@/components/GameBackground';
 
 const PROMPTS = [
   { title: 'My Dearest...', body: 'I love the way you', emoji: '💌' },
@@ -54,17 +53,16 @@ export default function LoveLetterPage() {
   };
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
-        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+        <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 mb-6">
           <ArrowLeft size={20} /> Back to Games
         </button>
 
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <div className="text-8xl mb-6">💌</div>
-            <h1 className="text-5xl font-bold text-white mb-4">Love Letter Studio</h1>
-            <p className="text-white/80 mb-8 text-lg">Write romantic love letters guided by heartfelt prompts. Pour your feelings onto the page.</p>
+            <h1 className="text-5xl font-bold text-pink-700 mb-4">Love Letter Studio</h1>
+            <p className="text-pink-700/80 mb-8 text-lg">Write romantic love letters guided by heartfelt prompts. Pour your feelings onto the page.</p>
             <button onClick={start} className="px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-semibold flex items-center gap-2 mx-auto">
               <Pencil size={20} /> Begin Writing
             </button>
@@ -74,12 +72,12 @@ export default function LoveLetterPage() {
         {state === 'writing' && (
           <motion.div key={promptIndex} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-4 text-white">
-              <span className="bg-white/10 px-4 py-2 rounded-full">Prompt {promptIndex + 1}/{PROMPTS.length}</span>
-              <span className="bg-white/10 px-4 py-2 rounded-full">Score: {score}</span>
+              <span className="bg-pink-100 px-4 py-2 rounded-full">Prompt {promptIndex + 1}/{PROMPTS.length}</span>
+              <span className="bg-pink-100 px-4 py-2 rounded-full">Score: {score}</span>
             </div>
             <div className={`bg-gradient-to-br ${ENVELOPES[promptIndex % ENVELOPES.length]} rounded-3xl p-8 mb-6 shadow-2xl`}>
               <div className="text-5xl mb-2">{PROMPTS[promptIndex].emoji}</div>
-              <h2 className="text-2xl font-bold text-white mb-2">{PROMPTS[promptIndex].title}</h2>
+              <h2 className="text-2xl font-bold text-pink-700 mb-2">{PROMPTS[promptIndex].title}</h2>
               <p className="text-white/90 text-lg italic">"{PROMPTS[promptIndex].body}..."</p>
             </div>
             <textarea
@@ -89,7 +87,7 @@ export default function LoveLetterPage() {
               rows={8}
               className="w-full bg-white/95 text-gray-800 rounded-2xl p-5 outline-none resize-none shadow-xl"
             />
-            <div className="text-right text-white/60 text-sm mt-2">{letter.length} characters</div>
+            <div className="text-right text-pink-700/60 text-sm mt-2">{letter.length} characters</div>
             <button onClick={submit} className="w-full mt-4 py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-semibold text-lg">
               {promptIndex + 1 >= PROMPTS.length ? 'Seal & Send 💌' : 'Save & Next →'}
             </button>
@@ -99,21 +97,21 @@ export default function LoveLetterPage() {
         {state === 'finished' && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto text-center">
             <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold text-white mb-6">Letters Sealed with Love</h2>
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
+            <h2 className="text-4xl font-bold text-pink-700 mb-6">Letters Sealed with Love</h2>
+            <div className="bg-pink-100 backdrop-blur-md rounded-3xl p-8 mb-8 border border-white/20">
               <div className="text-6xl font-bold text-rose-300">{score}</div>
-              <div className="text-white/80 mt-2">Total Love Score</div>
-              <p className="mt-6 text-white/80 italic">"Words are the voice of the heart. You wrote beautifully."</p>
+              <div className="text-pink-700/80 mt-2">Total Love Score</div>
+              <p className="mt-6 text-pink-700/80 italic">"Words are the voice of the heart. You wrote beautifully."</p>
             </div>
             <div className="flex gap-4 justify-center">
-              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl flex items-center gap-2">
+              <button onClick={start} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-pink-700 rounded-2xl flex items-center gap-2">
                 <RotateCcw size={18} /> Write More
               </button>
-              <Link href="/games" className="px-6 py-3 bg-white/20 text-white rounded-2xl">More Games</Link>
+              <Link href="/games" className="px-6 py-3 bg-white/20 text-pink-700 rounded-2xl">More Games</Link>
             </div>
           </motion.div>
         )}
       </div>
-    </GameBackground>
-  );
+    
+);
 }

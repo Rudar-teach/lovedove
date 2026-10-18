@@ -93,7 +93,7 @@ export default function LoveQuotes() {
             <div className="text-7xl mb-4">💬</div>
             <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-rose-500 to-red-500 bg-clip-text text-transparent">Love Quotes</h1>
             <p className="text-gray-600 mb-8 text-lg">Guess who said these famous love quotes from movies and songs! Test your romantic movie knowledge.</p>
-            <button onClick={() => setGameState('playing')} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-red-500 rounded-full text-white font-bold hover:shadow-lg hover:shadow-rose-500/30 transition transform hover:scale-105">
+            <button onClick={() => setGameState('playing')} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-red-500 rounded-full text-pink-700 font-bold hover:shadow-lg hover:shadow-rose-500/30 transition transform hover:scale-105">
               <Play className="inline mr-2" /> Start Game
             </button>
           </motion.div>

@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Drama } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
 
 const WORDS = [
   'First Date', 'Wedding Vows', 'Baby Talk', 'Breakfast in Bed',
@@ -89,14 +88,13 @@ export default function CoupleCharadesPage() {
   }, [timeLeft, state, score, best]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/games" className="flex items-center gap-2 text-white/80 hover:text-white transition">
+            <Link href="/games" className="flex items-center gap-2 text-pink-700/80 hover:text-pink-500 transition">
               <ArrowLeft size={20} /> Back
             </Link>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
               <Drama className="text-red-400" /> Charades
             </h1>
             <div className="w-16" />
@@ -109,16 +107,16 @@ export default function CoupleCharadesPage() {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <div className="text-white/60 text-xs uppercase">Score</div>
+                <div className="text-pink-700/60 text-xs uppercase">Score</div>
                 <div className="text-xl font-bold text-white">{score}</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Round</div>
+                <div className="text-pink-700/60 text-xs uppercase">Round</div>
                 <div className="text-xl font-bold text-white">{Math.min(round + 1, 5)}/5</div>
               </div>
               <div>
-                <div className="text-white/60 text-xs uppercase">Best</div>
-                <div className="text-xl font-bold text-pink-300">{best}</div>
+                <div className="text-pink-700/60 text-xs uppercase">Best</div>
+                <div className="text-xl font-bold text-pink-600">{best}</div>
               </div>
             </div>
 
@@ -129,8 +127,8 @@ export default function CoupleCharadesPage() {
                 className="text-center"
               >
                 <Drama className="text-red-400 mx-auto mb-4" size={48} />
-                <p className="text-white text-lg mb-2">Couple Charades</p>
-                <p className="text-white/60 text-sm mb-4">Act out the word for your partner!</p>
+                <p className="text-pink-700 text-lg mb-2">Couple Charades</p>
+                <p className="text-pink-700/60 text-sm mb-4">Act out the word for your partner!</p>
                 <button
                   onClick={startGame}
                   className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg mx-auto"
@@ -145,7 +143,7 @@ export default function CoupleCharadesPage() {
                 <div className="bg-black/30 rounded-2xl p-8 text-center relative">
                   {!revealed ? (
                     <>
-                      <p className="text-white/60 text-sm mb-2">Act this out:</p>
+                      <p className="text-pink-700/60 text-sm mb-2">Act this out:</p>
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -157,14 +155,14 @@ export default function CoupleCharadesPage() {
                   ) : (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
-                      <p className="text-white text-xl">+{pointsEarned} pts!</p>
+                      <p className="text-pink-700 text-xl">+{pointsEarned} pts!</p>
                     </motion.div>
                   )}
                 </div>
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-white/60 text-xs uppercase">Time</div>
+                    <div className="text-pink-700/60 text-xs uppercase">Time</div>
                     <div className={`text-xl font-bold ${timeLeft <= 15 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                       {timeLeft}s
                     </div>
@@ -199,10 +197,10 @@ export default function CoupleCharadesPage() {
                 >
                   <div className="text-center">
                     <Trophy className="text-yellow-400 mx-auto mb-2" size={48} />
-                    <h2 className="text-2xl font-bold text-white mb-1">
+                    <h2 className="text-2xl font-bold text-pink-700 mb-1">
                       {score >= 150 ? '🏆 Actors!' : score >= 80 ? '💖 Great!' : '💕 Fun!'}
                     </h2>
-                    <p className="text-white/70">Score: <span className="text-pink-300 font-bold">{score}</span></p>
+                    <p className="text-pink-700/70">Score: <span className="text-pink-600 font-bold">{score}</span></p>
                   </div>
                   <button
                     onClick={startGame}
@@ -216,6 +214,6 @@ export default function CoupleCharadesPage() {
           </motion.div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

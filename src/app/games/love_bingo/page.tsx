@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Sparkles, Star, Grid3x3, Shuffle } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 const ITEMS = [
   'Sunset Walk', 'Cook Together', 'Movie Marathon', 'Stargazing', 'Bake Cookies',
@@ -112,7 +112,6 @@ export default function LoveBingoPage() {
   }, [wins, calledCount]);
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -146,7 +145,7 @@ export default function LoveBingoPage() {
                   <li>First to 4 patterns wins!</li>
                 </ul>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -188,7 +187,7 @@ export default function LoveBingoPage() {
               </div>
 
               {wins.length > 0 && (
-                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-[2rem] p-4 text-white text-center mb-4">
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-[2rem] p-4 text-pink-700 text-center mb-4">
                   <Trophy className="w-8 h-8 mx-auto mb-2" />
                   <p className="font-bold">BINGO! Pattern: {wins[wins.length - 1]} +{wins.length * 25} pts</p>
                 </motion.div>
@@ -204,13 +203,13 @@ export default function LoveBingoPage() {
               <p className="text-5xl font-black bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-6">{score} pts</p>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }

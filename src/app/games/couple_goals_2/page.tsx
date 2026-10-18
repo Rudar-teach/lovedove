@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Sparkles, Trophy, Flame, Calendar, Star, Zap, Medal, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import GameBackground from '@/components/GameBackground';
+
 
 interface DayChallenge {
   day: number;
@@ -82,7 +82,6 @@ export default function CoupleGoals2Page() {
   const overallPercent = Math.round((completedCount / 30) * 100);
 
   return (
-    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -189,7 +188,7 @@ export default function CoupleGoals2Page() {
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${CAT_STYLE[day.category]}`}>{day.category}</span>
                     <div className="flex gap-3 mt-6">
                       <button onClick={() => setShowDay(false)} className="flex-1 py-3 bg-gray-100 rounded-2xl font-bold text-gray-700 hover:bg-gray-200 transition">Close</button>
-                      <button onClick={() => completeDay(day.day)} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl text-white font-bold hover:shadow-xl transition"><CheckCircle className="w-5 h-5 inline mr-1" /> Complete</button>
+                      <button onClick={() => completeDay(day.day)} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl text-pink-700 font-bold hover:shadow-xl transition"><CheckCircle className="w-5 h-5 inline mr-1" /> Complete</button>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -198,6 +197,6 @@ export default function CoupleGoals2Page() {
           </AnimatePresence>
         </div>
       </div>
-    </GameBackground>
-  );
+    
+);
 }
