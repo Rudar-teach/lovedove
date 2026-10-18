@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const GAME_W = 500;
 const GAME_H = 600;
@@ -171,7 +171,7 @@ export default function CupidsArrowPage() {
   }, [handleKeyDown]);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
@@ -257,6 +257,6 @@ export default function CupidsArrowPage() {
           </motion.div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

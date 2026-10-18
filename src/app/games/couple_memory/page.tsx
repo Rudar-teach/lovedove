@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const CARD_PAIRS = [
   '💘', '💖', '💗', '💓', '💕', '💝', '❤️', '💞',
@@ -82,7 +82,7 @@ export default function CoupleMemory() {
   }, [matches, gameState]);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -174,6 +174,6 @@ export default function CoupleMemory() {
           )}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

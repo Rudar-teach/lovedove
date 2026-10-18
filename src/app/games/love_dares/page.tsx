@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Star, CheckCircle, BarChart3, Timer } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 interface Dare {
   text: string;
@@ -124,7 +124,7 @@ export default function LoveDaresEnhanced() {
   const percent = pool.length > 0 ? Math.round((completed.length / (completed.length + pool.length)) * 100) : 100;
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -242,6 +242,6 @@ export default function LoveDaresEnhanced() {
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

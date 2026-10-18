@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw, Share2, Sparkles, Copy, Check, Heart } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -102,7 +102,7 @@ export default function LoveCalculatorPage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           {/* Premium Header */}
@@ -272,6 +272,6 @@ export default function LoveCalculatorPage() {
         </div>
       </div>
             <GameSharePanel gameSlug="lovecalculator" />
-      </PremiumBackground>
+      </GameBackground>
   );
 }

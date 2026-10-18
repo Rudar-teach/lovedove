@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Flame } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -108,7 +108,7 @@ export default function SpeedDatePage() {
   const result = RESULTS.find(r => compat >= r.min)!;
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -197,6 +197,6 @@ export default function SpeedDatePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

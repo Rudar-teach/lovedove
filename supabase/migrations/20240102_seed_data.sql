@@ -32,7 +32,14 @@ INSERT INTO relationship_tips (category, tip, keywords) VALUES
   ('intimacy', 'Write love notes and hide them in places your partner will find them.', ARRAY['love','romantic','note']),
   ('fun', 'Have a game night where the loser does the dishes or gives a massage.', ARRAY['game','fun','play']),
   ('growth', 'Share one personal goal with your partner and ask for their support.', ARRAY['goal','dream','future']),
-  ('growth', 'Celebrate each other wins, no matter how small they seem.', ARRAY['celebration','win'])
+  ('growth', 'Celebrate each other wins, no matter how small they seem.', ARRAY['celebration','win']),
+  -- The chatbot keeps its tips in a hardcoded object in src/components/Chatbot.tsx,
+  -- so nothing currently reads this table. These two rows add the categories the
+  -- existing insert is missing, so a future query gets real data for love/together.
+  ('love', 'Say one specific thing you noticed today that you like about them. Specificity beats grandness.', ARRAY['love','appreciate','notices']),
+  ('love', 'Write down three things you love about them while they are asleep and share them at breakfast.', ARRAY['love','appreciate','gratitude']),
+  ('together', 'Pick a shared side project neither of you is good at, and do it badly on purpose.', ARRAY['together','project','shared']),
+  ('together', 'Set a recurring two-hour block where both phones charge outside the room.', ARRAY['together','time','quality'])
 ON CONFLICT DO NOTHING;
 
 -- ---------- badges ----------

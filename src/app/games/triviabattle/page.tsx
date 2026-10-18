@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Share2, RotateCcw, Trophy, Flame, Clock, Flame as FlameIcon, Zap } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -134,7 +134,7 @@ export default function TriviaBattlePage() {
   const gradeLabel = pct >= 90 ? 'Romance Genius!' : pct >= 70 ? 'Love Expert!' : pct >= 50 ? 'Good Romantic!' : 'Keep Learning!';
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -302,6 +302,6 @@ export default function TriviaBattlePage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

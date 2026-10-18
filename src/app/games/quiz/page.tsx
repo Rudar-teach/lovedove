@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { q: 'What was our first date?', options: ['Movie', 'Dinner', 'Coffee', 'Park'], answer: 2 },
@@ -74,7 +74,7 @@ export default function CoupleQuizPage() {
   }, [showResult, currentQ, questions, selected, score, best, state]);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
@@ -200,6 +200,6 @@ export default function CoupleQuizPage() {
           </motion.div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

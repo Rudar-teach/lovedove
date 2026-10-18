@@ -140,6 +140,14 @@ export default function SignupPage() {
           setLoading(false);
           return;
         }
+        // 42501 = RLS: you are NOT signed in. signUp itself failed to establish
+        // a session. Do NOT silently continue - that creates a user with no profile
+        // and no way in. Surface the real reason instead.
+        if (profileError.code === '42501') {
+          toast.error('Could not create your account. Email confirmation may be required - check your inbox, then sign in.');
+          setLoading(false);
+          return;
+        }
       }
 
       // If the project has email confirmation OFF, signInWithPassword works now.

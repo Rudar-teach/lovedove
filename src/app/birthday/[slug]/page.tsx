@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Music, ChevronLeft, ChevronRight, X, Cake, Sparkles, Eye, Calendar, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import Guestbook from '@/components/Guestbook';
 
 interface SiteData {
   id: string;
@@ -103,7 +104,9 @@ export default function BirthdaySitePage() {
       if (cancelled) return;
 
       if (error || !data) { setNotFound(true); setLoading(false); return; }
-      if (!data.is_public) { setNotFound(true); setLoading(false); return; }
+      // is_published is null on rows written before the column existed, so
+      // only an explicit false hides a site. The guestbook API agrees on this.
+      if (!data.is_public || data.is_published === false) { setNotFound(true); setLoading(false); return; }
 
       setSite(data as SiteData);
       setLoading(false);
@@ -344,6 +347,15 @@ export default function BirthdaySitePage() {
             </AnimatePresence>
           </motion.div>
         )}
+
+        {/* Guestbook */}
+        <Guestbook
+          siteId={site.id}
+          siteSlug={site.slug}
+          accentColor={site.accent_color}
+          textColor={theme.text}
+          mutedColor={theme.muted}
+        />
 
         {/* Footer */}
         <motion.div

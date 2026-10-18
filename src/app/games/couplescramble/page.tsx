@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Users, Sparkles, Zap, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const WORDS = ['LOVE', 'KISS', 'HUGS', 'HEART', 'DREAM', 'SOUL', 'PASSION', 'TENDER', 'FOREVER', 'ADORE', 'CUDDLE', 'CHERISH'];
 
@@ -80,7 +80,7 @@ export default function CoupleScramblePage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -178,6 +178,6 @@ export default function CoupleScramblePage() {
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

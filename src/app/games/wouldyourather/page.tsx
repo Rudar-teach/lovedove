@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { a: 'Have breakfast in bed together every weekend', b: 'Go on a surprise weekend getaway every month' },
@@ -41,7 +41,7 @@ export default function WouldYouRatherPage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
           <ArrowLeft size={20} /> Back to Games
@@ -99,6 +99,6 @@ export default function WouldYouRatherPage() {
           </motion.div>
         )}
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

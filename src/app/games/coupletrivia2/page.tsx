@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Trophy, Flame, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -93,7 +93,7 @@ export default function CoupleTrivia2Page() {
   const winner = score1 > score2 ? 'p1' : score2 > score1 ? 'p2' : 'tie';
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -221,6 +221,6 @@ export default function CoupleTrivia2Page() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

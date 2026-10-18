@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Palette } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const CATEGORIES = [
   { name: 'Emoji Portraits', emoji: '😀', prompts: ['Draw each other using only emojis', 'Draw your first meeting', 'Draw your dream home', 'Draw your wedding'] },
@@ -77,7 +77,7 @@ export default function DrawingChallengePage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
           <ArrowLeft size={20} /> Back to Games
@@ -155,6 +155,6 @@ export default function DrawingChallengePage() {
           </motion.div>
         )}
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

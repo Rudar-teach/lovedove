@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const RIDDLES = [{ q: "I have cities, but no houses. Forests, but no trees. Water, but no fish. What am I?", a: "A map", hint: "You look at me before traveling" }, { q: "What has keys but no locks? Space but no room? You can enter, but can't go inside?", a: "A keyboard", hint: "You type on me" }, { q: "I speak without a mouth and hear without ears. I have no body, but come alive with the wind.", a: "An echo", hint: "I repeat what you say" }, { q: "The more you take, the more you leave behind. What am I?", a: "Footsteps", hint: "You make these when walking" }, { q: "What gets wetter the more it dries?", a: "A towel", hint: "You use me after a shower" }, { q: "What has a head and a tail but no body?", a: "A coin", hint: "You flip me to decide" }, { q: "I'm tall when I'm young and short when I'm old. What am I?", a: "A candle", hint: "I give light" }, { q: "What has many needles but doesn't sew?", a: "A pine tree", hint: "I grow in winter" }];
 
@@ -36,7 +36,7 @@ export default function LoveRiddles() {
   const start = () => { setGameState('playing'); setCurrent(0); setScore(0); setInput(''); setShowHint(false); setShowAnswer(false); setTimeLeft(60); setQuestions([...RIDDLES].sort(() => Math.random() - 0.5).slice(0, 5)); };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -73,6 +73,6 @@ export default function LoveRiddles() {
           </motion.div>)}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

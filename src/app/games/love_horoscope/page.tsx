@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Star, Calendar, TrendingUp, HeartPulse } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -77,7 +77,7 @@ export default function LoveHoroscopeEnhanced() {
   const refreshTip = () => setTip(DAILY_TIPS[Math.floor(Math.random() * DAILY_TIPS.length)]);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -191,6 +191,6 @@ export default function LoveHoroscopeEnhanced() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

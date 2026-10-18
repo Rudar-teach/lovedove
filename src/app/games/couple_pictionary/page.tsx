@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const WORDS = ['Sunset', 'Beach', 'Heart', 'Flower', 'Rainbow', 'Star', 'Kite', 'Birthday Cake', 'Treasure', 'Magic', 'Wedding', 'Bouquet'];
 
@@ -23,7 +23,7 @@ export default function CouplePictionary() {
   const startGame = () => { setGameState('playing'); setCurrentIndex(0); setTimeLeft(60); setWords([...WORDS].sort(() => Math.random() - 0.5).slice(0, 5)); };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -54,6 +54,6 @@ export default function CouplePictionary() {
           </motion.div>)}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

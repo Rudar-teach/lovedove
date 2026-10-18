@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Share2 } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 import GameSharePanel from '@/components/GameSharePanel';
@@ -107,7 +107,7 @@ export default function CompatibilityTestPage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           {/* Header */}
@@ -262,6 +262,6 @@ export default function CompatibilityTestPage() {
         </div>
       </div>
             <GameSharePanel gameSlug="compatibilitytest" />
-      </PremiumBackground>
+      </GameBackground>
   );
 }

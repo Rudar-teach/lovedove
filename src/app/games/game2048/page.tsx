@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const SIZE = 4;
 const SYMBOLS = ['💕', '💖', '💗', '💓', '💘', '💝'];
@@ -192,7 +192,7 @@ export default function Game2048Page() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -291,6 +291,6 @@ export default function Game2048Page() {
           </motion.div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Trophy, Music } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { q: 'Which artist sang "Perfect"?', options: ['Ed Sheeran', 'Bruno Mars', 'Shawn Mendes', 'Justin Bieber'], answer: 0, artist: 'Ed Sheeran' },
@@ -70,7 +70,7 @@ export default function CoupleMusicQuizPage() {
   }, [showResult, currentQ, questions, selected, score, best, state]);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-lg">
           <div className="flex items-center justify-between mb-4">
@@ -195,6 +195,6 @@ export default function CoupleMusicQuizPage() {
           </motion.div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

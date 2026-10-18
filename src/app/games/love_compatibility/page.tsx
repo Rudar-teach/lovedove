@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const COMPAT_QUESTIONS = [
   "Do you prefer nights in or going out?",
@@ -54,7 +54,7 @@ export default function LoveCompatibility() {
   const startGame = () => { setGameState('playing'); setCurrentIndex(0); setP1Answers([]); setP2Answers([]); setPhase('p1'); setCurrentAnswer(null); setQuestions(prev => [...prev].sort(() => Math.random() - 0.5).slice(0, 8)); };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50"><div className="glass-strong border-b border-white/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6"><div className="flex justify-between items-center h-16">
@@ -86,6 +86,6 @@ export default function LoveCompatibility() {
           </motion.div>)}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

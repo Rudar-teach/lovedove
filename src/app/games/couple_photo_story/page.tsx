@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Camera, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const MILESTONES = [
   { year: "The First Meeting", emoji: "👋", desc: "When you first laid eyes on each other" },
@@ -72,7 +72,7 @@ export default function CouplePhotoStory() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -188,6 +188,6 @@ export default function CouplePhotoStory() {
           )}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

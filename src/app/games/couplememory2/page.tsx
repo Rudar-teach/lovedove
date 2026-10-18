@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -36,7 +36,7 @@ export default function Couplememory2Page() {
     }
   };
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -67,6 +67,6 @@ export default function Couplememory2Page() {
           </TiltCard>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

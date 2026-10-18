@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const PROMPTS = [
   { title: 'My Dearest...', body: 'I love the way you', emoji: '💌' },
@@ -54,7 +54,7 @@ export default function LoveLetterPage() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
           <ArrowLeft size={20} /> Back to Games
@@ -114,6 +114,6 @@ export default function LoveLetterPage() {
           </motion.div>
         )}
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

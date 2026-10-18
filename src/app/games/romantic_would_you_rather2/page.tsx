@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const QUESTIONS = [
   { a: 'Share your phone password with me', b: 'Share your diary with me' },
@@ -71,7 +71,7 @@ export default function RomanticWouldYouRather2Page() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8">
         <button onClick={() => router.push('/games')} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
           <ArrowLeft size={20} /> Back to Games
@@ -130,6 +130,6 @@ export default function RomanticWouldYouRather2Page() {
           </motion.div>
         )}
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

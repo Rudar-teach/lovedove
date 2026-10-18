@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 const GAME_WIDTH = 320;
 const GAME_HEIGHT = 480;
@@ -205,7 +205,7 @@ export default function FlappyHeartPage() {
   }, []);
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <div className="w-full max-w-md">
           <div className="flex items-center justify-between mb-4">
@@ -282,6 +282,6 @@ export default function FlappyHeartPage() {
           </motion.div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

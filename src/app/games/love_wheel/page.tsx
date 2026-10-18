@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Timer, Sparkles, Zap, Star, Volume2 } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 interface Segment {
   label: string;
@@ -129,7 +129,7 @@ export default function LoveWheelEnhanced() {
     : 'transparent';
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -283,6 +283,6 @@ export default function LoveWheelEnhanced() {
           )}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

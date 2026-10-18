@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Play, RotateCcw, Trophy, Users, Sparkles, Flame, Star } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 interface Scenario {
   id: number;
@@ -60,7 +60,7 @@ export default function LoveScenariosPage() {
   const compatibilityScore = partner1.answers.reduce((acc, a, i) => acc + (a === partner2.answers[i] ? 100 : 50), 0) / partner1.answers.length;
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -162,6 +162,6 @@ export default function LoveScenariosPage() {
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

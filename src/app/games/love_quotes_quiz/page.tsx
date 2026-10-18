@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Trophy, Play, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 interface Quote {
   q: string;
@@ -66,7 +66,7 @@ export default function LoveQuotesQuiz() {
   };
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -146,6 +146,6 @@ export default function LoveQuotesQuiz() {
           )}
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }

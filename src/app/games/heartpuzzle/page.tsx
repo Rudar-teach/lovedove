@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles, Puzzle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+import GameBackground from '@/components/GameBackground';
 
 type Phase = 'idle' | 'playing' | 'finished';
 
@@ -88,7 +88,7 @@ export default function HeartPuzzlePage() {
   const puzzle = PUZZLES[puzzleIdx];
 
   return (
-    <PremiumBackground>
+    <GameBackground>
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <Link href="/games" className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 mb-6">
@@ -170,6 +170,6 @@ export default function HeartPuzzlePage() {
           </AnimatePresence>
         </div>
       </div>
-    </PremiumBackground>
+    </GameBackground>
   );
 }
