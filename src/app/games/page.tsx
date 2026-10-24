@@ -3,8 +3,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Heart, Gamepad2, Users, Search, Filter, Flame, Sparkles, Zap, Crown } from 'lucide-react';
+import { Heart, Gamepad2, Users, Search, Filter, Flame, Sparkles, Zap, Crown, Film, Clapperboard } from 'lucide-react';
+import { ALL_BOLLYWOOD_GAMES } from '@/lib/bollywoodGames';
+import GameArt from '@/components/games/GameArt';
+import GameArtPro, { PRO_ART_SLUGS } from '@/components/games/GameArtPro';
 import { STATIC_GAMES } from '@/lib/staticGames';
+
+// Showcase the first 12 Bollywood games on the main catalog page
+const BOLLYWOOD_GAMES_SHOWCASE = ALL_BOLLYWOOD_GAMES.slice(0, 12);
+const BOLLYWOOD_GAME_COUNT = ALL_BOLLYWOOD_GAMES.length;
 
 type GameCategory = 'all' | 'puzzle' | 'strategy' | 'action' | 'quiz' | 'romantic' | 'multiplayer' | 'creative';
 
@@ -34,18 +41,14 @@ const categoryConfig: Record<string, { label: string; icon: any; color: string }
 };
 
 export default function GamesCatalog() {
-  // Start with the static catalog so the page is NEVER empty.
-  // Supabase data, if any, merges on top of it as it arrives.
   const [games, setGames] = useState<Game[]>(STATIC_GAMES as any);
   const [filteredGames, setFilteredGames] = useState<Game[]>(STATIC_GAMES as any);
   const [category, setCategory] = useState<GameCategory>('all');
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fast, best-effort: if Supabase has more games, blend them in.
-    let cancelled = false;
     const fetchGames = async () => {
       try {
         const { data, error } = await supabase
@@ -54,35 +57,17 @@ export default function GamesCatalog() {
           .order('is_featured', { ascending: false })
           .order('play_count', { ascending: false });
 
-        if (cancelled || error || !data) return;
-
-        // Merge by slug so the page never loses games, and never duplicates.
-        setGames(prev => {
-          const bySlug = new Map(prev.map(g => [g.slug, g] as [string, Game]));
-          for (const row of data) {
-            const existing = bySlug.get(row.slug);
-            if (existing) {
-              bySlug.set(row.slug, { ...existing, ...row, play_count: row.play_count || existing.play_count });
-            } else {
-              bySlug.set(row.slug, {
-                ...row,
-                play_count: row.play_count ?? 0,
-                min_players: row.min_players ?? 2,
-                max_players: row.max_players ?? 2,
-              });
-            }
-          }
-          return Array.from(bySlug.values())
-            .sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0) || (b.play_count || 0) - (a.play_count || 0));
-        });
+        if (!error && data) {
+          setGames(data);
+          setFilteredGames(data);
+        }
       } catch (err) {
-        console.error('DB games load failed (static catalog still active):', err);
+        console.error('Failed to load games:', err);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     };
     fetchGames();
-    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -132,6 +117,27 @@ export default function GamesCatalog() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Bollywood Hub Banner */}
+        <Link href="/games/bollywood"
+          className="block mb-10 group bg-gradient-to-r from-amber-500 via-orange-600 to-red-700 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-2 right-6 text-8xl">🎬</div>
+            <div className="absolute bottom-2 left-6 text-6xl">🎵</div>
+          </div>
+          <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-white/70 mb-1 flex items-center gap-1.5">
+                <Film className="w-4 h-4" /> New
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black mb-1">Bollywood Games</h2>
+              <p className="text-white/80 text-sm">41 games inspired by Indian cinema — movies, songs, dance & romance.</p>
+            </div>
+            <span className="inline-flex items-center gap-2 px-5 py-3 bg-white text-gray-900 font-bold rounded-2xl group-hover:scale-105 transition-all flex-shrink-0">
+              Play now <Clapperboard className="w-5 h-5" />
+            </span>
+          </div>
+        </Link>
+
         {/* Hero Stats */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 mb-10 text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
@@ -232,6 +238,36 @@ export default function GamesCatalog() {
                       {categoryConfig[game.category]?.label || game.category}
                     </span>
                     <span className="text-xs text-gray-400">{game.play_count} plays</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bollywood Games Section */}
+        {category === 'all' && search === '' && difficulty === 'all' && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Film className="w-6 h-6 text-amber-500" />
+                Bollywood Games
+                <span className="text-sm font-normal text-gray-500">({BOLLYWOOD_GAME_COUNT})</span>
+              </h2>
+              <Link href="/games/bollywood" className="text-sm font-semibold text-amber-600 hover:text-amber-800 flex items-center gap-1">
+                See all <Clapperboard className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {BOLLYWOOD_GAMES_SHOWCASE.map(g => (
+                <Link key={g.slug} href={`/games/bollywood/${g.slug}`}
+                  className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-amber-100 hover:border-amber-300">
+                  {PRO_ART_SLUGS.has(g.slug)
+                    ? <GameArtPro title={g.name} subtitle={g.category} emoji={g.emoji} gradient={g.gradient} slug={g.slug} />
+                    : <GameArt title={g.name} subtitle={g.category} emoji={g.emoji} gradient={g.gradient} pattern="auto" />}
+                  <div className="p-3">
+                    <div className="text-xs font-bold text-gray-800 mb-1 truncate">{g.name}</div>
+                    <div className="text-[10px] text-gray-400 line-clamp-1">{g.tagline}</div>
                   </div>
                 </Link>
               ))}

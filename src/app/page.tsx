@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Heart, Gamepad2, Trophy, Users, Sparkles, ChevronRight, Gift,
-  MessageCircle, Star, Filter, Search, Zap, HeartHandshake, ArrowRight,
+  Camera, MessageCircle, Star, Filter, Search, Zap, HeartHandshake, ArrowRight,
   Play, ExternalLink, Award, Flame, Target, Crown, Rocket,
   PartyPopper, Music, Palette, Dumbbell, BookOpen, Coffee,
   Globe, Shield, Clock, Users2, HeartPulse, Smile
 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import LuxuryCursor from '@/components/premium/LuxuryCursor';
+import CanvasBackground from '@/components/premium/CanvasBackground';
+import CinematicReveal from '@/components/premium/CinematicReveal';
+import MagneticButton from '@/components/premium/MagneticButton';
+import GlassCard from '@/components/premium/GlassCard';
 import ShinyText from '@/components/premium/ShinyText';
 import ChatBot from '@/components/chat/ChatBot';
 
@@ -39,7 +43,6 @@ const games = [
   { name: 'Girlfriend Rules', slug: 'girlfriend_rules', icon: '👩', desc: 'Fun rules game', gradient: 'from-fuchsia-400 to-pink-500', category: 'Party', players: '2 Players' },
   { name: 'Boyfriend Rules', slug: 'boyfriend_rules', icon: '👨', desc: 'Fun rules game', gradient: 'from-blue-400 to-indigo-500', category: 'Party', players: '2 Players' },
   { name: 'Love Compatibility', slug: 'love_compatibility', icon: '💞', desc: 'Test your compatibility', gradient: 'from-pink-400 to-red-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Emoji Quiz 2', slug: 'love_emoji_quiz', icon: '😊', desc: 'More emoji fun', gradient: 'from-orange-400 to-pink-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Memory Match', slug: 'couple_memory_match', icon: '🃏', desc: 'Memory card game', gradient: 'from-teal-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Riddles', slug: 'love_riddles', icon: '🧩', desc: 'Solve love riddles', gradient: 'from-purple-400 to-fuchsia-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Riddles 2', slug: 'love_riddles2', icon: '🧠', desc: 'More love riddles', gradient: 'from-violet-400 to-purple-500', category: 'Quiz', players: '2 Players' },
@@ -47,7 +50,6 @@ const games = [
   { name: 'Couple Memory', slug: 'couple_memory', icon: '🧠', desc: 'Memory challenge', gradient: 'from-blue-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Anniversary Planner', slug: 'anniversary_planner', icon: '📅', desc: 'Plan your anniversary', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Photo Story', slug: 'couple_photo_story', icon: '📸', desc: 'Tell stories with photos', gradient: 'from-amber-400 to-orange-500', category: 'Creative', players: '2 Players' },
-  { name: 'Love Compatibility 2', slug: 'love_compatibility2', icon: '💕', desc: 'Advanced compatibility', gradient: 'from-red-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Photo', slug: 'couple_photo', icon: '📷', desc: 'Photo challenge', gradient: 'from-fuchsia-400 to-pink-500', category: 'Party', players: '2 Players' },
   { name: 'Love Quotes', slug: 'love_quotes', icon: '💝', desc: 'Guess the quote', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Emoji 2', slug: 'love_emoji2', icon: '😂', desc: 'Emoji guessing fun', gradient: 'from-yellow-400 to-amber-500', category: 'Party', players: '2+ Players' },
@@ -107,7 +109,6 @@ const games = [
   { name: 'Love Dares', slug: 'love_dares', icon: '😏', desc: 'Spicy dares', gradient: 'from-red-400 to-pink-500', category: 'Party', players: '2+ Players' },
   { name: 'Heart Puzzle', slug: 'heartpuzzle', icon: '🧩', desc: 'Solve the heart puzzle', gradient: 'from-rose-400 to-red-500', category: 'Puzzle', players: '1 Player' },
   { name: 'Couple Pictionary', slug: 'couplepictionary', icon: '✏️', desc: 'Draw & guess together', gradient: 'from-indigo-400 to-fuchsia-500', category: 'Party', players: '2 Players' },
-  { name: 'Couple Story 2', slug: 'couple_story2', icon: '📗', desc: 'Write a story together', gradient: 'from-teal-400 to-cyan-500', category: 'Creative', players: '2 Players' },
   { name: 'Love Mad Libs', slug: 'love_madlibs', icon: '📝', desc: 'Fill in the blanks', gradient: 'from-amber-400 to-orange-500', category: 'Party', players: '2+ Players' },
   { name: 'Love Q&A', slug: 'love_qna', icon: '❓', desc: 'Ask each other questions', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Goals', slug: 'couple_goals_2', icon: '🎯', desc: 'Set couple goals', gradient: 'from-emerald-400 to-teal-500', category: 'Love', players: '2 Players' },
@@ -119,9 +120,31 @@ const games = [
   { name: 'Couple Memory 2', slug: 'couplememory2', icon: '🃏', desc: 'More memory fun', gradient: 'from-blue-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Calculator', slug: 'lovecalculator', icon: '🧮', desc: 'Check compatibility', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Love Song Quiz', slug: 'lovesongquiz', icon: '🎵', desc: 'Guess the love song', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2+ Players' },
+
+  // ── Bollywood games (route to /games/bollywood/<slug>) ──────────
+  { name: 'Masala Film Quiz', slug: 'bolly:masala-quiz', icon: '🎞️', desc: 'The ultimate masala movie test', gradient: 'from-red-500 via-rose-600 to-red-800', category: 'Bollywood', players: '2 Players' },
+  { name: 'Slumdog Millionaire Quiz', slug: 'bolly:slumdog-quiz', icon: '📺', desc: 'Trivia from the Oscar-winning film', gradient: 'from-amber-500 via-orange-600 to-amber-800', category: 'Bollywood', players: '2 Players' },
+  { name: '3 Idiots Riddles', slug: 'bolly:3-idiots-riddles', icon: '🎓', desc: 'Riddles from the beloved comedy', gradient: 'from-sky-500 via-blue-600 to-indigo-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Villain Match', slug: 'bolly:villain-memory', icon: '🦹', desc: 'Match the villain to their film', gradient: 'from-gray-800 via-red-900 to-stone-950', category: 'Bollywood', players: '2 Players' },
+  { name: 'Hero’s Love Story', slug: 'bolly:hero-story', icon: '🚂', desc: 'A DDLJ-style train romance', gradient: 'from-pink-500 via-rose-500 to-red-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Ghazal Rhythm', slug: 'bolly:ghazal-rhythm', icon: '🎻', desc: 'A mellow slow-tempo tap game', gradient: 'from-violet-500 via-purple-700 to-indigo-900', category: 'Bollywood', players: '1 Player' },
+  { name: 'Dhol Beat', slug: 'bolly:dhol-rhythm', icon: '🥁', desc: 'Fast dhol taps, bhangra groove', gradient: 'from-orange-500 via-red-500 to-red-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Lyric Word Hunt', slug: 'bolly:lyric-word-search', icon: '📜', desc: 'Find famous song words in the grid', gradient: 'from-fuchsia-500 via-pink-600 to-rose-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Song Charades', slug: 'bolly:song-charades', icon: '🎤', desc: 'Act the song, partner names it', gradient: 'from-cyan-500 via-blue-500 to-indigo-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Baraat Would-Rather', slug: 'bolly:baraat-would', icon: '💒', desc: '6 wedding dilemmas, pick your side', gradient: 'from-amber-400 via-yellow-500 to-orange-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Wedding Party Story', slug: 'bolly:wedding-party', icon: '🎊', desc: 'Build a Bollywood-style sangeet', gradient: 'from-pink-400 via-rose-500 to-red-500', category: 'Bollywood', players: '2 Players' },
+  { name: 'Item Number Differences', slug: 'bolly:item-diff', icon: '💃', desc: 'Spot the differences in posters', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Love Riddles', slug: 'bolly:love-riddles', icon: '💕', desc: '4 riddles about famous love scenes', gradient: 'from-pink-500 via-rose-500 to-fuchsia-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Romance Rhythm', slug: 'bolly:romance-rhythm', icon: '🌹', desc: 'A slow-romantic tempo tap game', gradient: 'from-rose-400 via-pink-500 to-red-600', category: 'Bollywood', players: '1 Player' },
+  { name: 'Couples Dilemmas', slug: 'bolly:couples-choices', icon: '💘', desc: '8 spicy couple dilemmas', gradient: 'from-red-400 via-rose-500 to-pink-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Trivia', slug: 'bolly:sholay-quiz', icon: '🔫', desc: '8 questions on the classic film', gradient: 'from-stone-500 via-amber-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Character Match', slug: 'bolly:sholay-memory2', icon: '🎭', desc: 'Match the character to the actor', gradient: 'from-stone-500 via-amber-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Riddles 2', slug: 'bolly:sholay-riddles2', icon: '🏜️', desc: 'More riddles from the dacoit world', gradient: 'from-amber-600 via-stone-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Dosti Test 2', slug: 'bolly:dosti-quiz2', icon: '🤝', desc: '6 more friendship questions', gradient: 'from-emerald-400 via-green-500 to-teal-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Masala Choices 2', slug: 'bolly:masala-choices2', icon: '🌶️', desc: '8 more masala dilemmas', gradient: 'from-red-500 via-orange-600 to-amber-700', category: 'Bollywood', players: '2 Players' },
 ];
 
-const categories = ['All', 'Classic', 'Arcade', 'Party', 'Quiz', 'Love'];
+const categories = ['All', 'Classic', 'Arcade', 'Party', 'Quiz', 'Love', 'Bollywood'];
 const categoryColors: Record<string, string> = {
   All: 'from-pink-500 to-rose-500',
   Classic: 'from-blue-400 to-indigo-500',
@@ -129,14 +152,16 @@ const categoryColors: Record<string, string> = {
   Party: 'from-fuchsia-500 to-purple-500',
   Quiz: 'from-teal-400 to-cyan-500',
   Love: 'from-rose-400 to-pink-500',
+  Bollywood: 'from-amber-500 to-orange-600',
 };
 
 const features = [
-  { icon: Gamepad2, title: '101 Couple Games', desc: 'From classics to party games, trivia to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500', href: '/games' },
-  { icon: Users, title: 'Add Friends', desc: 'Connect with your partner or friends, challenge them to games, and compete together.', color: 'from-rose-500 to-red-500', href: '/friends' },
-  { icon: Trophy, title: 'Earn Badges', desc: 'Unlock achievements like "10 Hours Together", "Game Master", and "Love Champions".', color: 'from-amber-400 to-orange-500', href: '/badges' },
-  { icon: Clock, title: 'Track Playtime', desc: 'See how much time you spend playing together. Every moment counts on your love journey.', color: 'from-sky-400 to-blue-500', href: '/profile' },
-  { icon: HeartHandshake, title: 'Share & Connect', desc: 'Share game links with your loved ones. Spread the love everywhere.', color: 'from-red-400 to-rose-500', href: '/find-partner' },
+  { icon: Camera, title: 'Birthday Websites', desc: 'Upload photos, add messages, and create stunning personalized birthday pages for your loved ones.', color: 'from-pink-500 to-rose-500' },
+  { icon: Gamepad2, title: '121 Couple Games', desc: 'From classics to party games, Bollywood to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500' },
+  { icon: Users, title: 'Add Friends', desc: 'Connect with your partner or friends, challenge them to games, and compete together.', color: 'from-rose-500 to-red-500' },
+  { icon: Trophy, title: 'Earn Badges', desc: 'Unlock achievements like "10 Hours Together", "Game Master", and "Love Champions".', color: 'from-amber-400 to-orange-500' },
+  { icon: Clock, title: 'Track Playtime', desc: 'See how much time you spend playing together. Every moment counts on your love journey.', color: 'from-sky-400 to-blue-500' },
+  { icon: HeartHandshake, title: 'Share & Connect', desc: 'Share birthday pages and game links with your loved ones. Spread the love everywhere.', color: 'from-red-400 to-rose-500' },
 ];
 
 const badges = [
@@ -149,7 +174,7 @@ const badges = [
 ];
 
 const stats = [
-  { number: '101+', label: 'Couple Games', icon: Gamepad2 },
+  { number: '121+', label: 'Couple Games', icon: Gamepad2 },
   { number: '50K+', label: 'Happy Couples', icon: Users2 },
   { number: '1M+', label: 'Games Played', icon: Play },
   { number: '4.9★', label: 'User Rating', icon: Star },
@@ -161,14 +186,6 @@ export default function HomePage() {
   const [showSearch, setShowSearch] = useState(false);
   const [clickedHearts, setClickedHearts] = useState<{ id: number; x: number; y: number }[]>([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Lightweight auth check (no heavy queries)
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setIsLoggedIn(!!data?.session);
-    });
-  }, []);
 
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, -100]);
@@ -185,18 +202,8 @@ export default function HomePage() {
     setTimeout(() => heart.remove(), 1000);
   }, []);
 
-  const rafRef = useRef<number | null>(null);
-  const lastPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (rafRef.current !== null) return;
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = null;
-      const dx = e.clientX - lastPos.current.x;
-      const dy = e.clientY - lastPos.current.y;
-      if (dx * dx + dy * dy < 64) return;
-      lastPos.current = { x: e.clientX, y: e.clientY };
-      setMousePos({ x: e.clientX, y: e.clientY });
-    });
+    setMousePos({ x: e.clientX, y: e.clientY });
   }, []);
 
   const filteredGames = games.filter(game => {
@@ -312,7 +319,7 @@ export default function HomePage() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4"
           >
-            Play <span className="font-bold text-pink-600">101 couple games</span>,
+            Create beautiful birthday websites, play <span className="font-bold text-pink-600">121 couple games</span>,
             connect with friends, and celebrate your love story together. 💑
           </motion.p>
 
@@ -409,17 +416,14 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Love Dove brings couples together with exciting games, and meaningful connections.
+              Love Dove brings couples together with beautiful birthday pages, exciting games, and meaningful connections.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {features.map((feature, i) => (
-              <motion.a
+              <motion.div
                 key={i}
-                href={feature.href}
-                target="_blank"
-                rel="noreferrer"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -445,14 +449,11 @@ export default function HomePage() {
                   <p className="text-gray-500 text-sm leading-relaxed">
                     {feature.desc}
                   </p>
-                  <p className="mt-4 text-xs font-bold text-pink-500 flex items-center gap-1">
-                    Open <ChevronRight className="w-3.5 h-3.5" />
-                  </p>
                 </div>
 
                 {/* Corner accent */}
                 <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-pink-100/0 to-pink-100/0 group-hover:from-pink-100/30 group-hover:to-pink-100/10 rounded-bl-full transition-all duration-500" />
-              </motion.a>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -527,7 +528,7 @@ export default function HomePage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-pink-50 text-pink-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-pink-100">
               <Gamepad2 className="w-3.5 h-3.5" />
-              101 Games
+              121 Games
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-gray-900 mb-4">
               Play Together,{' '}
@@ -536,7 +537,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Choose from 101 exciting games designed for couples. Every game brings you closer!
+              Choose from 121 exciting games designed for couples. Every game brings you closer!
             </p>
           </motion.div>
 
@@ -589,7 +590,11 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: (i % 10) * 0.05 }}
                 whileHover={{ y: -8, scale: 1.03 }}
-                onClick={() => window.location.href = `/games/${game.slug}`}
+                onClick={() =>
+                  window.location.href = game.slug.startsWith('bolly:')
+                    ? `/games/bollywood/${game.slug.slice(6)}`
+                    : `/games/${game.slug}`
+                }
                 className="game-card bg-white rounded-2xl p-4 sm:p-5 shadow-md border border-gray-100 hover:border-pink-200 group cursor-pointer relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-50/0 to-rose-50/0 group-hover:from-pink-50/40 group-hover:to-rose-50/30 transition-all duration-500" />
@@ -844,45 +849,27 @@ export default function HomePage() {
             Ready to Start Your Love Journey?
           </h2>
           <p className="text-white/80 text-base sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10">
-            {isLoggedIn
-              ? 'Jump into a couple game, or find your partner and play together.'
-              : 'Join thousands of couples who are already playing, connecting, and celebrating their love on Love Dove.'}
+            Join thousands of couples who are already playing, connecting, and celebrating their love on Love Dove.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-            {isLoggedIn ? (
-              <>
-                <Link href="/games">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-pink-600 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-sm sm:text-base"
-                  >
-                    🎮 Play a Game
-                  </motion.button>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/auth/signup">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-pink-600 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-sm sm:text-base"
-                  >
-                    Create Free Account
-                  </motion.button>
-                </Link>
-                <Link href="/contact">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-2xl border border-white/30 hover:bg-white/30 transition-all duration-300 text-sm sm:text-base"
-                  >
-                    Contact Us
-                  </motion.button>
-                </Link>
-              </>
-            )}
+            <Link href="/auth/signup">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-pink-600 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-sm sm:text-base"
+              >
+                Create Free Account
+              </motion.button>
+            </Link>
+            <Link href="/contact">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-2xl border border-white/30 hover:bg-white/30 transition-all duration-300 text-sm sm:text-base"
+              >
+                Contact Us
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
       </section>
@@ -899,7 +886,7 @@ export default function HomePage() {
                 <span className="text-xl font-display font-black">Love Dove</span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                Where hearts connect & play. Play couple games together and celebrate your love.
+                Where hearts connect & play. Create beautiful birthday websites and play couple games together.
               </p>
               <div className="flex gap-3">
                 {['💕', '💖', '💗', '💓'].map((emoji, i) => (
