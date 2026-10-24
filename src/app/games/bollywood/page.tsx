@@ -10,6 +10,7 @@ import { ALL_BOLLYWOOD_GAMES, BollywoodGameDef } from '@/lib/bollywoodGames';
 import GameArt from '@/components/games/GameArt';
 import GameArtPro from '@/components/games/GameArtPro';
 import { PRO_ART_SLUGS } from '@/components/games/GameArtPro';
+import ArcadeCarousel from '@/components/games/ArcadeCarousel';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -161,6 +162,15 @@ export default function BollywoodHub() {
             <ChevronDown className="w-5 h-5 text-white" />
           </motion.div>
         </div>
+      </div>
+
+      {/* Kufli-style sliding Game Arcade */}
+      <div className="bg-gradient-to-b from-amber-50 via-white to-white pb-4">
+        <ArcadeCarousel
+          title="Game Arcade"
+          subtitle="Sliding showcase — tap a card to play"
+          games={ALL_BOLLYWOOD_GAMES.slice(0, 24)}
+        />
       </div>
 
       <div id="bolly-grid" className="max-w-7xl mx-auto px-4 py-8">

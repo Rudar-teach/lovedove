@@ -142,6 +142,34 @@ const games = [
   { name: 'Sholay Riddles 2', slug: 'bolly:sholay-riddles2', icon: '🏜️', desc: 'More riddles from the dacoit world', gradient: 'from-amber-600 via-stone-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
   { name: 'Dosti Test 2', slug: 'bolly:dosti-quiz2', icon: '🤝', desc: '6 more friendship questions', gradient: 'from-emerald-400 via-green-500 to-teal-600', category: 'Bollywood', players: '2 Players' },
   { name: 'Masala Choices 2', slug: 'bolly:masala-choices2', icon: '🌶️', desc: '8 more masala dilemmas', gradient: 'from-red-500 via-orange-600 to-amber-700', category: 'Bollywood', players: '2 Players' },
+
+  // ── Bollywood batch 2 (30 games) ───────────────────────────────
+  { name: 'Bhaag Simran', slug: 'bolly:bhaag-simran', icon: '🏃💕', desc: 'Carry Simran, beat the dad, reach the baraat!', gradient: 'from-amber-400 via-orange-500 to-red-600', category: 'Bollywood', players: '1 Player' },
+  { name: 'Kahaani Mystery Quiz', slug: 'bolly:koyaa-kahani', icon: '🕵️', desc: 'The Kolkata mystery, solved', gradient: 'from-slate-700 via-zinc-800 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Goli Goli Masala Quiz', slug: 'bolly:goli-goli-masala', icon: '🎥', desc: 'The ultimate goli-goli film quiz', gradient: 'from-orange-500 via-red-600 to-rose-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Dhoom Reflex Chase', slug: 'bolly:dhoom-chase', icon: '🚓', desc: 'A police chase reflex game', gradient: 'from-blue-600 via-indigo-700 to-slate-900', category: 'Bollywood', players: '1 Player' },
+  { name: 'Margi Riddles', slug: 'bolly:margi-riddles', icon: '🛣️', desc: 'Riddles from a classic road film', gradient: 'from-stone-500 via-amber-600 to-stone-800', category: 'Bollywood', players: '2 Players' },
+  { name: 'Raajneeti Memory', slug: 'bolly:raajneeti-memory', icon: '🏛️', desc: 'Match the political drama to its line', gradient: 'from-emerald-700 via-teal-800 to-slate-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sultan Would-Rather', slug: 'bolly:sultan-choices', icon: '👑', desc: 'Six power-fantasy dilemmas', gradient: 'from-yellow-600 via-amber-700 to-orange-800', category: 'Bollywood', players: '2 Players' },
+  { name: 'Barfi Story', slug: 'bolly:barfi-story', icon: '🎈', desc: 'A feel-good story, 4 forks', gradient: 'from-sky-400 via-blue-500 to-indigo-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Talaash Spot the Diff', slug: 'bolly:talaash-diff', icon: '🔎', desc: 'Find the differences in two mystery scenes', gradient: 'from-indigo-500 via-purple-600 to-slate-800', category: 'Bollywood', players: '1 Player' },
+  { name: 'Zinda Rhythm', slug: 'bolly:zinda-rhythm', icon: '🔥', desc: 'A fast zindagi tap game', gradient: 'from-orange-500 via-red-600 to-rose-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Roshni Word Hunt', slug: 'bolly:roshni-words', icon: '✨', desc: 'Find the light-words in the grid', gradient: 'from-yellow-400 via-amber-500 to-orange-600', category: 'Bollywood', players: '1 Player' },
+  { name: 'Tumsa Nahin Charades', slug: 'bolly:tumsa-nahi-charades', icon: '🎶', desc: 'Act the line, partner names the song', gradient: 'from-pink-500 via-fuchsia-600 to-purple-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Chamma Rhythm', slug: 'bolly:chamma-rhythm', icon: '🪘', desc: 'A fast chamma-chamma tap game', gradient: 'from-red-500 via-orange-600 to-amber-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Kareeb Riddles', slug: 'bolly:kareeb-riddles', icon: '💞', desc: 'Riddles about a close-romance song', gradient: 'from-rose-400 via-pink-500 to-fuchsia-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Mehndi Memory Match', slug: 'bolly:mehndi-memory', icon: '🌸', desc: 'Match mehndi designs to meanings', gradient: 'from-green-400 via-emerald-500 to-teal-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sangeet Choices', slug: 'bolly:sangeet-choices', icon: '🎊', desc: 'Six sangeet dilemmas', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Bhangra Reflex Battle', slug: 'bolly:bhangra-battle', icon: '🕺', desc: 'A fast bhangra reflex test', gradient: 'from-orange-400 via-red-500 to-rose-600', category: 'Bollywood', players: '1 Player' },
+  { name: 'Wedding Traditions Quiz', slug: 'bolly:wedding-games-quiz', icon: '💍', desc: '8 rounds on Indian wedding traditions', gradient: 'from-amber-400 via-yellow-500 to-orange-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Ishq Story Builder', slug: 'bolly:ishq-story', icon: '💘', desc: 'Build your own ishq story', gradient: 'from-pink-500 via-rose-500 to-red-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Pyaar Riddles', slug: 'bolly:pyaar-riddles', icon: '❤️', desc: '4 riddles about love, Hindi style', gradient: 'from-rose-400 via-pink-500 to-red-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Dil Charades', slug: 'bolly:dil-charades', icon: '💖', desc: 'Act the heart scene, partner guesses', gradient: 'from-pink-500 via-fuchsia-500 to-rose-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Love Track Diff', slug: 'bolly:love-track-diff', icon: '🎵', desc: 'Spot the differences in two love tracks', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Hum Hum Hainna Quiz', slug: 'bolly:hum-hum-quiz', icon: '👨‍👩‍👧‍👦', desc: '8 rounds on a classic family drama', gradient: 'from-sky-500 via-blue-600 to-indigo-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Deewana Memory', slug: 'bolly:deewana-memory', icon: '🌀', desc: 'Match deewana lines to their films', gradient: 'from-violet-500 via-purple-600 to-fuchsia-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sharan Would-Rather', slug: 'bolly:sharan-choices', icon: '🏠', desc: 'Six sharan (refuge) dilemmas', gradient: 'from-teal-400 via-emerald-500 to-green-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Family Bond Riddles', slug: 'bolly:family-riddles', icon: '👪', desc: '4 riddles about family, Hindi style', gradient: 'from-amber-400 via-orange-500 to-red-600', category: 'Bollywood', players: '2 Players' },
 ];
 
 const categories = ['All', 'Classic', 'Arcade', 'Party', 'Quiz', 'Love', 'Bollywood'];
@@ -157,7 +185,7 @@ const categoryColors: Record<string, string> = {
 
 const features = [
   { icon: Camera, title: 'Birthday Websites', desc: 'Upload photos, add messages, and create stunning personalized birthday pages for your loved ones.', color: 'from-pink-500 to-rose-500' },
-  { icon: Gamepad2, title: '121 Couple Games', desc: 'From classics to party games, Bollywood to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500' },
+  { icon: Gamepad2, title: '150 Couple Games', desc: 'From classics to party games, Bollywood to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500' },
   { icon: Users, title: 'Add Friends', desc: 'Connect with your partner or friends, challenge them to games, and compete together.', color: 'from-rose-500 to-red-500' },
   { icon: Trophy, title: 'Earn Badges', desc: 'Unlock achievements like "10 Hours Together", "Game Master", and "Love Champions".', color: 'from-amber-400 to-orange-500' },
   { icon: Clock, title: 'Track Playtime', desc: 'See how much time you spend playing together. Every moment counts on your love journey.', color: 'from-sky-400 to-blue-500' },
@@ -174,7 +202,7 @@ const badges = [
 ];
 
 const stats = [
-  { number: '121+', label: 'Couple Games', icon: Gamepad2 },
+  { number: '150+', label: 'Couple Games', icon: Gamepad2 },
   { number: '50K+', label: 'Happy Couples', icon: Users2 },
   { number: '1M+', label: 'Games Played', icon: Play },
   { number: '4.9★', label: 'User Rating', icon: Star },
@@ -319,7 +347,7 @@ export default function HomePage() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4"
           >
-            Create beautiful birthday websites, play <span className="font-bold text-pink-600">121 couple games</span>,
+            Create beautiful birthday websites, play <span className="font-bold text-pink-600">150 couple games</span>,
             connect with friends, and celebrate your love story together. 💑
           </motion.p>
 
@@ -528,7 +556,7 @@ export default function HomePage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-pink-50 text-pink-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-pink-100">
               <Gamepad2 className="w-3.5 h-3.5" />
-              121 Games
+              150 Games
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-gray-900 mb-4">
               Play Together,{' '}
@@ -537,7 +565,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Choose from 121 exciting games designed for couples. Every game brings you closer!
+              Choose from 150 exciting games designed for couples. Every game brings you closer!
             </p>
           </motion.div>
 

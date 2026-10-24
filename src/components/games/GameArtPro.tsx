@@ -203,6 +203,43 @@ const scenes: Record<string, Scene> = {
       </g>
     ),
   },
+  // ── bhaag-simran : boy carrying girl on shoulder, running from dad ─
+  'bhaag-simran': {
+    bg: 'linear-gradient(135deg,#9a3412,#ea580c)',
+    accent: '#ffedd5',
+    shape: (
+      <g opacity="0.15">
+        <path d="M0 70 Q20 55 40 70 T80 70 L100 70 L100 100 L0 100 Z" fill="#ffedd5" />
+        <circle cx="85" cy="20" r="8" fill="#ffedd5" />
+      </g>
+    ),
+    subject: () => (
+      <g>
+        {/* road */}
+        <rect x="10" y="66" width="80" height="24" rx="4" fill="#7c2d12" opacity="0.6" />
+        <line x1="10" y1="78" x2="90" y2="78" stroke="#ffedd5" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+        {/* boy running (carrying Simran on shoulder) */}
+        <g>
+          <circle cx="50" cy="34" r="7" fill="#ffedd5" />
+          <path d="M50 41 L50 58" stroke="#ffedd5" strokeWidth="5" strokeLinecap="round" />
+          <path d="M50 45 L38 52" stroke="#ffedd5" strokeWidth="4" strokeLinecap="round" />
+          <path d="M50 45 L62 50" stroke="#ffedd5" strokeWidth="4" strokeLinecap="round" />
+          <path d="M50 58 L42 72" stroke="#ffedd5" strokeWidth="4" strokeLinecap="round" />
+          <path d="M50 58 L58 72" stroke="#ffedd5" strokeWidth="4" strokeLinecap="round" />
+          {/* Simran on his shoulder */}
+          <circle cx="50" cy="24" r="5" fill="#fbbf24" />
+          <path d="M46 28 L54 28" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
+        </g>
+        {/* dad's shadow chasing behind */}
+        <g opacity="0.5">
+          <circle cx="18" cy="46" r="6" fill="#000" />
+          <path d="M18 52 L18 64" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+          <path d="M18 55 L26 62" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+          <path d="M18 55 L10 62" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+        </g>
+      </g>
+    ),
+  },
 };
 
 // Slugs that have a dedicated hand-illustrated scene in GameArtPro.

@@ -9,8 +9,8 @@ import GameArt from '@/components/games/GameArt';
 import GameArtPro, { PRO_ART_SLUGS } from '@/components/games/GameArtPro';
 import { STATIC_GAMES } from '@/lib/staticGames';
 
-// Showcase the first 12 Bollywood games on the main catalog page
-const BOLLYWOOD_GAMES_SHOWCASE = ALL_BOLLYWOOD_GAMES.slice(0, 12);
+// Showcase Bollywood games on the main catalog page
+const BOLLYWOOD_GAMES_SHOWCASE = ALL_BOLLYWOOD_GAMES.slice(0, 24);
 const BOLLYWOOD_GAME_COUNT = ALL_BOLLYWOOD_GAMES.length;
 
 type GameCategory = 'all' | 'puzzle' | 'strategy' | 'action' | 'quiz' | 'romantic' | 'multiplayer' | 'creative';
