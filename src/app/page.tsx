@@ -16,6 +16,7 @@ import CinematicReveal from '@/components/premium/CinematicReveal';
 import MagneticButton from '@/components/premium/MagneticButton';
 import GlassCard from '@/components/premium/GlassCard';
 import ShinyText from '@/components/premium/ShinyText';
+import ChatBot from '@/components/chat/ChatBot';
 
 const games = [
   { name: 'Tic-Tac-Toe', slug: 'tictactoe', icon: '⭕❌', desc: 'Classic strategy', gradient: 'from-pink-400 to-rose-500', category: 'Classic', players: '2 Players' },
@@ -42,7 +43,6 @@ const games = [
   { name: 'Girlfriend Rules', slug: 'girlfriend_rules', icon: '👩', desc: 'Fun rules game', gradient: 'from-fuchsia-400 to-pink-500', category: 'Party', players: '2 Players' },
   { name: 'Boyfriend Rules', slug: 'boyfriend_rules', icon: '👨', desc: 'Fun rules game', gradient: 'from-blue-400 to-indigo-500', category: 'Party', players: '2 Players' },
   { name: 'Love Compatibility', slug: 'love_compatibility', icon: '💞', desc: 'Test your compatibility', gradient: 'from-pink-400 to-red-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Emoji Quiz 2', slug: 'love_emoji_quiz', icon: '😊', desc: 'More emoji fun', gradient: 'from-orange-400 to-pink-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Memory Match', slug: 'couple_memory_match', icon: '🃏', desc: 'Memory card game', gradient: 'from-teal-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Riddles', slug: 'love_riddles', icon: '🧩', desc: 'Solve love riddles', gradient: 'from-purple-400 to-fuchsia-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Riddles 2', slug: 'love_riddles2', icon: '🧠', desc: 'More love riddles', gradient: 'from-violet-400 to-purple-500', category: 'Quiz', players: '2 Players' },
@@ -50,7 +50,6 @@ const games = [
   { name: 'Couple Memory', slug: 'couple_memory', icon: '🧠', desc: 'Memory challenge', gradient: 'from-blue-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Anniversary Planner', slug: 'anniversary_planner', icon: '📅', desc: 'Plan your anniversary', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Photo Story', slug: 'couple_photo_story', icon: '📸', desc: 'Tell stories with photos', gradient: 'from-amber-400 to-orange-500', category: 'Creative', players: '2 Players' },
-  { name: 'Love Compatibility 2', slug: 'love_compatibility2', icon: '💕', desc: 'Advanced compatibility', gradient: 'from-red-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Photo', slug: 'couple_photo', icon: '📷', desc: 'Photo challenge', gradient: 'from-fuchsia-400 to-pink-500', category: 'Party', players: '2 Players' },
   { name: 'Love Quotes', slug: 'love_quotes', icon: '💝', desc: 'Guess the quote', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Emoji 2', slug: 'love_emoji2', icon: '😂', desc: 'Emoji guessing fun', gradient: 'from-yellow-400 to-amber-500', category: 'Party', players: '2+ Players' },
@@ -59,17 +58,13 @@ const games = [
   { name: 'Romantic Calculator', slug: 'romantic_calculator', icon: '💘', desc: 'Love percentage', gradient: 'from-pink-400 to-red-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Quiz 2', slug: 'couplequiz2', icon: '💡', desc: 'More couple questions', gradient: 'from-teal-400 to-emerald-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Hangman 2', slug: 'lovehangman2', icon: '💬', desc: 'More hangman words', gradient: 'from-rose-400 to-red-500', category: 'Classic', players: '2 Players' },
-  { name: 'Flappy Heart', slug: 'flappyheart', icon: '💘', desc: 'Flappy bird love edition', gradient: 'from-pink-400 to-rose-500', category: 'Arcade', players: '1 Player' },
   { name: 'Would You Rather', slug: 'wouldyourather', icon: '🤔', desc: 'Tough choices', gradient: 'from-orange-400 to-pink-500', category: 'Quiz', players: '2+ Players' },
   { name: 'Romantic Would You Rather 2', slug: 'romantic_would_you_rather2', icon: '💭', desc: 'More spicy questions', gradient: 'from-fuchsia-400 to-purple-500', category: 'Quiz', players: '2+ Players' },
-  { name: 'Love Snake', slug: 'snake', icon: '🐍', desc: 'Classic snake game', gradient: 'from-lime-400 to-green-600', category: 'Arcade', players: '1 Player' },
   { name: 'Kissing Spinner', slug: 'kissinggame', icon: '💋', desc: 'Spin the wheel', gradient: 'from-red-400 to-rose-500', category: 'Party', players: '2 Players' },
-  { name: 'Love Pong', slug: 'pong', icon: '🏓', desc: 'Classic pong battle', gradient: 'from-sky-400 to-sky-600', category: 'Arcade', players: '2 Players' },
   { name: 'Couple Riddles', slug: 'couple_riddles', icon: '🧩', desc: 'Riddles for couples', gradient: 'from-violet-400 to-purple-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Letter', slug: 'loveletter', icon: '✉️', desc: 'Write a love letter', gradient: 'from-rose-400 to-pink-500', category: 'Creative', players: '2 Players' },
   { name: 'Love Letters 2', slug: 'loveletters', icon: '💌', desc: 'More love letters', gradient: 'from-pink-400 to-rose-500', category: 'Creative', players: '2 Players' },
   { name: 'Relationship Riddles', slug: 'relationship_riddles', icon: '🤔', desc: 'Relationship puzzles', gradient: 'from-indigo-400 to-blue-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Hangman', slug: 'hangman', icon: '💌', desc: 'Guess the love word', gradient: 'from-rose-400 to-red-500', category: 'Classic', players: '2 Players' },
   { name: 'Couple Poetry', slug: 'couple_poetry', icon: '📜', desc: 'Write poetry together', gradient: 'from-fuchsia-400 to-pink-500', category: 'Creative', players: '2 Players' },
   { name: 'Couple Golfs', slug: 'couplegolfs', icon: '⛳', desc: '9 holes of love', gradient: 'from-lime-400 to-green-600', category: 'Love', players: '2 Players' },
   { name: 'Love Maze', slug: 'lovemaze', icon: '🧭', desc: 'Navigate the maze of love', gradient: 'from-rose-400 to-fuchsia-500', category: 'Love', players: '2 Players' },
@@ -80,17 +75,13 @@ const games = [
   { name: 'Love Story Builder', slug: 'love_story_builder', icon: '📖', desc: 'Build your love story', gradient: 'from-teal-400 to-cyan-500', category: 'Creative', players: '2 Players' },
   { name: 'Couple Quiz', slug: 'quiz', icon: '💡', desc: 'How well do you know each other?', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
   { name: 'Love Story 2', slug: 'love_story2', icon: '📕', desc: 'Another love story', gradient: 'from-pink-400 to-rose-500', category: 'Creative', players: '2 Players' },
-  { name: 'Number Guess', slug: 'numberguess', icon: '🔢', desc: 'Guess the number', gradient: 'from-sky-400 to-sky-600', category: 'Classic', players: '2 Players' },
   { name: 'Love Journal', slug: 'love_journal', icon: '📔', desc: 'Write your feelings', gradient: 'from-amber-400 to-orange-500', category: 'Creative', players: '2 Players' },
   { name: 'Drawing Challenge', slug: 'drawingchallenge', icon: '🎨', desc: 'Draw & guess', gradient: 'from-amber-400 to-orange-500', category: 'Party', players: '2+ Players' },
   { name: 'Love Typing', slug: 'lovetyping', icon: '⌨️', desc: 'Type love messages', gradient: 'from-blue-400 to-indigo-500', category: 'Quiz', players: '2 Players' },
   { name: 'Typing Race', slug: 'typingrace', icon: '⚡', desc: 'Type romantic quotes', gradient: 'from-sky-400 to-sky-600', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Typing Race', slug: 'couple_typing_race', icon: '🏁', desc: 'Race to type', gradient: 'from-emerald-400 to-teal-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Rock Paper Scissors', slug: 'rockpaperscissors', icon: '🪨', desc: 'Classic hand game', gradient: 'from-stone-400 to-stone-600', category: 'Classic', players: '2 Players' },
   { name: 'Heart Match', slug: 'heartmatch', icon: '💖', desc: 'Match the hearts', gradient: 'from-rose-400 to-pink-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Math', slug: 'lovemath', icon: '➕', desc: 'Solve love math', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Hearts Card', slug: 'hearts', icon: '♥️', desc: 'Card game classic', gradient: 'from-red-500 to-rose-600', category: 'Arcade', players: '4 Players' },
-  { name: 'Tic-Tac-Toe', slug: 'tictactoe', icon: '⭕❌', desc: 'Classic strategy', gradient: 'from-pink-400 to-rose-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Resolutions', slug: 'love_resolutions', icon: '🎯', desc: 'Make resolutions together', gradient: 'from-amber-400 to-yellow-500', category: 'Love', players: '2 Players' },
   { name: 'Couple Music Quiz', slug: 'couple_music_quiz', icon: '🎵', desc: 'Guess the love song', gradient: 'from-violet-400 to-purple-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Trivia 2', slug: 'coupletrivia2', icon: '🧠', desc: 'Couple trivia round 2', gradient: 'from-fuchsia-400 to-indigo-500', category: 'Quiz', players: '2 Players' },
@@ -118,7 +109,6 @@ const games = [
   { name: 'Love Dares', slug: 'love_dares', icon: '😏', desc: 'Spicy dares', gradient: 'from-red-400 to-pink-500', category: 'Party', players: '2+ Players' },
   { name: 'Heart Puzzle', slug: 'heartpuzzle', icon: '🧩', desc: 'Solve the heart puzzle', gradient: 'from-rose-400 to-red-500', category: 'Puzzle', players: '1 Player' },
   { name: 'Couple Pictionary', slug: 'couplepictionary', icon: '✏️', desc: 'Draw & guess together', gradient: 'from-indigo-400 to-fuchsia-500', category: 'Party', players: '2 Players' },
-  { name: 'Couple Story 2', slug: 'couple_story2', icon: '📗', desc: 'Write a story together', gradient: 'from-teal-400 to-cyan-500', category: 'Creative', players: '2 Players' },
   { name: 'Love Mad Libs', slug: 'love_madlibs', icon: '📝', desc: 'Fill in the blanks', gradient: 'from-amber-400 to-orange-500', category: 'Party', players: '2+ Players' },
   { name: 'Love Q&A', slug: 'love_qna', icon: '❓', desc: 'Ask each other questions', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Goals', slug: 'couple_goals_2', icon: '🎯', desc: 'Set couple goals', gradient: 'from-emerald-400 to-teal-500', category: 'Love', players: '2 Players' },
@@ -128,68 +118,33 @@ const games = [
   { name: 'Love Word Search', slug: 'lovewordsearch', icon: '🔎', desc: 'Find hidden love words', gradient: 'from-cyan-400 to-blue-500', category: 'Classic', players: '2 Players' },
   { name: 'Photo Quiz', slug: 'photoquiz', icon: '📸', desc: 'Guess your partner', gradient: 'from-fuchsia-400 to-pink-500', category: 'Quiz', players: '2 Players' },
   { name: 'Couple Memory 2', slug: 'couplememory2', icon: '🃏', desc: 'More memory fun', gradient: 'from-blue-400 to-cyan-500', category: 'Classic', players: '2 Players' },
-  { name: 'Love Emoji Quiz', slug: 'love_emoji2', icon: '😀', desc: 'Emoji love quiz', gradient: 'from-yellow-400 to-amber-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Couple Pictionary', slug: 'couple_pictionary', icon: '🎨', desc: 'Draw & guess together', gradient: 'from-indigo-400 to-fuchsia-500', category: 'Party', players: '2 Players' },
-  { name: 'Love Riddles', slug: 'love_riddles2', icon: '🧩', desc: 'Love riddles round 2', gradient: 'from-purple-400 to-fuchsia-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Couple Memory Match', slug: 'couple_memory', icon: '🧠', desc: 'Memory match game', gradient: 'from-teal-400 to-cyan-500', category: 'Classic', players: '2 Players' },
   { name: 'Love Calculator', slug: 'lovecalculator', icon: '🧮', desc: 'Check compatibility', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
   { name: 'Love Song Quiz', slug: 'lovesongquiz', icon: '🎵', desc: 'Guess the love song', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2+ Players' },
-  { name: 'Trivia Battle', slug: 'triviabattle', icon: '🧠', desc: 'Couple trivia', gradient: 'from-fuchsia-400 to-indigo-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Trivia', slug: 'lovetrivia', icon: '🌹', desc: 'Love & romance trivia', gradient: 'from-red-400 to-rose-500', category: 'Quiz', players: '2+ Players' },
-  { name: 'Typing Race', slug: 'typingrace', icon: '⌨️', desc: 'Type romantic quotes', gradient: 'from-sky-400 to-sky-600', category: 'Quiz', players: '2 Players' },
-  { name: 'Word Chain', slug: 'wordchain', icon: '🔤', desc: 'Word building game', gradient: 'from-sky-400 to-sky-600', category: 'Quiz', players: '2+ Players' },
-  { name: 'Photo Quiz', slug: 'photoquiz', icon: '📸', desc: 'Guess your partner', gradient: 'from-fuchsia-400 to-pink-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Speed Date', slug: 'speeddate', icon: '💬', desc: '8 rapid-fire questions', gradient: 'from-red-400 to-pink-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Couple Quiz', slug: 'couple_quiz', icon: '💡', desc: 'How well do you know each other?', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Truth or Dare', slug: 'truthordare', icon: '😈', desc: 'Spicy questions', gradient: 'from-fuchsia-500 to-pink-500', category: 'Party', players: '2+ Players' },
-  { name: 'Would You Rather', slug: 'wouldyourather', icon: '🤔', desc: 'Tough choices', gradient: 'from-orange-400 to-pink-500', category: 'Quiz', players: '2+ Players' },
-  { name: 'Love Calculator', slug: 'lovecalculator', icon: '🧮', desc: 'Check compatibility', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Maze', slug: 'lovemaze', icon: '🧭', desc: 'Navigate the maze of love', gradient: 'from-rose-400 to-fuchsia-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Letters', slug: 'loveletters', icon: '💌', desc: 'Write a love letter', gradient: 'from-rose-400 to-pink-500', category: 'Love', players: '2 Players' },
-  { name: 'Couple Golfs', slug: 'couplegolfs', icon: '⛳', desc: '9 holes of love', gradient: 'from-lime-400 to-green-600', category: 'Love', players: '2 Players' },
-  { name: 'Puzzle Love', slug: 'puzzlelove', icon: '🧩', desc: 'Sliding puzzle', gradient: 'from-rose-400 to-red-500', category: 'Love', players: '1 Player' },
-  { name: 'Heart Match', slug: 'heartmatch', icon: '💖', desc: 'Match the hearts', gradient: 'from-pink-400 to-rose-500', category: 'Classic', players: '2 Players' },
-  { name: 'Couple Dance', slug: 'dancechallenge', icon: '💃', desc: 'Show your moves', gradient: 'from-pink-400 to-fuchsia-500', category: 'Party', players: '2+ Players' },
-  { name: 'Love Dares', slug: 'love_dares', icon: '😏', desc: 'Spicy dares', gradient: 'from-red-400 to-pink-500', category: 'Party', players: '2+ Players' },
-  { name: 'Couple Pictionary', slug: 'couplepictionary', icon: '✏️', desc: 'Draw & guess together', gradient: 'from-indigo-400 to-fuchsia-500', category: 'Party', players: '2 Players' },
-  { name: 'Love Mad Libs', slug: 'love_madlibs', icon: '📝', desc: 'Fill in the blanks', gradient: 'from-amber-400 to-orange-500', category: 'Party', players: '2+ Players' },
-  { name: 'Couple Charades', slug: 'couplecharades', icon: '🎭', desc: 'Act out love scenes', gradient: 'from-purple-400 to-fuchsia-500', category: 'Party', players: '2+ Players' },
-  { name: 'First Date Simulator', slug: 'firstdate', icon: '🌹', desc: 'Simulate a first date', gradient: 'from-rose-400 to-pink-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Journal', slug: 'love_journal', icon: '📔', desc: 'Write your feelings', gradient: 'from-amber-400 to-orange-500', category: 'Creative', players: '2 Players' },
-  { name: 'Couple Goals 2', slug: 'couple_goals_2', icon: '🎯', desc: 'Set couple goals', gradient: 'from-emerald-400 to-teal-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Q&A', slug: 'love_qna', icon: '❓', desc: 'Ask each other questions', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Language Test', slug: 'love_language_test', icon: '🗣️', desc: 'Discover love languages', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Future Together', slug: 'future_together', icon: '🔮', desc: 'Predict your future', gradient: 'from-purple-400 to-indigo-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Countdown', slug: 'love_countdown', icon: '⏱️', desc: 'Count the love moments', gradient: 'from-rose-400 to-pink-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Story Builder', slug: 'love_story_builder', icon: '📖', desc: 'Build your love story', gradient: 'from-teal-400 to-cyan-500', category: 'Creative', players: '2 Players' },
-  { name: 'Couple Poetry', slug: 'couple_poetry', icon: '📜', desc: 'Write poetry together', gradient: 'from-fuchsia-400 to-pink-500', category: 'Creative', players: '2 Players' },
-  { name: 'Couple Time Capsule', slug: 'couple_timecapsule', icon: '⏳', desc: 'Messages for the future', gradient: 'from-purple-400 to-indigo-500', category: 'Creative', players: '2 Players' },
-  { name: 'Couple Bucket List', slug: 'couple_bucketlist', icon: '📋', desc: 'Dreams to achieve together', gradient: 'from-sky-400 to-blue-500', category: 'Love', players: '2 Players' },
-  { name: 'Couple Playlist', slug: 'couple_playlist', icon: '🎧', desc: 'Build your love playlist', gradient: 'from-indigo-400 to-purple-500', category: 'Creative', players: '2 Players' },
-  { name: 'Love Horoscope', slug: 'love_horoscope', icon: '⭐', desc: 'Check your love stars', gradient: 'from-purple-400 to-fuchsia-500', category: 'Love', players: '2 Players' },
-  { name: 'Couple Truths', slug: 'couple_truths', icon: '🕯️', desc: 'Truths for couples', gradient: 'from-orange-400 to-red-500', category: 'Party', players: '2 Players' },
-  { name: 'How Well We Met', slug: 'howwell_met', icon: '💑', desc: 'How well do you remember?', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Who Knows Who', slug: 'who_knows_who', icon: '🤷', desc: 'Test how well you know each other', gradient: 'from-teal-400 to-cyan-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Promise Chain', slug: 'promisechain', icon: '🔗', desc: 'Chain of promises', gradient: 'from-pink-400 to-rose-500', category: 'Love', players: '2 Players' },
-  { name: 'Couple Reflex', slug: 'couple_reflex', icon: '⚡', desc: 'Test your reflexes', gradient: 'from-orange-400 to-red-500', category: 'Arcade', players: '2 Players' },
-  { name: 'Love Resolutions', slug: 'love_resolutions', icon: '🎯', desc: 'Make resolutions together', gradient: 'from-amber-400 to-yellow-500', category: 'Love', players: '2 Players' },
-  { name: 'Love Math', slug: 'lovemath', icon: '➕', desc: 'Solve love math', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Heart Math', slug: 'heartmath', icon: '❤️', desc: 'Math with hearts', gradient: 'from-red-400 to-pink-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Achievements', slug: 'love_achievements', icon: '🏆', desc: 'Track your achievements', gradient: 'from-amber-400 to-orange-500', category: 'Love', players: '2 Players' },
-  { name: 'Heart Puzzle', slug: 'heartpuzzle', icon: '🧩', desc: 'Solve the heart puzzle', gradient: 'from-rose-400 to-red-500', category: 'Puzzle', players: '1 Player' },
-  { name: 'Couple Drawing', slug: 'couple_drawing', icon: '✏️', desc: 'Draw together', gradient: 'from-indigo-400 to-fuchsia-500', category: 'Creative', players: '2 Players' },
-  { name: 'Love Quotes', slug: 'love_quotes', icon: '💝', desc: 'Guess the quote', gradient: 'from-rose-400 to-red-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Relationship Quiz', slug: 'relationship_quiz', icon: '💡', desc: 'Test your relationship IQ', gradient: 'from-teal-400 to-emerald-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Story 2', slug: 'love_story2', icon: '📕', desc: 'Another love story', gradient: 'from-pink-400 to-rose-500', category: 'Creative', players: '2 Players' },
-  { name: 'Couple Story 2', slug: 'couple_story2', icon: '📗', desc: 'Write a story together', gradient: 'from-teal-400 to-cyan-500', category: 'Creative', players: '2 Players' },
-  { name: 'Love Typing', slug: 'lovetyping', icon: '⌨️', desc: 'Type love messages', gradient: 'from-blue-400 to-indigo-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Couple Typing Race', slug: 'couple_typing_race', icon: '🏁', desc: 'Race to type', gradient: 'from-emerald-400 to-teal-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Love Word Search 2', slug: 'love_word_search2', icon: '🔍', desc: 'More word search fun', gradient: 'from-blue-400 to-indigo-500', category: 'Classic', players: '2 Players' },
-  { name: 'Heart Spelling', slug: 'heartspelling', icon: '✍️', desc: 'Spell love words', gradient: 'from-pink-400 to-rose-500', category: 'Quiz', players: '2 Players' },
-  { name: 'Heart Colors', slug: 'heartcolors', icon: '🎨', desc: 'Match heart colors', gradient: 'from-rose-400 to-red-500', category: 'Classic', players: '2 Players' },
+
+  // ── Bollywood games (route to /games/bollywood/<slug>) ──────────
+  { name: 'Masala Film Quiz', slug: 'bolly:masala-quiz', icon: '🎞️', desc: 'The ultimate masala movie test', gradient: 'from-red-500 via-rose-600 to-red-800', category: 'Bollywood', players: '2 Players' },
+  { name: 'Slumdog Millionaire Quiz', slug: 'bolly:slumdog-quiz', icon: '📺', desc: 'Trivia from the Oscar-winning film', gradient: 'from-amber-500 via-orange-600 to-amber-800', category: 'Bollywood', players: '2 Players' },
+  { name: '3 Idiots Riddles', slug: 'bolly:3-idiots-riddles', icon: '🎓', desc: 'Riddles from the beloved comedy', gradient: 'from-sky-500 via-blue-600 to-indigo-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Villain Match', slug: 'bolly:villain-memory', icon: '🦹', desc: 'Match the villain to their film', gradient: 'from-gray-800 via-red-900 to-stone-950', category: 'Bollywood', players: '2 Players' },
+  { name: 'Hero’s Love Story', slug: 'bolly:hero-story', icon: '🚂', desc: 'A DDLJ-style train romance', gradient: 'from-pink-500 via-rose-500 to-red-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Ghazal Rhythm', slug: 'bolly:ghazal-rhythm', icon: '🎻', desc: 'A mellow slow-tempo tap game', gradient: 'from-violet-500 via-purple-700 to-indigo-900', category: 'Bollywood', players: '1 Player' },
+  { name: 'Dhol Beat', slug: 'bolly:dhol-rhythm', icon: '🥁', desc: 'Fast dhol taps, bhangra groove', gradient: 'from-orange-500 via-red-500 to-red-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Lyric Word Hunt', slug: 'bolly:lyric-word-search', icon: '📜', desc: 'Find famous song words in the grid', gradient: 'from-fuchsia-500 via-pink-600 to-rose-700', category: 'Bollywood', players: '2 Players' },
+  { name: 'Song Charades', slug: 'bolly:song-charades', icon: '🎤', desc: 'Act the song, partner names it', gradient: 'from-cyan-500 via-blue-500 to-indigo-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Baraat Would-Rather', slug: 'bolly:baraat-would', icon: '💒', desc: '6 wedding dilemmas, pick your side', gradient: 'from-amber-400 via-yellow-500 to-orange-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Wedding Party Story', slug: 'bolly:wedding-party', icon: '🎊', desc: 'Build a Bollywood-style sangeet', gradient: 'from-pink-400 via-rose-500 to-red-500', category: 'Bollywood', players: '2 Players' },
+  { name: 'Item Number Differences', slug: 'bolly:item-diff', icon: '💃', desc: 'Spot the differences in posters', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700', category: 'Bollywood', players: '1 Player' },
+  { name: 'Love Riddles', slug: 'bolly:love-riddles', icon: '💕', desc: '4 riddles about famous love scenes', gradient: 'from-pink-500 via-rose-500 to-fuchsia-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Romance Rhythm', slug: 'bolly:romance-rhythm', icon: '🌹', desc: 'A slow-romantic tempo tap game', gradient: 'from-rose-400 via-pink-500 to-red-600', category: 'Bollywood', players: '1 Player' },
+  { name: 'Couples Dilemmas', slug: 'bolly:couples-choices', icon: '💘', desc: '8 spicy couple dilemmas', gradient: 'from-red-400 via-rose-500 to-pink-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Trivia', slug: 'bolly:sholay-quiz', icon: '🔫', desc: '8 questions on the classic film', gradient: 'from-stone-500 via-amber-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Character Match', slug: 'bolly:sholay-memory2', icon: '🎭', desc: 'Match the character to the actor', gradient: 'from-stone-500 via-amber-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Sholay Riddles 2', slug: 'bolly:sholay-riddles2', icon: '🏜️', desc: 'More riddles from the dacoit world', gradient: 'from-amber-600 via-stone-700 to-stone-900', category: 'Bollywood', players: '2 Players' },
+  { name: 'Dosti Test 2', slug: 'bolly:dosti-quiz2', icon: '🤝', desc: '6 more friendship questions', gradient: 'from-emerald-400 via-green-500 to-teal-600', category: 'Bollywood', players: '2 Players' },
+  { name: 'Masala Choices 2', slug: 'bolly:masala-choices2', icon: '🌶️', desc: '8 more masala dilemmas', gradient: 'from-red-500 via-orange-600 to-amber-700', category: 'Bollywood', players: '2 Players' },
 ];
 
-const categories = ['All', 'Classic', 'Arcade', 'Party', 'Quiz', 'Love'];
+const categories = ['All', 'Classic', 'Arcade', 'Party', 'Quiz', 'Love', 'Bollywood'];
 const categoryColors: Record<string, string> = {
   All: 'from-pink-500 to-rose-500',
   Classic: 'from-blue-400 to-indigo-500',
@@ -197,11 +152,12 @@ const categoryColors: Record<string, string> = {
   Party: 'from-fuchsia-500 to-purple-500',
   Quiz: 'from-teal-400 to-cyan-500',
   Love: 'from-rose-400 to-pink-500',
+  Bollywood: 'from-amber-500 to-orange-600',
 };
 
 const features = [
   { icon: Camera, title: 'Birthday Websites', desc: 'Upload photos, add messages, and create stunning personalized birthday pages for your loved ones.', color: 'from-pink-500 to-rose-500' },
-  { icon: Gamepad2, title: '101 Couple Games', desc: 'From classics to party games, trivia to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500' },
+  { icon: Gamepad2, title: '121 Couple Games', desc: 'From classics to party games, Bollywood to love quizzes - play together and strengthen your bond.', color: 'from-fuchsia-500 to-pink-500' },
   { icon: Users, title: 'Add Friends', desc: 'Connect with your partner or friends, challenge them to games, and compete together.', color: 'from-rose-500 to-red-500' },
   { icon: Trophy, title: 'Earn Badges', desc: 'Unlock achievements like "10 Hours Together", "Game Master", and "Love Champions".', color: 'from-amber-400 to-orange-500' },
   { icon: Clock, title: 'Track Playtime', desc: 'See how much time you spend playing together. Every moment counts on your love journey.', color: 'from-sky-400 to-blue-500' },
@@ -218,7 +174,7 @@ const badges = [
 ];
 
 const stats = [
-  { number: '101+', label: 'Couple Games', icon: Gamepad2 },
+  { number: '121+', label: 'Couple Games', icon: Gamepad2 },
   { number: '50K+', label: 'Happy Couples', icon: Users2 },
   { number: '1M+', label: 'Games Played', icon: Play },
   { number: '4.9★', label: 'User Rating', icon: Star },
@@ -363,7 +319,7 @@ export default function HomePage() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4"
           >
-            Create beautiful birthday websites, play <span className="font-bold text-pink-600">101 couple games</span>,
+            Create beautiful birthday websites, play <span className="font-bold text-pink-600">121 couple games</span>,
             connect with friends, and celebrate your love story together. 💑
           </motion.p>
 
@@ -572,7 +528,7 @@ export default function HomePage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-pink-50 text-pink-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-pink-100">
               <Gamepad2 className="w-3.5 h-3.5" />
-              101 Games
+              121 Games
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-gray-900 mb-4">
               Play Together,{' '}
@@ -581,7 +537,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Choose from 101 exciting games designed for couples. Every game brings you closer!
+              Choose from 121 exciting games designed for couples. Every game brings you closer!
             </p>
           </motion.div>
 
@@ -634,7 +590,11 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: (i % 10) * 0.05 }}
                 whileHover={{ y: -8, scale: 1.03 }}
-                onClick={() => window.location.href = `/games/${game.slug}`}
+                onClick={() =>
+                  window.location.href = game.slug.startsWith('bolly:')
+                    ? `/games/bollywood/${game.slug.slice(6)}`
+                    : `/games/${game.slug}`
+                }
                 className="game-card bg-white rounded-2xl p-4 sm:p-5 shadow-md border border-gray-100 hover:border-pink-200 group cursor-pointer relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-50/0 to-rose-50/0 group-hover:from-pink-50/40 group-hover:to-rose-50/30 transition-all duration-500" />
@@ -674,6 +634,69 @@ export default function HomePage() {
               <p className="text-gray-500 text-lg">No games found. Try a different search!</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Relationship Advisor Chatbot Feature */}
+      <section id="advisor" className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-white via-rose-50/30 to-pink-50/50 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-10 left-10 text-6xl opacity-10">💕</div>
+        <div className="absolute bottom-10 right-10 text-5xl opacity-10">💖</div>
+        <div className="absolute top-1/2 left-1/4 text-4xl opacity-10">💝</div>
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 sm:mb-16"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-pink-50 text-pink-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-pink-100">
+              <MessageCircle className="w-3.5 h-3.5" />
+              Relationship Advisor
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-gray-900 mb-4">
+              Need Someone to{' '}
+              <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">
+                Talk To?
+              </span>
+            </h2>
+            <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto mb-8">
+              Our AI relationship advisor is here for you 24/7. Get advice on love, conflicts, communication, and emotional support - anytime you need it.
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => document.dispatchEvent(new CustomEvent('openChatBot'))}
+              className="px-8 sm:px-10 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl shadow-2xl shadow-pink-300/40 hover:shadow-pink-400/50 transition-all duration-300 inline-flex items-center gap-3 text-sm sm:text-base"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Chat with Advisor
+              <Sparkles className="w-4 h-4" />
+            </motion.button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            {[
+              { icon: '💬', title: 'Relationship Advice', desc: 'Get guidance on communication, trust, and building stronger bonds.' },
+              { icon: '💝', title: 'Emotional Support', desc: 'Feel heard and understood. We are here to listen and comfort you.' },
+              { icon: '💡', title: 'Conflict Resolution', desc: 'Learn healthy ways to navigate disagreements and grow together.' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="bg-white rounded-3xl p-6 sm:p-8 shadow-lg border border-pink-100/60 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="text-4xl mb-4">{item.icon}</div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -934,6 +957,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Relationship Advisor ChatBot */}
+      <ChatBot />
     </div>
   );
 }

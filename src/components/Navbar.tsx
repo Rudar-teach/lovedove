@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   Heart, Menu, X, ChevronDown, Gamepad2, Trophy, Users, Mail,
   Sparkles, User, LogOut, Clock, Flame, Settings, ChevronRight,
-  Home, Gift, Camera, Search
+  Home, Gift, Camera, Search, Film
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
