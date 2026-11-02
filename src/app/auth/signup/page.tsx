@@ -25,6 +25,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const router = useRouter();
 
   // Username availability check (debounced)
@@ -80,6 +81,10 @@ export default function SignupPage() {
       toast.error('That username is already taken');
       return;
     }
+    if (!agreedToTerms) {
+      toast.error('Please accept the Terms & Privacy Policy to continue');
+      return;
+    }
     setLoading(true);
     try {
       // Server-side guard: re-check username uniqueness right before sign-up
@@ -101,6 +106,8 @@ export default function SignupPage() {
           data: {
             full_name: name.trim() || 'User',
             username: cleanUsername,
+            // Record explicit consent to the current terms (audit trail).
+            terms_accepted_at: new Date().toISOString(),
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -330,10 +337,27 @@ export default function SignupPage() {
                 </div>
               </CinematicReveal>
 
+              <CinematicReveal direction="up" delay={0.28}>
+                <label className="flex items-start gap-3 text-xs text-gray-600 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-rose-200 text-pink-500 focus:ring-2 focus:ring-pink-500/30"
+                  />
+                  <span>
+                    I&rsquo;m at least 16 years old and I agree to the{' '}
+                    <Link href="/terms" className="text-pink-600 font-semibold hover:underline" target="_blank">Terms of Service</Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" className="text-pink-600 font-semibold hover:underline" target="_blank">Privacy Policy</Link>.
+                  </span>
+                </label>
+              </CinematicReveal>
+
               <CinematicReveal direction="up" delay={0.3}>
                 <motion.button
                   type="submit"
-                  disabled={loading || usernameStatus === 'taken' || usernameStatus === 'invalid'}
+                  disabled={loading || usernameStatus === 'taken' || usernameStatus === 'invalid' || !agreedToTerms}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

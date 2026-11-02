@@ -12,7 +12,7 @@ interface Message {
 
 const relationshipTips: Record<string, { message: string; options?: string[] }> = {
   default: {
-    message: "Hi there! I'm LoveBot, your relationship companion. 💕 I'm here to help with any relationship questions, conflicts, or ideas. What's on your mind?",
+    message: "Hi there! I'm LoveBot, your AI relationship companion. 💕 I'm here to help with any relationship questions, conflicts, or ideas. (I'm an AI — my tips are general guidance, not professional advice.) What's on your mind?",
     options: ['Having a conflict', 'Need date ideas', 'Feeling distant', 'Communication help', 'Just chatting']
   },
   'Having a conflict': {
@@ -333,7 +333,7 @@ export default function Chatbot() {
               <Heart className="w-5 h-5 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-800">LoveBot</p>
+              <p className="text-sm font-semibold text-gray-800">LoveBot <span className="text-[9px] font-bold uppercase tracking-wider bg-pink-100 text-pink-600 rounded-full px-1.5 py-0.5">AI</span></p>
               <p className="text-xs text-gray-500">Click to continue chatting 💕</p>
             </div>
             <Sparkles className="w-4 h-4 text-pink-400 ml-auto" />
@@ -352,8 +352,11 @@ export default function Chatbot() {
             <Heart className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">LoveBot 💕</p>
-            <p className="text-pink-100 text-xs">Relationship Companion</p>
+            <p className="text-white font-semibold text-sm flex items-center gap-1.5">
+              LoveBot 💕
+              <span className="text-[9px] font-bold uppercase tracking-wider bg-white/20 text-white rounded-full px-2 py-0.5">AI Assistant</span>
+            </p>
+            <p className="text-pink-100 text-xs">Relationship Companion · AI-generated, not professional advice</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

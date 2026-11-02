@@ -6,6 +6,7 @@ import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { PlayInviteProvider } from '@/components/PlayInviteProvider';
+import CookieBanner from '@/components/CookieBanner';
 import "./globals.css";
 
 // Self-hosted fonts (next/font downloads at build time, serves locally,
@@ -23,7 +24,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Love Dove - Where Hearts Connect & Play",
-  description: "Play 101 couple games, add friends, earn badges, track your playtime, and celebrate your love story together.",
+  description: "Play 150 couple games, add friends, earn badges, track your playtime, and celebrate your love story together.",
   keywords: ["love", "couple games", "games", "friends", "badges", "love dove", "couples"],
   authors: [{ name: "Rudar Salaria" }],
   openGraph: {
@@ -50,6 +51,7 @@ export default function RootLayout({
                 {children}
               </main>
               <Chatbot />
+              <CookieBanner />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>

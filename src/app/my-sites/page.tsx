@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -175,7 +176,7 @@ export default function MySitesPage() {
                     {/* Cover */}
                     <div className={`w-24 sm:w-32 flex-shrink-0 bg-gradient-to-br ${THEME_COLORS[site.theme] || THEME_COLORS.pink} flex items-center justify-center relative overflow-hidden`}>
                       {site.photos && site.photos.length > 0 ? (
-                        <img src={site.photos[0]} alt="" className="w-full h-full object-cover" />
+                        <Image src={site.photos[0]} alt={`Cover photo for ${site.name} birthday site`} fill className="object-cover" loading="lazy" />
                       ) : (
                         <span className="text-4xl">🎂</span>
                       )}

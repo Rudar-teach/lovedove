@@ -8,9 +8,10 @@ const supabase = createClient(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const authHeader = request.headers.get('authorization') ?? '';
     const token = authHeader.replace('Bearer ', '');
 
@@ -37,7 +38,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('friend_requests')
       .update({ status: body.status })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('receiver_id', user.id)
       .select()
       .single();

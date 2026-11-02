@@ -203,9 +203,9 @@ const badges = [
 
 const stats = [
   { number: '150+', label: 'Couple Games', icon: Gamepad2 },
-  { number: '50K+', label: 'Happy Couples', icon: Users2 },
-  { number: '1M+', label: 'Games Played', icon: Play },
-  { number: '4.9★', label: 'User Rating', icon: Star },
+  { number: '8', label: 'Game Categories', icon: Users2 },
+  { number: 'Free', label: 'To Play', icon: Play },
+  { number: 'No Ads', label: 'No Sign-up Walls', icon: Star },
 ];
 
 export default function HomePage() {
@@ -973,14 +973,21 @@ export default function HomePage() {
 
           <div className="border-t border-gray-800 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-xs text-gray-500">
-              © 2025 Love Dove. All rights reserved. Made with 💖
+              © 2026 Love Dove. All rights reserved. Made with 💖
             </p>
             <div className="flex gap-6">
               <Link href="/contact" className="text-xs text-gray-500 hover:text-pink-400 transition-colors">
                 Contact Us
               </Link>
-              <span className="text-xs text-gray-600">Privacy Policy</span>
-              <span className="text-xs text-gray-600">Terms of Service</span>
+              <Link href="/privacy" className="text-xs text-gray-500 hover:text-pink-400 transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-xs text-gray-500 hover:text-pink-400 transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/refund-policy" className="text-xs text-gray-500 hover:text-pink-400 transition-colors">
+                Refund Policy
+              </Link>
             </div>
           </div>
         </div>

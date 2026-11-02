@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Send, BookHeart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -317,7 +318,14 @@ export default function Guestbook({ siteId, siteSlug, accentColor, textColor, mu
                 </p>
                 {entry.photo_url && (
                   <a href={entry.photo_url} target="_blank" rel="noreferrer" className="mt-2 block">
-                    <img src={entry.photo_url} alt="" className="max-h-44 rounded-xl object-cover" />
+                    <Image
+                      src={entry.photo_url}
+                      alt={`Photo from ${entry.guest_name || 'a guest'}`}
+                      width={352}
+                      height={176}
+                      className="max-h-44 w-auto rounded-xl object-cover"
+                      loading="lazy"
+                    />
                   </a>
                 )}
               </div>

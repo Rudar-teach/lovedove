@@ -6,6 +6,8 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Love Dove <onboarding@resend.dev>';
 // Default recipient for now; can be overridden per-call
 const DEFAULT_RECIPIENT = process.env.PROPOSAL_NOTIFICATION_EMAIL || 'noreply@example.com';
+// Public URL of the app, used for the unsubscribe link in email footers.
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export type EmailPayload = {
   to: string;
@@ -65,6 +67,24 @@ export async function sendEmail({ to, subject, html, text }: EmailPayload) {
     console.error('Email send error:', error);
     return { success: false, error: error?.message || 'Unknown error' };
   }
+}
+
+// Shared email footer. Marketing/notification emails must include an
+// unsubscribe mechanism (CAN-SPAM / GDPR expectation). We link to the
+// account settings page where notification email can be turned off.
+const UNSUB_URL = APP_URL ? `${APP_URL}/profile` : '';
+function unsubscribeLine(color: string): string {
+  if (!UNSUB_URL) return '';
+  return `
+  <p style="margin:8px 0 0 0; color:${color}; font-size:11px;">
+    Not wanting these emails?
+    <a href="${UNSUB_URL}" style="color:#ec4899; text-decoration:underline;">Unsubscribe or manage preferences</a>
+    &nbsp;·&nbsp; <a href="${APP_URL ? APP_URL + '/privacy' : '#'}" style="color:#9ca3af; text-decoration:underline;">Privacy</a>
+  </p>`;
+}
+function unsubscribeText(): string {
+  if (!UNSUB_URL) return '';
+  return `\n\nNot wanting these emails? Manage preferences or unsubscribe: ${UNSUB_URL}`;
 }
 
 export function buildProposalEmail(data: ProposalEmailData): { subject: string; html: string; text: string } {
@@ -152,7 +172,7 @@ export function buildProposalEmail(data: ProposalEmailData): { subject: string; 
 </body>
 </html>`.trim();
 
-    const textResponse = `${headline}\n\nHi ${senderName},\n\n${receiverName} just responded to your proposal "${title}": ${response.toUpperCase()}\n\nView on Love Dove: ${responseUrl}\n\nMade with 💕 by Love Dove`;
+    const textResponse = `${headline}\n\nHi ${senderName},\n\n${receiverName} just responded to your proposal "${title}": ${response.toUpperCase()}\n\nView on Love Dove: ${responseUrl}\n\nMade with 💕 by Love Dove${unsubscribeText()}`;
 
     return { subject, html: htmlResponse, text: textResponse };
   }

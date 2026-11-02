@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -410,7 +411,7 @@ export default function CreateBirthdaySite() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="relative aspect-square rounded-2xl overflow-hidden group shadow-md"
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <Image src={url} alt={`Uploaded photo ${i + 1}`} fill className="object-cover" loading="lazy" />
                     <button
                       onClick={() => removePhoto(i)}
                       className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"

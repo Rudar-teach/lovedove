@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -394,9 +395,9 @@ export default function GamePage() {
                                 }`}
                               >
                                 <div className="relative shrink-0">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-pink-700 font-bold">
+                                  <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-pink-700 font-bold overflow-hidden">
                                     {f.friend.avatar_url
-                                      ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                      ? <Image src={f.friend.avatar_url} alt={`${f.friend.full_name || 'Friend'}'s avatar`} fill className="rounded-full object-cover" loading="lazy" />
                                       : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
                                   </div>
                                   <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
@@ -419,9 +420,9 @@ export default function GamePage() {
                                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/40 opacity-60"
                               >
                                 <div className="relative shrink-0">
-                                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-pink-700 font-bold">
+                                  <div className="relative w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-pink-700 font-bold overflow-hidden">
                                     {f.friend.avatar_url
-                                      ? <img src={f.friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                      ? <Image src={f.friend.avatar_url} alt={`${f.friend.full_name || 'Friend'}'s avatar`} fill className="rounded-full object-cover" loading="lazy" />
                                       : (f.friend.full_name?.charAt(0)?.toUpperCase() || '?')}
                                   </div>
                                   <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gray-400 border-2 border-white rounded-full" />

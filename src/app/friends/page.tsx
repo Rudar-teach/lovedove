@@ -75,67 +75,88 @@ export default function FriendsPage() {
       if (error) { console.error('Error fetching matches:', error); setLoading(false); return; }
 
       const friendsList: Friend[] = [];
+      const seen = new Set<string>();
 
-      for (const match of matchData || []) {
-        const otherId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+      // Collect every partner id we need (matches + accepted friend requests)
+      const otherIdsFromMatches = (matchData || []).map(m => (m.user1_id === user.id ? m.user2_id : m.user1_id));
 
-        const { data: otherUser } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url')
-          .eq('id', otherId)
-          .single();
-
-        if (otherUser) {
-          const { data: conv } = await supabase
-            .from('conversations')
-            .select('id, last_message_at')
-            .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${user.id})`)
-            .single();
-
-          friendsList.push({
-            id: match.id,
-            user1_id: match.user1_id,
-            user2_id: match.user2_id,
-            created_at: match.matched_at || match.created_at,
-            other_user: otherUser,
-            conversation: conv || undefined,
-          });
-        }
-      }
-
-      // Also add accepted friend requests
       const { data: requestData } = await supabase
         .from('friend_requests')
         .select('*')
         .or(`and(from_user_id.eq.${user.id},status.eq.accepted),and(to_user_id.eq.${user.id},status.eq.accepted)`);
 
-      for (const req of requestData || []) {
-        const otherId = req.from_user_id === user.id ? req.to_user_id : req.from_user_id;
-        const exists = friendsList.some(f => f.other_user.id === otherId);
-        if (exists) continue;
+      const otherIdsFromRequests = (requestData || [])
+        .map(r => (r.from_user_id === user.id ? r.to_user_id : r.from_user_id));
 
-        const { data: otherUser } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url')
-          .eq('id', otherId)
-          .single();
+      const otherIds = [...new Set([...otherIdsFromMatches, ...otherIdsFromRequests])];
 
-        if (otherUser) {
-          const { data: conv } = await supabase
+      // Batch: fetch all partner profiles in one query, and every conversation
+      // with any partner in one more query (was N+1: two round-trips per friend).
+      const profilesById: Record<string, any> = {};
+      const convByPartner: Record<string, any> = {};
+      if (otherIds.length > 0) {
+        const [profilesRes, convsRes] = await Promise.all([
+          supabase.from('profiles').select('id, full_name, username, avatar_url').in('id', otherIds),
+          supabase
             .from('conversations')
-            .select('id, last_message_at')
-            .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherId}),and(user1_id.eq.${otherId},user2_id.eq.${user.id})`)
-            .single();
-
-          friendsList.push({
-            id: req.id,
-            user1_id: user.id,
-            user2_id: otherId,
-            created_at: req.accepted_at || req.created_at,
-            other_user: otherUser,
-            conversation: conv || undefined,
-          });
+            .select('id, user1_id, user2_id, last_message_at')
+            .or(
+              `and(user1_id.eq.${user.id},user2_id.in.(${otherIds.join(',')})),` +
+              `and(user2_id.eq.${user.id},user1_id.in.(${otherIds.join(',')}))`
+            ),
+        ]);
+        for (const p of profilesRes.data || []) profilesById[p.id] = p;
+        for (const c of convsRes.data || []) {
+          const partnerId = c.user1_id === user.id ? c.user2_id : c.user1_id;
+          const prev = convByPartner[partnerId];
+          if (!prev || new Date(c.last_message_at || 0) > new Date(prev.last_message_at || 0)) {
+            convByPartner[partnerId] = c;
+          }
         }
+      }
+
+      const addFriend = (entry: {
+        id: string; user1_id: string; user2_id: string; created_at: string; partnerId: string;
+      }) => {
+        if (seen.has(entry.partnerId)) return;
+        const otherUser = profilesById[entry.partnerId];
+        if (!otherUser) return;
+        seen.add(entry.partnerId);
+        friendsList.push({
+          id: entry.id,
+          user1_id: entry.user1_id,
+          user2_id: entry.user2_id,
+          created_at: entry.created_at,
+          other_user: otherUser,
+          conversation: convByPartner[entry.partnerId]
+            ? {
+                id: convByPartner[entry.partnerId].id,
+                last_message_at: convByPartner[entry.partnerId].last_message_at,
+              }
+            : undefined,
+        });
+      };
+
+      for (const match of matchData || []) {
+        const partnerId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        addFriend({
+          id: match.id,
+          user1_id: match.user1_id,
+          user2_id: match.user2_id,
+          created_at: match.matched_at || match.created_at,
+          partnerId,
+        });
+      }
+
+      for (const req of requestData || []) {
+        const partnerId = req.from_user_id === user.id ? req.to_user_id : req.from_user_id;
+        addFriend({
+          id: req.id,
+          user1_id: user.id,
+          user2_id: partnerId,
+          created_at: req.accepted_at || req.created_at,
+          partnerId,
+        });
       }
 
       friendsList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

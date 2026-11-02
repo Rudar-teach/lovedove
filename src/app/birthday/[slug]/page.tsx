@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Music, ChevronLeft, ChevronRight, X, Cake, Sparkles, Eye, Calendar, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -273,9 +274,9 @@ export default function BirthdaySitePage() {
                   <button
                     key={url}
                     onClick={() => setPhotoIdx(i)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === photoIdx ? 'border-white scale-105' : 'border-transparent opacity-60'}`}
+                    className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === photoIdx ? 'border-white scale-105' : 'border-transparent opacity-60'}`}
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <Image src={url} alt={`Photo ${i + 1} of ${site?.name || 'birthday'} site`} fill className="object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>

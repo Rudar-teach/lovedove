@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { Heart, Sparkles, Check, X, ChevronRight, UserPlus, MessageCircle, Bell, Loader2, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -214,17 +215,18 @@ export default function FindPartner() {
         return;
       }
 
-      // Persist top matches (matches table)
-      for (const m of scored) {
-        await supabase.from('matches').upsert({
+      // Persist top matches (matches table) — one batched upsert, not N+1
+      await supabase.from('matches').upsert(
+        scored.map(m => ({
           user1_id: userId,
           user2_id: m.c.id,
           match_score: m.score,
           match_reasons: m.reasons,
           user1_accepted: true,
           is_active: true,
-        }, { onConflict: 'user1_id, user2_id' });
-      }
+        })),
+        { onConflict: 'user1_id, user2_id' }
+      );
 
       setMatches(scored.map(m => ({
         id: `${userId}-${m.c.id}`,
@@ -547,9 +549,9 @@ export default function FindPartner() {
                 {matches.map((match) => (
                   <div key={match.id} className="bg-white rounded-2xl shadow-lg p-6 border border-pink-100 hover:shadow-xl transition-all">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg flex-shrink-0 overflow-hidden">
+                      <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg flex-shrink-0 overflow-hidden">
                         {match.user.avatar_url
-                          ? <img src={match.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ? <Image src={match.user.avatar_url} alt={`${match.user.full_name || match.user.username}'s avatar`} fill className="object-cover" loading="lazy" />
                           : (match.user.full_name || match.user.username || '?')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
