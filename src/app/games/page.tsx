@@ -7,6 +7,7 @@ import { Heart, Gamepad2, Users, Search, Filter, Flame, Sparkles, Zap, Crown, Fi
 import { ALL_BOLLYWOOD_GAMES } from '@/lib/bollywoodGames';
 import GameArt from '@/components/games/GameArt';
 import GameArtPro, { PRO_ART_SLUGS } from '@/components/games/GameArtPro';
+import FriendPanel from '@/components/games/FriendPanel';
 import { STATIC_GAMES } from '@/lib/staticGames';
 
 // Showcase Bollywood games on the main catalog page
@@ -47,6 +48,7 @@ export default function GamesCatalog() {
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [friendPanelOpen, setFriendPanelOpen] = useState(false);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -108,6 +110,13 @@ export default function GamesCatalog() {
                 <Flame className="w-4 h-4 text-orange-400" />
                 {totalPlays.toLocaleString()} total plays
               </div>
+              <button
+                onClick={() => setFriendPanelOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+              >
+                <Gamepad2 className="w-4 h-4" />
+                Play with friend
+              </button>
               <Link href="/" className="text-purple-600 hover:text-purple-800 text-sm font-medium">
                 ← Home
               </Link>
@@ -329,6 +338,21 @@ export default function GamesCatalog() {
           )}
         </div>
       </div>
+
+      <FriendPanel
+        gameName="Couple Games"
+        gameSlug=""
+        open={friendPanelOpen}
+        onClose={() => setFriendPanelOpen(false)}
+        onPlayFriend={(f) => {
+          alert(
+            `You chose ${f.name}! Now pick any game below to play together.\n\n` +
+            'In pass-and-play mode: Player 1 picks, then Player 2 picks. ' +
+            'For quiz games, both answers reveal only after both finish.'
+          );
+          setFriendPanelOpen(false);
+        }}
+      />
     </div>
   );
 }

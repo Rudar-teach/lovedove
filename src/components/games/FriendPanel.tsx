@@ -19,11 +19,13 @@ export default function FriendPanel({
   gameSlug,
   open,
   onPlayFriend,
+  onClose,
 }: {
   gameName: string;
   gameSlug: string;
   open: boolean;
   onPlayFriend: (friend: Friend) => void;
+  onClose?: () => void;
 }) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,13 +100,23 @@ export default function FriendPanel({
                 <Gamepad2 className="w-5 h-5 text-pink-500" />
                 <h3 className="font-bold text-gray-900">Play with a friend</h3>
               </div>
-              <Link
-                href={`/games/${gameSlug}`}
-                onClick={() => { /* close handled by parent */ }}
-                className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-500 hover:bg-pink-50 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </Link>
+              {onClose ? (
+                <button
+                  onClick={onClose}
+                  aria-label="Close friend panel"
+                  className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-500 hover:bg-pink-50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              ) : (
+                <Link
+                  href={`/games/${gameSlug}`}
+                  onClick={() => { /* close handled by parent */ }}
+                  className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-500 hover:bg-pink-50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </Link>
+              )}
             </div>
             <p className="text-xs text-gray-500">
               Playing <span className="font-semibold text-pink-600">{gameName}</span>

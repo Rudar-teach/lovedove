@@ -72,11 +72,15 @@ export function middleware(req: NextRequest) {
   res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   // CSP: self-hosted fonts, Supabase/Cloudinary images, inline styles
   // (Next injects them), and Google fonts if any are still in use.
+  // Dev-only: React's dev build calls eval() to reconstruct component
+  // callstacks, so 'unsafe-eval' is required locally. It is baked out
+  // of production builds (NODE_ENV is defined at build time).
+  const allowUnsafeEval = process.env.NODE_ENV !== 'production';
   res.headers.set(
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'", // Next streaming chunks need inline
+      `script-src 'self' 'unsafe-inline'${allowUnsafeEval ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data:",
