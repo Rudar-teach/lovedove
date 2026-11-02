@@ -44,9 +44,11 @@ function checkRateLimit(req: NextRequest): boolean {
   const now = Date.now();
   const bucket = buckets.get(key);
 
-  if (!bucket || now > bucket.resetAt || bucket.count >= limit.max) {
+  if (!bucket || now > bucket.resetAt) {
+    // New window (or no bucket yet): start counting from 1.
     buckets.set(key, { count: 1, resetAt: now + limit.windowMs });
   } else if (bucket.count >= limit.max) {
+    // Window still open and cap already hit — block.
     return false; // over limit
   } else {
     bucket.count += 1;
