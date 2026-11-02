@@ -234,6 +234,84 @@ export default function BollywoodGame({ game }: { game: BollywoodGameDef }) {
     }
   };
 
+  // ===== CHASE GAME (Bhaag Simran style: dash, dodge, escape) =====
+  const isChase = game.slug === 'bhaag-simran';
+  const [chasePhase, setChasePhase] = useState<'idle' | 'dash' | 'caught' | 'won'>('idle');
+  const [chaseLane, setChaseLane] = useState(1);
+  const [obstacle, setObstacle] = useState<{ lane: number; y: number }>({ lane: 1, y: -100 });
+  const [chaseTime, setChaseTime] = useState(0);
+
+  useEffect(() => {
+    if (game.type !== 'reaction' || !isChase) return;
+    let raf: number;
+    let last = performance.now();
+    let t = 0;
+    let obsY = -100;
+    let obsLane = 0;
+    let obsSpawned = false;
+    const tick = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (chasePhase === 'dash') {
+        t += dt;
+        obsY += dt * 320;
+        if (!obsSpawned && t > 0.5 + Math.random() * 0.6) {
+          obsLane = Math.floor(Math.random() * 3);
+          obsSpawned = true;
+        }
+        setObstacle({ lane: obsLane, y: obsY });
+        setChaseTime(t);
+        // Collision
+        if (obsSpawned && obsY > 60 && obsY < 80 && obsLane === chaseLane) {
+          setChasePhase('caught');
+          setResult('lose');
+          setPhase('result');
+          return;
+        }
+        if (t > 4.5) {
+          setChasePhase('won');
+          setScore(s => s + 1);
+          setResult('win');
+          setPhase('result');
+          return;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    if (chasePhase === 'dash') raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [chasePhase, isChase, game.type]);
+
+  const startChase = () => {
+    setChasePhase('dash');
+    setObstacle({ lane: 0, y: -100 });
+    setChaseTime(0);
+    setChaseLane(1);
+  };
+
+  const shiftChase = (dir: -1 | 1) => {
+    if (chasePhase !== 'dash') return;
+    setChaseLane(l => {
+      const nl = Math.max(0, Math.min(2, l + dir));
+      return nl;
+    });
+  };
+
+  // Keyboard controls for the chase game (← / → or A / D)
+  useEffect(() => {
+    if (!isChase) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (chasePhase !== 'dash') {
+        if (e.key === ' ' || e.key === 'Enter') startChase();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'a') shiftChase(-1);
+      if (e.key === 'ArrowRight' || e.key === 'd') shiftChase(1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isChase, chasePhase]);
+
   // ===== DIFF =====
   const diffs = game.content.diffPairs || [];
   const toggleDiff = (i: number) => {
@@ -440,7 +518,19 @@ export default function BollywoodGame({ game }: { game: BollywoodGameDef }) {
       case 'rhythm': return <RhythmView game={game} rhythmIndex={rhythmIndex} onRhythmTap={onRhythmTap} />;
       case 'charades': return <CharadesView c={charades[charadeIndex]} index={charadeIndex} total={charades.length} onDone={nextCharade} />;
       case 'story': return <StoryView s={story[storyIndex]} choices={storyChoices} index={storyIndex} total={story.length} onPick={pickStory} />;
-      case 'reaction': return <ReactionView state={reactionState} attempts={reactionAttempts} onRestart={startReaction} onTap={onReactionTap} />;
+      case 'reaction':
+        return isChase ? (
+          <ChaseView
+            phase={chasePhase}
+            lane={chaseLane}
+            obstacle={obstacle}
+            time={chaseTime}
+            onStart={startChase}
+            onShift={shiftChase}
+          />
+        ) : (
+          <ReactionView state={reactionState} attempts={reactionAttempts} onRestart={startReaction} onTap={onReactionTap} />
+        );
       case 'spotTheDiff': return <DiffView pair={diffs[diffIndex]} found={diffFound} onToggle={toggleDiff} index={diffIndex} total={diffs.length} />;
       case 'wordSearch': return <WordSearchView grid={wordGrid} words={game.content.words || []} found={wordsFound} onTry={tryFindWord} />;
       default: return null;
@@ -682,6 +772,140 @@ function StoryView({ s, choices, index, total, onPick }: {
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== CHASE VIEW (Bhaag Simran: boy + Simran on shoulder, run from dad) =====
+function ChaseView({
+  phase,
+  lane,
+  obstacle,
+  time,
+  onStart,
+  onShift,
+}: {
+  phase: string;
+  lane: number;
+  obstacle: { lane: number; y: number };
+  time: number;
+  onStart: () => void;
+  onShift: (dir: -1 | 1) => void;
+}) {
+  const LANE_LEFT = ['20%', '45%', '70%'];
+  const reachedFinish = time > 4.0 && phase !== 'caught';
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-3xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-2 left-2 text-5xl">🏃</div>
+          <div className="absolute bottom-2 right-2 text-4xl">💨</div>
+        </div>
+        <div className="relative flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-lg sm:text-xl font-black">Bhaag Simran!</h3>
+            <p className="text-xs text-white/70">Tap ←/→ to change lanes. Don&apos;t let the dad&apos;s shadow catch you!</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-black">{Math.min(100, Math.round((time / 4.5) * 100))}%</div>
+            <div className="text-[10px] text-white/60 uppercase tracking-wider">Distance</div>
+          </div>
+        </div>
+
+        {/* progress bar */}
+        <div className="h-2 bg-white/20 rounded-full mb-4 overflow-hidden">
+          <div
+            className="h-full bg-white rounded-full transition-all"
+            style={{ width: `${Math.min(100, (time / 4.5) * 100)}%` }}
+          />
+        </div>
+
+        {/* road (3 lanes) */}
+        <div className="relative h-64 bg-gradient-to-b from-amber-900/60 to-amber-800/60 rounded-2xl overflow-hidden border-2 border-white/20">
+          {/* lane dividers */}
+          <div className="absolute inset-0 flex">
+            {[0, 1, 2].map((l) => (
+              <div key={l} className="flex-1 relative">
+                {l < 2 && <div className="absolute left-full top-0 bottom-0 w-1 bg-white/30 border-l-2 border-dashed border-white/40" />}
+              </div>
+            ))}
+          </div>
+
+          {/* obstacle (dad&apos;s shadow) */}
+          {phase === 'dash' && obstacle.y > -50 && obstacle.y < 250 && (
+            <div
+              className="absolute text-5xl transition-none"
+              style={{ left: LANE_LEFT[obstacle.lane], top: obstacle.y, transform: 'translateX(-50%)' }}
+            >
+              👨‍🦰
+            </div>
+          )}
+
+          {/* player (boy + Simran on shoulder) */}
+          {phase === 'dash' && (
+            <div
+              className="absolute text-5xl transition-all duration-150"
+              style={{ left: LANE_LEFT[lane], top: 70, transform: 'translateX(-50%)' }}
+            >
+              🏃💕
+            </div>
+          )}
+
+          {/* finish line */}
+          {reachedFinish && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white font-black text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+              🎊 Baraat ho gaya!
+            </div>
+          )}
+
+          {/* overlay state */}
+          {phase !== 'dash' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-2xl text-center p-6">
+              <div className="text-5xl mb-3">{phase === 'won' ? '🏆' : phase === 'caught' ? '😱' : '🏃'}</div>
+              <div className="text-xl font-black mb-2">
+                {phase === 'won'
+                  ? 'Shaadi ho gayi! You made it to the baraat!'
+                  : phase === 'caught'
+                  ? 'Dad caught you! Better luck next time.'
+                  : 'Bhaag Simran — Carry her on your shoulder, run from the father!'}
+              </div>
+              <p className="text-xs text-white/60 mb-4 max-w-xs">
+                {phase === 'idle'
+                  ? 'Tap start, then use ← / → (or on-screen buttons) to dodge the dad&apos;s shadow. Reach the baraat in 4.5 seconds.'
+                  : 'Press start to try again.'}
+              </p>
+              <button
+                onClick={onStart}
+                className="px-6 py-3 bg-white text-amber-700 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all"
+              >
+                {phase === 'idle' ? 'Start Chase' : 'Run Again'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* shift buttons */}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={() => onShift(-1)}
+            disabled={phase !== 'dash'}
+            className="flex-1 py-3 bg-white/20 backdrop-blur-sm rounded-2xl text-white font-black text-lg disabled:opacity-30 hover:bg-white/30 transition-all"
+          >
+            ◀ Left
+          </button>
+          <button
+            onClick={() => onShift(1)}
+            disabled={phase !== 'dash'}
+            className="flex-1 py-3 bg-white/20 backdrop-blur-sm rounded-2xl text-white font-black text-lg disabled:opacity-30 hover:bg-white/30 transition-all"
+          >
+            Right ▶
+          </button>
+        </div>
+
+        <p className="text-[11px] text-white/50 mt-3 text-center">
+          Keyboard: press ← and → to switch lanes while running.
+        </p>
       </div>
     </div>
   );
