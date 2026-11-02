@@ -1,141 +1,295 @@
-# 💕 Love Dove - Birthday & Couple Games Platform
+# Love Dove 💕
 
-Love Dove is a full-stack web application where users can create beautiful birthday websites, connect with partners, and play 60+ couple online games together in real-time.
+A romantic birthday website builder and couples' gaming platform. Create beautiful birthday sites for someone special, play 2-player games together, track your relationship badges, and much more.
 
-## Features
+![Love Dove](https://img.shields.io/badge/Made%20with-%E2%9D%A4-ff69b4) ![Next.js](https://img.shields.io/badge/Next.js-14-black) ![Supabase](https://img.shields.io/badge/Supabase-green) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 
-### For Everyone
-- **User Authentication** - Secure signup/login with Supabase Auth
-- **Find Partner** - Search and connect with your loved one
-- **Proposal System** - Send relationship proposals via email
-- **Add Friend** - Connect with other couples
+---
 
-### Birthday Websites
-- Create beautiful personalized birthday websites
-- Upload photos and add names
-- Shareable birthday pages
-- Customizable themes
+## ✨ Features
 
-### Couple Games (60+ Games)
-Play together online in real-time:
-- Memory Match
-- Tic Tac Toe
-- Word Chain
-- Would You Rather
-- Couple Quiz
-- Love Calculator
-- Heart Spelling
-- Love Hangman
-- And 50+ more romantic games!
+- **🎂 Birthday Site Builder** — Create a personalized birthday website in 3 steps: sign in, upload photos, add the person's name. Share the link and celebrate.
+- **🎮 100+ Couple Games** — Play Tic-Tac-Toe, Memory Match, Love Snake, Pong, Truth or Dare, Would You Rather, and many more. All support 2-player mode.
+- **👥 Friend System** — Add friends by username or invite link. See who's online, send friend requests, and accept invites.
+- **🏆 Badges & Achievements** — Earn badges for hours played together, games won, and milestones.
+- **⏱️ Time Tracking** — See which games you recently played and for how long in your profile.
+- **💍 Proposals** — Send a romantic proposal link by email and get a yes or no response.
+- **🔔 Real-time Notifications** — Friend requests, badge unlocks, and game invites delivered instantly.
+- **🌙 Premium UI** — Glassmorphism design, smooth animations with Framer Motion, fully responsive.
 
-### Chat & Communication
-- Real-time chat between couples
-- Message notifications
+---
 
-### Profile & Stats
-- Profile icon with recent games
-- Playtime tracking
-- Session history
-- Badges & achievements
-- "You played 10 hours together" milestones
-
-### Badges & Achievements
-- Earn badges for playing together
-- Track hours played together
-- Milestone celebrations
-
-### Admin Panel
-- User management
-- Game statistics
-- Platform analytics
-
-## Tech Stack
-
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS, ShadCN UI
-- **Backend**: Next.js API Routes
-- **Database**: PostgreSQL via Supabase
-- **Auth**: Supabase Auth
-- **Real-time**: Supabase Realtime
-- **Email**: Resend
-- **Payments**: Stripe (for premium features)
-- **Storage**: Supabase Storage
-- **Deployment**: Vercel
-
-## Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
+
+- Node.js 18 or newer
+- A [Supabase](https://supabase.com) account and project
 - npm or yarn
-- Supabase account
-- Resend account (for emails)
-- GitHub account
 
-### Installation
+### 1. Clone the repository
 
-1. Clone the repository
 ```bash
 git clone https://github.com/Rudar-teach/lovedove.git
 cd lovedove
 ```
 
-2. Install dependencies
+### 2. Install dependencies
+
 ```bash
 npm install
 ```
 
-3. Set up environment variables
-Create a `.env.local` file:
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+### 3. Set up environment variables
 
-# Email (Resend)
-RESEND_API_KEY=your_resend_api_key
+Copy the example file:
 
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+```bash
+cp .env.example .env.local
 ```
 
-4. Set up Supabase
-- Create a Supabase project
-- Run the SQL migrations in `supabase/migrations/`
-- Enable Email auth in Supabase Dashboard
+Then fill in your credentials in `.env.local`:
 
-5. Run the development server
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SITE_URL=http://localhost:3002
+```
+
+Get these from your Supabase dashboard: **Project Settings → API**.
+
+### 4. Run the database migrations
+
+Open your Supabase project, go to the **SQL Editor**, and run each file in `supabase/migrations/` in order:
+
+1. `20240101_lovedove_base.sql` — profiles, game sessions, notifications, avatars bucket
+2. `20240101_lovedove_features.sql` — additional features schema
+3. `20251013_birthday_sites.sql` — birthday website tables
+4. `20251013_social_presence.sql` — friends, invites, online presence
+5. `20251013_matchmaking.sql` — matchmaking system
+
+### 5. Start the dev server
+
 ```bash
 npm run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000)
+The app runs at **http://localhost:3002**.
 
-## Deployment
+---
 
-### Deploy to Vercel
+## 📁 Project Structure
 
-1. Push code to GitHub
-2. Import project in Vercel
-3. Add environment variables
-4. Deploy!
+```
+lovedove/
+├── src/
+│   ├── app/                  # Next.js App Router pages
+│   │   ├── page.tsx          # Landing page with game catalog
+│   │   ├── layout.tsx        # Root layout with providers
+│   │   ├── games/            # 100+ game pages
+│   │   ├── create/           # Birthday site builder
+│   │   ├── my-sites/         # User's created birthday sites
+│   │   ├── add-friends/      # Friend search and requests
+│   │   ├── proposals/        # Proposal flow
+│   │   ├── profile/          # User profile
+│   │   └── api/              # API routes
+│   ├── components/           # Reusable React components
+│   ├── lib/                  # Utilities, Supabase client, helpers
+│   └── styles/               # Global CSS
+├── supabase/
+│   └── migrations/           # Database schema files
+├── public/                   # Static assets
+├── .github/
+│   └── workflows/            # GitHub Actions CI
+└── README.md
+```
 
-## Database Schema
+---
 
-The app uses Supabase PostgreSQL with tables for:
-- Users & Profiles
-- Friends & Relationships
-- Game Sessions & Stats
-- Badges & Achievements
-- Chat Messages
-- Birthday Pages
-- Proposals & Notifications
+## 🗄️ Database
 
-See `supabase-schema-updated.sql` for full schema.
+Love Dove uses **Supabase** (PostgreSQL + Auth + Storage).
 
-## Contributing
+Key tables:
 
-Pull requests are welcome!
+| Table | Purpose |
+|---|---|
+| `profiles` | User accounts and profile info |
+| `game_sessions` | Every game played, with duration and scores |
+| `game_stats` | Per-user, per-game aggregate stats |
+| `badges` / `user_badges` | Achievement definitions and unlocks |
+| `friendships` | Friend relationships |
+| `friend_requests` | Pending friend requests |
+| `notifications` | In-app notifications |
+| `birthday_sites` | Created birthday websites |
+| `proposals` | Marriage proposal links |
 
-## License
+All tables have **Row Level Security** enabled so users can only read and write their own data.
 
-MIT
+---
+
+## 🎮 Games
+
+Games are organized by category:
+
+- **Classic** — Tic-Tac-Toe, Memory Match, Snake, 2048
+- **Arcade** — Pong, Flappy Heart, Heart Catcher, Cupid's Arrow
+- **Quiz** — Love Trivia, Compatibility, Would You Rather
+- **Creative** — Love Letters, Couple Poetry, Time Capsule
+- **Party** — Truth or Dare, Kissing Spinner, Emoji Games
+
+Each game records play time and results to the `game_sessions` table.
+
+### Playing together
+
+Games are built for two people, so the entry screen is a friend picker rather
+than a code box. Opening a game loads your friend list and marks each person
+online or offline from the `user_presence` table, which the app heartbeats
+every 25 seconds while you are on the page.
+
+Pick a friend and send an invite. Two things happen on their side:
+
+- A browser notification, if they have granted that permission. The first time
+  they load the app a small button in the corner offers to turn it on.
+- A banner at the bottom of the screen with Accept and Later buttons.
+
+Either button resolves the invite. Accepting sends you both into the same
+started session, so you arrive at the game together rather than one of you
+waiting on a code. Invites arrive through Supabase realtime on the
+`play_invites` table, which needs that table added to the realtime publication
+(the migration does this).
+
+If someone has no friends yet, the picker shows a link to `/add-friends`
+instead of an empty list.
+
+---
+
+## 🚢 Deployment
+
+### Deploy to Vercel (recommended)
+
+1. Push your code to GitHub.
+2. Import the repository at [vercel.com](https://vercel.com).
+3. Add the same environment variables from `.env.local` in the Vercel dashboard.
+4. Deploy.
+
+Vercel automatically detects Next.js and builds the project.
+
+### Manual build
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## 🔗 Connecting GitHub to Claude Code
+
+If you want Claude Code to manage this repository for you, follow these steps.
+
+### Option A: GitHub CLI (fastest)
+
+1. **Install GitHub CLI** from [cli.github.com](https://cli.github.com).
+2. **Authenticate**:
+
+   ```bash
+   gh auth login
+   ```
+
+   Choose `GitHub.com`, then `HTTPS`, then authenticate in the browser.
+
+3. **Verify it worked**:
+
+   ```bash
+   gh auth status
+   ```
+
+   You should see your account `Rudar-teach` listed.
+
+4. **Connect the repo**:
+
+   ```bash
+   git remote set-url origin https://github.com/Rudar-teach/lovedove.git
+   git push -u origin main
+   ```
+
+5. **Let Claude Code push for you**:
+
+   ```bash
+   gh auth setup-git
+   ```
+
+   This configures git to use the GitHub CLI as a credential helper, so `git push` works without a password.
+
+### Option B: Personal Access Token
+
+1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**.
+2. Generate a token with `repo` and `workflow` scopes.
+3. Use it when prompted during `git push`, or store it:
+
+   ```bash
+   git config --global credential.helper store
+   ```
+
+### Option C: SSH key
+
+1. Generate a key:
+
+   ```bash
+   ssh-keygen -t ed25519 -C "rudarsalaria12345@gmail.com"
+   ```
+
+2. Copy the public key:
+
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   ```
+
+3. Add it at **GitHub → Settings → SSH and GPG keys → New SSH key**.
+4. Change the remote:
+
+   ```bash
+   git remote set-url origin git@github.com:Rudar-teach/lovedove.git
+   ```
+
+---
+
+## 🤖 GitHub Actions
+
+The repository includes a CI workflow at `.github/workflows/ci.yml` that runs on every push and pull request:
+
+- Installs dependencies
+- Runs `tsc --noEmit` type checking
+- Runs `eslint`
+- Runs `next build`
+
+View results under the **Actions** tab of your repository.
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Next.js 14 | React framework, App Router |
+| TypeScript | Type safety |
+| Tailwind CSS | Styling |
+| Framer Motion | Animations |
+| Supabase | Database, auth, storage, realtime |
+| Lucide React | Icons |
+| Sonner | Toast notifications |
+
+---
+
+## 📝 License
+
+This project is private and personal. All rights reserved.
+
+---
+
+## 💌 Support
+
+For questions or issues, open a GitHub issue or contact the maintainer.
+
+Made with 💕 by Rudar Salaria

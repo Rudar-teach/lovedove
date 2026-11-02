@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { PlayInviteProvider } from '@/components/PlayInviteProvider';
 import "./globals.css";
 
 // Self-hosted fonts (next/font downloads at build time, serves locally,
@@ -22,12 +23,12 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Love Dove - Where Hearts Connect & Play",
-  description: "Create beautiful birthday websites, play 101 couple games, add friends, earn badges, and celebrate your love story together.",
-  keywords: ["love", "couple games", "birthday", "games", "friends", "badges", "love dove", "couples"],
+  description: "Play 101 couple games, add friends, earn badges, track your playtime, and celebrate your love story together.",
+  keywords: ["love", "couple games", "games", "friends", "badges", "love dove", "couples"],
   authors: [{ name: "Rudar Salaria" }],
   openGraph: {
     title: "Love Dove - Where Hearts Connect & Play",
-    description: "Create birthday websites and play couple games together",
+    description: "Play couple games together and celebrate your love",
     type: "website",
   },
 };
@@ -42,12 +43,14 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <ClientProvider>
           <AuthProvider>
-            <LuxuryCursor />
-            <Navbar />
-            <main className="relative z-10">
-              {children}
-            </main>
-            <Chatbot />
+            <PlayInviteProvider>
+              <LuxuryCursor />
+              <Navbar />
+              <main className="relative z-10 pt-16 sm:pt-20">
+                {children}
+              </main>
+              <Chatbot />
+            </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
       </body>

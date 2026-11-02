@@ -1,9 +1,9 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -35,8 +35,8 @@ function generateMaze(rows: number, cols: number) {
 
 export default function LoveMazePage() {
   const [phase, setPhase] = useState<'start' | 'p1' | 'p2' | 'result'>('start');
-  const [maze1, setMaze1] = useState<string[][]>([]);
-  const [maze2, setMaze2] = useState<string[][]>([]);
+  const [maze1, setMaze1] = useState<number[][]>([]);
+  const [maze2, setMaze2] = useState<number[][]>([]);
   const [pos1, setPos1] = useState({ x: 1, y: 1 });
   const [pos2, setPos2] = useState({ x: 1, y: 1 });
   const [rows, setRows] = useState(11);
@@ -130,7 +130,6 @@ export default function LoveMazePage() {
   const atGoal2 = pos2.x === cols - 2 && pos2.y === rows - 2;
 
   return (
-    <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -241,6 +240,6 @@ export default function LoveMazePage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
-  );
+    
+);
 }

@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 interface ShinyTextProps {
   text: string;
   className?: string;
@@ -23,12 +21,6 @@ export default function ShinyText({
       }}
     >
       {text}
-      <style>{`
-        @keyframes shimmer-text {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
-      `}</style>
     </span>
   );
 }

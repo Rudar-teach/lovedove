@@ -1,18 +1,21 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Lightbulb, Sparkles, Star, Zap, Flame } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+
 
 interface Phrase {
   original: string;
-  scrambled: string;
   hint: string;
   category: string;
   difficulty: number;
   points: number;
+}
+
+interface GamePhrase extends Phrase {
+  scrambled: string;
 }
 
 const PHRASES: Phrase[] = [
@@ -47,8 +50,8 @@ export default function LoveScramble2Page() {
   const router = useRouter();
   const [phase, setPhase] = useState<'start' | 'playing' | 'finished'>('start');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [pool, setPool] = useState<Phrase[]>([]);
-  const [current, setCurrent] = useState<Phrase | null>(null);
+  const [pool, setPool] = useState<GamePhrase[]>([]);
+  const [current, setCurrent] = useState<GamePhrase | null>(null);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState(0);
@@ -64,14 +67,14 @@ export default function LoveScramble2Page() {
   const startGame = () => {
     let available = difficulty === 'easy' ? PHRASES.filter(p => p.difficulty === 1) : difficulty === 'medium' ? PHRASES.filter(p => p.difficulty <= 2) : [...PHRASES];
     const shuffled = available.sort(() => Math.random() - 0.5).slice(0, maxRounds);
-    const prepared = shuffled.map(p => ({ ...p, scrambled: scramblePhrase(p.original) }));
+    const prepared: GamePhrase[] = shuffled.map(p => ({ ...p, scrambled: scramblePhrase(p.original) }));
     setPool(prepared); setScore(0); setRoundNum(0); setHintsLeft(difficulty === 'easy' ? 3 : 2);
     nextWord(prepared);
     setTimer(timeLimit); setTimerOn(false);
     setPhase('playing');
   };
 
-  const nextWord = (p: Phrase[]) => {
+  const nextWord = (p: GamePhrase[]) => {
     if (roundNum + 1 >= p.length) { setPhase('finished'); return; }
     const next = p[roundNum + 1];
     setCurrent(next);
@@ -134,7 +137,6 @@ export default function LoveScramble2Page() {
   };
 
   return (
-    <PremiumBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -168,7 +170,7 @@ export default function LoveScramble2Page() {
                 </div>
                 <p className="text-sm text-gray-500 mt-3">Rounds: {maxRounds} | Time: {timeLimit}s</p>
               </div>
-              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={startGame} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -190,7 +192,7 @@ export default function LoveScramble2Page() {
               </motion.div>
 
               <div className="flex gap-3">
-                <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Submit</button>
+                <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Submit</button>
                 <button onClick={handleHint} disabled={hintsLeft <= 0} className="px-4 py-3 bg-amber-100 rounded-2xl font-bold text-amber-700 hover:bg-amber-200 disabled:opacity-50"><Lightbulb className="w-5 h-5" /></button>
                 <button onClick={handleSkip} className="px-4 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
@@ -204,13 +206,13 @@ export default function LoveScramble2Page() {
               <p className="text-5xl font-black bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent mb-6">{score} pts</p>
               <div className="flex gap-4 justify-center">
                 <button onClick={startGame} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </PremiumBackground>
-  );
+    
+);
 }

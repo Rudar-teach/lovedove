@@ -42,7 +42,9 @@ export default function LoginPage() {
         await trackLogin(data.user.id, email);
       }
 
-      router.push('/dashboard');
+      // Always send the user to the add-friends flow after sign-in so they
+      // can connect with their partner. They can go elsewhere from there.
+      router.push('/add-friends');
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setLoading(false);

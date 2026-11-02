@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Play, RotateCcw, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -38,8 +38,10 @@ export default function LoveMathPage() {
     const val = parseInt(guess);
     if (val === correct) {
       const pts = 10 + streak * 5;
+      const ns = streak + 1;
       setScore(s => s + pts);
-      setStreak(s => { const ns = s + 1; if (ns > bestStreak) setBestStreak(ns); return ns; });
+      if (ns > bestStreak) setBestStreak(ns);
+      setStreak(ns);
       setComboText(ns > 1 ? `🔥 ${ns}x Combo! +${pts}` : `+${pts}`);
     } else {
       setStreak(0);
@@ -62,7 +64,6 @@ export default function LoveMathPage() {
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   return (
-    <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -132,6 +133,6 @@ export default function LoveMathPage() {
           </div>
         </div>
       </div>
-    </PremiumBackground>
-  );
+    
+);
 }

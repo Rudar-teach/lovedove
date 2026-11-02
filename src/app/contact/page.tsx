@@ -62,11 +62,6 @@ export default function ContactPage() {
 
   const services = [
     {
-      icon: '🎂',
-      title: 'Custom Birthday Websites',
-      desc: 'Beautiful, personalized birthday websites with photos, animations, and interactive games tailored for your loved ones.',
-    },
-    {
       icon: '💻',
       title: 'Custom Website Development',
       desc: 'Full-stack web applications, e-commerce platforms, portfolio websites, and business websites built with modern technologies.',
@@ -131,7 +126,7 @@ export default function ContactPage() {
 
           <CinematicReveal direction="up" delay={0.1}>
             <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-              Have a project in mind? Need a custom birthday website? Want to collaborate?
+              Have a project in mind? Want to collaborate?
               I&apos;d love to hear from you! Let&apos;s create something amazing together.
             </p>
           </CinematicReveal>
@@ -229,7 +224,7 @@ export default function ContactPage() {
                   <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">Amazing</span>
                 </h2>
                 <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
-                  Whether you need a custom birthday website for your partner, a full business website, or just want to say hello - I&apos;m here to help!
+                  Whether you need a custom couple app, a full business website, or just want to say hello - I&apos;m here to help!
                 </p>
               </div>
 
@@ -271,7 +266,7 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <p className="text-white/80 text-xs sm:text-sm leading-relaxed">
-                  Passionate about creating beautiful web experiences. Specializing in couple apps, birthday platforms, and custom websites.
+                  Passionate about creating beautiful web experiences. Specializing in couple apps, gaming platforms, and custom websites.
                 </p>
                 <a
                   href="https://github.com/Rudar-teach"
@@ -348,7 +343,7 @@ export default function ContactPage() {
                         required
                       >
                         <option value="">Select a topic...</option>
-                        <option value="custom-birthday">Custom Birthday Website</option>
+                        <option value="couple-app">Couple App / Game Platform</option>
                         <option value="custom-website">Custom Website Development</option>
                         <option value="game-development">Game Development</option>
                         <option value="ui-ux">UI/UX Design</option>

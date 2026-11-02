@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, RotateCcw, Trophy, Timer, MessageCircle, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import PremiumBackground from '@/components/PremiumBackground';
+
 import TiltCard from '@/components/3d/TiltCard';
 import Button from '@/components/ui/Button';
 
@@ -31,7 +31,7 @@ type LoveLang = 'Words of Affirmation' | 'Physical Touch' | 'Acts of Service' | 
 
 const LOVE_LANGS: LoveLang[] = ['Words of Affirmation', 'Physical Touch', 'Acts of Service', 'Quality Time', 'Receiving Gifts'];
 
-const LANG_EMOJI: Record<number, string> = [0, '💬', '🤗', '🎁', '⏳', '💝'];
+const LANG_EMOJI: Record<number, string> = { 0: '💬', 1: '🤗', 2: '🎁', 3: '⏳', 4: '💝' };
 const LANG_DESC: Record<string, string> = {
   'Words of Affirmation': 'You feel loved when you hear kind, affirming words from your partner. Compliments, encouragement, and verbal expressions mean the most.',
   'Physical Touch': 'You feel loved through physical closeness. Hugs, hand-holding, and affectionate touch speak louder than words.',
@@ -87,7 +87,6 @@ export default function LoveLanguageTest() {
   };
 
   return (
-    <PremiumBackground>
       <div className="min-h-screen py-8 px-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -176,7 +175,7 @@ export default function LoveLanguageTest() {
                     <div className="space-y-2">
                       {LOVE_LANGS.map((lang, i) => {
                         const pct = maxScore > 0 ? Math.round((scores[i] / maxScore) * 100) : 0;
-                        const emoji = LANG_EMOJI[i + 1] || '💬';
+                        const emoji = LANG_EMOJI[i] || '💬';
                         return (
                           <div key={lang}>
                             <div className="flex justify-between text-sm font-semibold mb-1">
@@ -206,6 +205,6 @@ export default function LoveLanguageTest() {
           )}
         </div>
       </div>
-    </PremiumBackground>
-  );
+    
+);
 }

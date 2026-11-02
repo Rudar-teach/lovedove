@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Play, RotateCcw, Trophy, Flame, Zap, Target, Calendar, Award } from 'lucide-react';
 import Link from 'next/link';
-import PremiumBackground from '@/components/PremiumBackground';
 
 interface Challenge {
   id: number;
@@ -61,7 +60,7 @@ export default function LoveChallengesPage() {
   const [completed, setCompleted] = useState<Challenge[]>([]);
   const [streak, setStreak] = useState(0);
   const [completedCategories, setCompletedCategories] = useState<string[]>([]);
-  const [progress, setProgress] = useState({ communication: 0, fun: 0, romance: 0, adventure: 0 });
+  const [progress, setProgress] = useState<Record<string, number>>({ communication: 0, fun: 0, romance: 0, adventure: 0 });
 
   const filtered = CHALLENGES.filter(c => {
     if (categoryFilter !== 'all' && c.category !== categoryFilter) return false;
@@ -70,7 +69,9 @@ export default function LoveChallengesPage() {
   });
 
   const getDailyChallenge = () => {
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const now = Date.now();
+    const yearStart = new Date(new Date().getFullYear(), 0, 0).getTime();
+    const dayOfYear = Math.floor((now - yearStart) / 86400000);
     const cats = Object.keys(CATEGORY_META);
     const cat = cats[dayOfYear % cats.length];
     const catChallenges = CHALLENGES.filter(c => c.category === cat);
@@ -103,7 +104,6 @@ export default function LoveChallengesPage() {
   const reset = () => { setPhase('start'); setScore(0); setCompleted([]); setStreak(0); setCompletedCategories([]); setProgress({ communication: 0, fun: 0, romance: 0, adventure: 0 }); };
 
   return (
-    <PremiumBackground>
       <div className="min-h-screen pb-20">
         <nav className="relative z-50">
           <div className="glass-strong border-b border-white/50 sticky top-0 z-50">
@@ -153,7 +153,7 @@ export default function LoveChallengesPage() {
                 ))}
               </div>
 
-              <button onClick={() => { setPool(filtered.sort(() => Math.random() - 0.5)); setPhase('pick'); }} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
+              <button onClick={() => { setPool(filtered.sort(() => Math.random() - 0.5)); setPhase('pick'); }} className="px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-pink-700 font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition"><Play className="w-5 h-5 inline mr-2" /> Start</button>
             </motion.div>
           )}
 
@@ -196,15 +196,15 @@ export default function LoveChallengesPage() {
 
           {phase === 'active' && activeChallenge && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-              <div className={`bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2rem] shadow-2xl p-8 text-white mb-6`}>
+              <div className={`bg-gradient-to-br from-blue-500 to-purple-500 rounded-[2rem] shadow-2xl p-8 text-pink-700 mb-6`}>
                 <span className="text-5xl block mb-4">{activeChallenge.emoji}</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold bg-white/20 mb-4 inline-block`}>{activeChallenge.difficulty.toUpperCase()}</span>
                 <h2 className="text-2xl font-black mb-2">{activeChallenge.title}</h2>
-                <p className="text-white/80">{activeChallenge.description}</p>
-                <p className="text-sm text-white/60 mt-2">+{activeChallenge.points} pts{streak > 0 ? ` (+${streak * 10} bonus)` : ''}</p>
+                <p className="text-pink-700/80">{activeChallenge.description}</p>
+                <p className="text-sm text-pink-700/60 mt-2">+{activeChallenge.points} pts{streak > 0 ? ` (+${streak * 10} bonus)` : ''}</p>
               </div>
               <div className="flex gap-3">
-                <button onClick={completeChallenge} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-2xl hover:shadow-xl transition">Complete +{activeChallenge.points + streak * 10} pts</button>
+                <button onClick={completeChallenge} className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-pink-700 font-bold rounded-2xl hover:shadow-xl transition">Complete +{activeChallenge.points + streak * 10} pts</button>
                 <button onClick={skipChallenge} className="px-6 py-4 bg-white/70 rounded-2xl font-bold hover:bg-white transition">Skip</button>
               </div>
             </motion.div>
@@ -223,22 +223,22 @@ export default function LoveChallengesPage() {
                     <div key={cat} className="flex items-center gap-2">
                       <span className="text-xl">{meta.icon}</span>
                       <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${Math.min(progress[cat] * 25, 100)}%` }} />
+                        <motion.div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${Math.min(progress[cat as keyof typeof progress] * 25, 100)}%` }} />
                       </div>
-                      <span className="text-sm font-bold text-gray-700">{progress[cat]}</span>
+                      <span className="text-sm font-bold text-gray-700">{progress[cat as keyof typeof progress]}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="flex gap-4 justify-center">
                 <button onClick={reset} className="px-8 py-3 bg-white/70 rounded-2xl font-bold hover:bg-white transition"><RotateCcw className="w-5 h-5 inline mr-2" /> Play Again</button>
-                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-white font-bold">More Games</Link>
+                <Link href="/games" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl text-pink-700 font-bold">More Games</Link>
               </div>
             </motion.div>
           )}
           <div className="text-center mt-6"><Link href="/games"><button className="px-6 py-3 bg-white/70 rounded-2xl font-bold text-sm hover:bg-white transition">← Back to Games</button></Link></div>
         </div>
       </div>
-    </PremiumBackground>
-  );
+    
+);
 }

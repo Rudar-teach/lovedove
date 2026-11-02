@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { startPresence, stopPresence } from '@/lib/presence';
 
 interface AuthContextValue {
   initialized: boolean;
@@ -27,7 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
-          if (profile && mounted) setUser(profile);
+          if (profile && mounted) {
+            setUser(profile);
+            startPresence(profile.id);
+          }
         }
       } catch (e) {
         console.error('Auth init error:', e);
@@ -51,10 +55,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
-          if (profile) setUser(profile);
-          else setUser(null);
+          if (profile) {
+            setUser(profile);
+            startPresence(profile.id);
+          } else {
+            setUser(null);
+            stopPresence();
+          }
         } else {
           setUser(null);
+          stopPresence();
         }
         setLoading(false);
         setInitialized(true);
@@ -63,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      stopPresence();
       subscription.unsubscribe();
     };
   }, [setUser, setLoading]);
