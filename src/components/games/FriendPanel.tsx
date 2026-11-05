@@ -5,7 +5,7 @@ import { Users, Play, X, CheckCircle2, Clock, Gamepad2, Trophy } from 'lucide-re
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
-interface Friend {
+export interface Friend {
   id: string;
   name: string;
   username: string;

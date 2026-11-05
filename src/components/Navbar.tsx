@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   Heart, Menu, X, ChevronDown, Gamepad2, Trophy, Users, Mail,
   Sparkles, User, LogOut, Clock, Flame, Settings, ChevronRight,
-  Home, Gift, Camera, Search, Film
+  Home, Gift, Camera, Search, Film, Timer
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
@@ -115,6 +115,7 @@ export default function Navbar() {
     { href: '/#features', label: 'Features', icon: Sparkles },
     { href: '/find-partner', label: 'Find Partner', icon: Heart },
     { href: '/games', label: 'All Games', icon: Gamepad2 },
+    { href: '/miss-meter', label: 'Miss Meter', icon: Timer },
     { href: '/#badges', label: 'Badges', icon: Trophy },
     { href: '/#community', label: 'Community', icon: Users },
     { href: '/contact', label: 'Contact', icon: Mail },

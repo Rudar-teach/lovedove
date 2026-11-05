@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import ClientProvider from '@/components/ClientProvider';
 import Navbar from '@/components/Navbar';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
@@ -7,18 +7,23 @@ import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { PlayInviteProvider } from '@/components/PlayInviteProvider';
 import CookieBanner from '@/components/CookieBanner';
+import MissYouBanner from '@/components/MissYouBanner';
+import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
 import "./globals.css";
 
-// Self-hosted fonts (next/font downloads at build time, serves locally,
-// limits weights to what is actually used, and inlines font-display).
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// Self-hosted variable fonts (one woff2 file per family, all weights 100-900).
+// next/font/local hashes the files into the build, serves them locally, and
+// inlines font-display. No network fetch at build or runtime — faster than
+// the next/font/google pipeline and it sidesteps a Turbopack dev-mode bug
+// in Next 16.4.x that fails to resolve @vercel/turbopack-next font modules.
+const inter = localFont({
+  src: "../fonts/inter-var.woff2",
   variable: "--font-inter",
+  // Variable font: the browser picks any weight on the axis; Tailwind's
+  // font-light/semibold/black classes all map onto the one file.
 });
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+const playfair = localFont({
+  src: "../fonts/playfair-var.woff2",
   variable: "--font-playfair",
 });
 
@@ -52,6 +57,8 @@ export default function RootLayout({
               </main>
               <Chatbot />
               <CookieBanner />
+              <MissYouBanner />
+              <GlobalPlayWithFriend />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
