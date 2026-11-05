@@ -7,7 +7,7 @@ import {
   Camera, MessageCircle, Star, Filter, Search, Zap, HeartHandshake, ArrowRight,
   Play, ExternalLink, Award, Flame, Target, Crown, Rocket,
   PartyPopper, Music, Palette, Dumbbell, BookOpen, Coffee,
-  Globe, Shield, Clock, Users2, HeartPulse, Smile
+  Globe, Shield, Clock, Users2, HeartPulse, Smile, Timer, Send
 } from 'lucide-react';
 import Link from 'next/link';
 import LuxuryCursor from '@/components/premium/LuxuryCursor';
@@ -545,6 +545,49 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Miss Meter Section */}
+      <section id="miss-meter" className="py-20 sm:py-28 px-4 sm:px-6 relative overflow-hidden">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative bg-white rounded-3xl p-6 sm:p-10 shadow-xl shadow-pink-100/40 border border-pink-100/60 text-center overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-50/60 via-rose-50/40 to-fuchsia-50/60" />
+            <div className="relative z-10">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-pink-50 text-pink-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-pink-100">
+                <Timer className="w-3.5 h-3.5" />
+                Miss Meter
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-display font-black text-gray-900 mb-4">
+                Tell Your Partner{' '}
+                <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">
+                  How Much You Miss Them
+                </span>
+              </h2>
+              <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+                A private miss meter that fills the longer you are apart, a Love Wall for
+                missed-you notes, and a live moment when you are both online. Share it and
+                it shows up on their screen the instant they come back. 💕
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                <Link href="/miss-meter">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-8 sm:px-10 py-3.5 sm:py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl shadow-2xl shadow-pink-300/40 hover:shadow-pink-400/50 transition-all duration-300 inline-flex items-center gap-3 text-sm sm:text-base"
+                  >
+                    <Send className="w-5 h-5" />
+                    Open My Miss Meter
+                  </motion.button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Games Section */}
       <section id="games" className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-white via-pink-50/30 to-white relative">
         <div className="max-w-7xl mx-auto">
@@ -932,13 +975,19 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold text-sm uppercase tracking-wider text-gray-300 mb-4">Quick Links</h4>
               <div className="space-y-2.5">
-                {['Home', 'Games', 'Badges', 'Contact'].map((link) => (
+                {[
+                  { label: 'Home', href: '/' },
+                  { label: 'Miss Meter', href: '/miss-meter' },
+                  { label: 'Games', href: '/#games' },
+                  { label: 'Badges', href: '/#badges' },
+                  { label: 'Contact', href: '/contact' },
+                ].map((link) => (
                   <Link
-                    key={link}
-                    href={link === 'Home' ? '/' : link === 'Games' ? '/#games' : link === 'Badges' ? '/#badges' : '/contact'}
+                    key={link.label}
+                    href={link.href}
                     className="block text-sm text-gray-400 hover:text-pink-400 transition-colors"
                   >
-                    {link}
+                    {link.label}
                   </Link>
                 ))}
               </div>
