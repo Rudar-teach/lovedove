@@ -1,7 +1,36 @@
+# Love Dove on Netlify
+#
+# Netlify supports Next.js natively: when this repo is built on Netlify it
+# auto-installs the Next.js runtime, which serves the static pages AND runs
+# every /api/* route as a function plus the security middleware — so the 19
+# API routes and the rate limiting / security headers keep working in
+# production (a "Dropped files" upload cannot do that; it skips the build).
+#
+# Deploy via Git: Netlify -> add a Git-based project pointing at
+# github.com/Rudar-teach/lovedove (branch main). Framework detection finds
+# Next.js and applies this file.
+
 [build]
   command = "next build"
   publish = ".next"
 
 [build.environment]
-  NEXT_TELEMETRY_DISABLED = "1"
+  # Next.js 16 needs Node 22+
   NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Environment variables are NOT stored in this file (it is committed to git).
+# Set them in the Netlify dashboard: Project settings -> Environment ->
+# Environment variables:
+#
+#   Required for the app to work in the browser (public values, fine to
+#   build-time inline):
+#     NEXT_PUBLIC_SUPABASE_URL        https://pytjmswiynjsjatluftd.supabase.co
+#     NEXT_PUBLIC_SUPABASE_ANON_KEY   (anon key — the public browser key)
+#
+#   Optional, used only inside API routes (SECRETS, keep them out of git
+#   and out of any NEXT_PUBLIC_ variable):
+#     SUPABASE_SERVICE_ROLE_KEY
+#     RESEND_API_KEY
+#     RESEND_FROM_EMAIL
+#     PROPOSAL_NOTIFICATION_EMAIL
