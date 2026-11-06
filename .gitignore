@@ -40,3 +40,5 @@ verify_setup.js
 
 # Local Netlify folder
 .netlify
+
+.env*
