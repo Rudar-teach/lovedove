@@ -36,3 +36,4 @@ tsc_output.txt
 # Local agent tooling
 .claude/
 .claude-tmp/
+verify_setup.js

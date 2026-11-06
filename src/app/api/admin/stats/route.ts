@@ -1,24 +1,53 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+function getClient(token?: string) {
+  return createClient(
+    supabaseUrl,
+    supabaseServiceKey || supabaseAnonKey,
+    token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {}
+  );
+}
+
+async function resolveToken(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.replace('Bearer ', '').trim();
+  }
+  const cookieStore = await cookies();
+  return cookieStore.get('admin_token')?.value || null;
+}
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const token = await resolveToken(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const authClient = getClient(token);
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await authClient
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile?.is_admin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const supabase = getClient(token);
 
     const today = new Date();
     const startOfWeek = new Date(today);
@@ -64,11 +93,11 @@ export async function GET(request: Request) {
       supabase.from('profiles').select('created_at').neq('username', 'admin').gte('created_at', last30d.toISOString()).order('created_at', { ascending: true }),
     ]);
 
-    const uniqueActive24h = new Set(activeSessionsResult.data?.map(s => s.user_id) || []).size;
+    const uniqueActive24h = new Set(activeSessionsResult.data?.map((s: any) => s.user_id) || []).size;
 
     // Calculate daily signups chart data
     const dailySignupsMap: Record<string, number> = {};
-    dailySignupsResult.data?.forEach(u => {
+    dailySignupsResult.data?.forEach((u: any) => {
       const date = new Date(u.created_at).toISOString().split('T')[0];
       dailySignupsMap[date] = (dailySignupsMap[date] || 0) + 1;
     });
@@ -84,8 +113,10 @@ export async function GET(request: Request) {
     // Hourly activity for peak hour
     const hourlyCount: Record<number, number> = {};
     for (let h = 0; h < 24; h++) hourlyCount[h] = 0;
-    analyticsWeekResult.data?.forEach(day => {
-      if (day.peak_hour !== null) hourlyCount[day.peak_hour] = (hourlyCount[day.peak_hour] || 0) + day.peak_users;
+    analyticsWeekResult.data?.forEach((day: any) => {
+      if (day.peak_hour !== null && day.peak_hour !== undefined) {
+        hourlyCount[day.peak_hour] = (hourlyCount[day.peak_hour] || 0) + (day.peak_users || 0);
+      }
     });
     let peakHour = 0;
     let peakCount = 0;

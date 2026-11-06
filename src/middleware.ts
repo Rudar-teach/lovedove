@@ -84,7 +84,7 @@ export function middleware(req: NextRequest) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in ws://localhost:* wss://localhost:*",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in ws://localhost:* wss://localhost:*",
       "frame-src https: http:", // Spotify embeds
       `frame-ancestors 'none'`,
       "base-uri 'self'",
