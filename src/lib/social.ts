@@ -40,6 +40,38 @@ export type PlayInvite = {
 };
 
 const PROFILE_COLS = 'id, full_name, username, avatar_url, is_online, last_seen';
+/** Columns that exist in the base schema, before the social/presence migration. */
+const PROFILE_COLS_MIN = 'id, full_name, username, avatar_url';
+
+/** Friendly message shown when the live DB hasn't had the social migration yet. */
+const DB_PENDING_ERROR =
+  'Friends are still being set up on the server — please try again in a few minutes.';
+
+function isTableMissing(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === 'PGRST205' || (error.message || '').includes('Could not find the table');
+}
+
+function isColumnMissing(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    error.code === '42703' ||
+    (error.message || '').includes('does not exist')
+  );
+}
+
+/** Fill presence fields with safe defaults; tolerant of partial / migrated rows. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function withPresenceDefaults(p: any): FriendProfile {
+  return {
+    id: p.id as string,
+    full_name: p.full_name ?? null,
+    username: p.username ?? null,
+    avatar_url: p.avatar_url ?? null,
+    is_online: Boolean(p.is_online),
+    last_seen: p.last_seen ?? null,
+  };
+}
 
 /** Fetch every friend + pending request involving this user, in one query. */
 export async function fetchFriendRelations(userId: string): Promise<{
@@ -47,17 +79,26 @@ export async function fetchFriendRelations(userId: string): Promise<{
   incoming: FriendRelation[];
   outgoing: FriendRelation[];
 }> {
+  // Minimal profile columns keep the join working even when the presence
+  // migration (is_online/last_seen) hasn't been applied yet.
   const { data, error } = await supabase
     .from('friend_requests')
     .select(`
       id, sender_id, receiver_id, status, created_at, accepted_at,
-      sender:profiles!friend_requests_sender_id_fkey(${PROFILE_COLS}),
-      receiver:profiles!friend_requests_receiver_id_fkey(${PROFILE_COLS})
+      sender:profiles!friend_requests_sender_id_fkey(${PROFILE_COLS_MIN}),
+      receiver:profiles!friend_requests_receiver_id_fkey(${PROFILE_COLS_MIN})
     `)
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
     .order('created_at', { ascending: false });
 
-  if (error || !data) return { friends: [], incoming: [], outgoing: [] };
+  if (error) {
+    if (isTableMissing(error)) {
+      console.warn('[social] friend_requests table missing — run the social migration', error.message);
+      return { friends: [], incoming: [], outgoing: [] };
+    }
+    return { friends: [], incoming: [], outgoing: [] };
+  }
+  if (!data) return { friends: [], incoming: [], outgoing: [] };
 
   const friends: FriendRelation[] = [];
   const incoming: FriendRelation[] = [];
@@ -79,6 +120,25 @@ export async function fetchFriendRelations(userId: string): Promise<{
     }
   }
 
+  // Best-effort presence enrichment: fills is_online/last_seen when the
+  // migration has been applied; silently no-ops when it hasn't.
+  const ids = [...new Set([...friends, ...incoming, ...outgoing].map(r => r.friend?.id).filter(Boolean))] as string[];
+  if (ids.length > 0) {
+    const { data: presence } = await supabase
+      .from('profiles')
+      .select('id, is_online, last_seen')
+      .in('id', ids)
+      .limit(100);
+    if (presence) {
+      const map = new Map(presence.map(p => [p.id, p]));
+      for (const r of [...friends, ...incoming, ...outgoing]) {
+        if (!r.friend) continue;
+        const p = map.get(r.friend.id);
+        r.friend = withPresenceDefaults({ ...r.friend, is_online: p?.is_online, last_seen: p?.last_seen });
+      }
+    }
+  }
+
   return { friends, incoming, outgoing };
 }
 
@@ -87,27 +147,37 @@ export async function searchProfiles(query: string, excludeId: string): Promise<
   const q = query.trim().replace(/^@/, '');
   if (q.length < 2) return [];
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(PROFILE_COLS)
-    .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
-    .neq('id', excludeId)
-    .limit(20);
+  const run = (cols: string) =>
+    supabase
+      .from('profiles')
+      .select(cols)
+      .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
+      .neq('id', excludeId)
+      .limit(20);
+
+  let { data, error } = await run(PROFILE_COLS);
+  if ((isColumnMissing(error) || isTableMissing(error)) && data === undefined) {
+    // Presence columns may not exist yet — retry with the minimal set.
+    ({ data, error } = await run(PROFILE_COLS_MIN));
+  }
 
   if (error || !data) return [];
-  return data as FriendProfile[];
+  return data.map(withPresenceDefaults);
 }
 
 /** Look up a single profile by exact username (case-insensitive). */
 export async function getProfileByUsername(username: string): Promise<FriendProfile | null> {
   const clean = username.trim().replace(/^@/, '').toLowerCase();
   if (!clean) return null;
-  const { data } = await supabase
-    .from('profiles')
-    .select(PROFILE_COLS)
-    .eq('username', clean)
-    .maybeSingle();
-  return (data as FriendProfile) || null;
+
+  const run = (cols: string) =>
+    supabase.from('profiles').select(cols).eq('username', clean).maybeSingle();
+
+  let { data, error } = await run(PROFILE_COLS);
+  if (isColumnMissing(error) && !data) ({ data, error } = await run(PROFILE_COLS_MIN));
+
+  if (error || !data) return null;
+  return withPresenceDefaults(data as unknown as Record<string, unknown>);
 }
 
 /** Is a username already taken? */
@@ -128,11 +198,15 @@ export async function sendFriendRequest(fromId: string, toId: string): Promise<S
   if (fromId === toId) return { ok: false, error: 'You cannot add yourself' };
 
   // Already friends / pending?
-  const { data: existing } = await supabase
+  const { data: existing, error: readErr } = await supabase
     .from('friend_requests')
     .select('id, status, sender_id')
     .or(`and(sender_id.eq.${fromId},receiver_id.eq.${toId}),and(sender_id.eq.${toId},receiver_id.eq.${fromId})`)
     .maybeSingle();
+
+  if (readErr && isTableMissing(readErr)) {
+    return { ok: false, error: DB_PENDING_ERROR };
+  }
 
   if (existing) {
     if (existing.status === 'accepted') return { ok: true, alreadyFriends: true };

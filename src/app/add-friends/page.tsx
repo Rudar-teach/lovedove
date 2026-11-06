@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Search, UserPlus, Users, Share2, Copy, Check, MessageCircle,
   Gamepad2, Bell, X, ArrowLeft, Sparkles, Link2, Send, Wifi, WifiOff,
-  Instagram, Twitter, Facebook, Trash2, Clock, Zap
+  Instagram, Twitter, Facebook, Trash2, Clock, Zap, CheckCircle2, SendHorizontal
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   fetchFriendRelations, searchProfiles, sendFriendRequestByUsername,
   respondToFriendRequest, removeFriend, getFriendInviteLink,
-  sendPlayInvite, type FriendRelation, type FriendProfile
+  sendPlayInvite, getProfileByUsername,
+  type FriendRelation, type FriendProfile
 } from '@/lib/social';
 import toast from 'react-hot-toast';
 
@@ -27,6 +28,13 @@ const POPULAR_GAMES = [
   { slug: 'rockpaperscissors', name: 'Rock Paper Scissors', emoji: '✋' },
   { slug: 'truthordare', name: 'Truth or Dare', emoji: '🎯' },
 ];
+
+/**
+ * Relationship status for a given user id, derived from the loaded sets.
+ * The UI renders this as its OWN icon, kept visually separate from the
+ * user's @username handle so the two are never confused.
+ */
+type UserStatus = 'stranger' | 'friend' | 'pending_out' | 'pending_in';
 
 function timeAgo(iso: string | null) {
   if (!iso) return '';
@@ -55,6 +63,8 @@ function AddFriendsContent() {
   const [loading, setLoading] = useState(true);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [invitingGame, setInvitingGame] = useState<string | null>(null);
+  const [ownUsername, setOwnUsername] = useState<string>('');
+  const [ownCopyDone, setOwnCopyDone] = useState(false);
 
   const inviteLink = useMemo(() => (userId ? getFriendInviteLink(userId) : ''), [userId]);
 
@@ -68,6 +78,15 @@ function AddFriendsContent() {
     setFriends(f);
     setIncoming(i);
     setOutgoing(o);
+
+    // Your own @username — shown with its own copy button so you can hand it
+    // to your partner to add you by username.
+    if (!ownUsername) {
+      try {
+        const rows = await supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle();
+        if (rows.data?.username) setOwnUsername(rows.data.username);
+      } catch { /* presence migration pending — skip */ }
+    }
 
     // If the page was opened via ?invite=<id>, auto-send a request so the
     // inviter's friend list shows a pending request immediately.
@@ -85,9 +104,37 @@ function AddFriendsContent() {
     }
 
     setLoading(false);
-  }, [router, inviteCode]);
+  }, [router, inviteCode, ownUsername]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Map of userId -> status, built from the loaded friend sets.
+  const statusOf = useCallback((uid: string | null | undefined): UserStatus => {
+    if (!uid) return 'stranger';
+    if (friends.some(f => f.friend.id === uid)) return 'friend';
+    if (outgoing.some(o => o.friend.id === uid)) return 'pending_out';
+    if (incoming.some(i => i.friend.id === uid)) return 'pending_in';
+    return 'stranger';
+  }, [friends, outgoing, incoming]);
+
+  const statusBadge: Record<UserStatus, { icon: typeof UserPlus; label: string; cls: string }> = {
+    friend:      { icon: CheckCircle2,       label: 'Friend',      cls: 'text-green-600 bg-green-50' },
+    pending_out: { icon: SendHorizontal,    label: 'Sent',        cls: 'text-amber-600 bg-amber-50' },
+    pending_in:  { icon: Bell,              label: 'Wants you',   cls: 'text-pink-600 bg-pink-50' },
+    stranger:    { icon: UserPlus,          label: 'Add friend',  cls: 'text-purple-600 bg-purple-50' },
+  };
+
+  const copyOwnUsername = async () => {
+    if (!ownUsername) return;
+    try {
+      await navigator.clipboard.writeText(ownUsername);
+      setOwnCopyDone(true);
+      toast.success('Your username copied — share it with your partner 💕');
+      setTimeout(() => setOwnCopyDone(false), 2000);
+    } catch {
+      toast.error('Could not copy');
+    }
+  };
 
   // ── Live refresh on friend request / accept ─────────────────────────────
   useEffect(() => {
@@ -350,13 +397,28 @@ function AddFriendsContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-800 text-sm truncate">{p.full_name || 'User'}</p>
-                            <p className="text-xs text-gray-500">@{p.username}</p>
+                            {/* @username is the IDENTITY handle; the status is shown by its OWN icon, never mixed into the name */}
+                            <p className="text-xs text-gray-400 font-mono">@{p.username}</p>
                           </div>
+                          {(() => {
+                            const st = statusOf(p.id);
+                            const b = statusBadge[st];
+                            return (
+                              <span className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg ${b.cls}`} title={b.label}>
+                                <b.icon className="w-3.5 h-3.5" />
+                                {b.label}
+                              </span>
+                            );
+                          })()}
                           <button
                             onClick={() => handleAddFromResults(p)}
-                            className="px-3 py-1.5 bg-pink-500 text-white text-xs font-bold rounded-xl hover:bg-pink-600 transition-colors"
+                            className={`px-3 py-1.5 text-white text-xs font-bold rounded-xl transition-colors ${
+                              statusOf(p.id) === 'friend'
+                                ? 'bg-emerald-500 hover:bg-emerald-600'
+                                : 'bg-pink-500 hover:bg-pink-600'
+                            }`}
                           >
-                            Add
+                            {statusOf(p.id) === 'friend' ? 'Friends' : 'Add'}
                           </button>
                         </motion.div>
                       ))}
@@ -368,6 +430,25 @@ function AddFriendsContent() {
                   <p className="text-sm text-gray-400 mt-3 text-center">No users found. Try a different username.</p>
                 )}
               </div>
+
+              {/* Your own username — share it so your partner can add you */}
+              {ownUsername && (
+                <div className="bg-white rounded-3xl shadow-xl shadow-pink-100/40 border border-pink-100 p-5 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-black text-lg flex-shrink-0">
+                    {ownUsername.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Your username</p>
+                    <p className="font-mono font-bold text-gray-800 truncate">@{ownUsername}</p>
+                  </div>
+                  <button
+                    onClick={copyOwnUsername}
+                    className="flex-shrink-0 px-3 py-2 bg-pink-500 text-white text-xs font-bold rounded-xl hover:bg-pink-600 transition-colors flex items-center gap-1.5"
+                  >
+                    {ownCopyDone ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                  </button>
+                </div>
+              )}
 
               {/* Share your invite link */}
               <div className="bg-white rounded-3xl shadow-xl shadow-purple-100/40 border border-purple-100 p-6">
