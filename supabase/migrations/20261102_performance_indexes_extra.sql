@@ -3,7 +3,13 @@
 -- guarded with a DO block so a missing table is skipped instead of aborting
 -- the whole script.
 --
--- Apply this in the same Supabase project where these tables exist.
+-- NOTE 2026-11-06: superseded. The ad-hoc tables that exist in the live
+-- project (conversations, game_stats, user_badges) are now indexed directly
+-- in 20261102_performance_indexes.sql, and `proposals`, `active_sessions`,
+-- `analytics_daily` were found NOT to exist in the live project, so this
+-- file's remaining work is already done. Keeping the file only for history
+-- - it is idempotent and safe to re-run, but a fresh project only needs
+-- 20261102_performance_indexes.sql + 20261105_missed_you_entries.sql.
 
 DO $$
 BEGIN
