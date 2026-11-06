@@ -1,17 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Heart, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Heart, Mail, Lock, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
 import CanvasBackground from '@/components/premium/CanvasBackground';
 import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
 import { supabase } from '@/lib/supabase';
-import { friendlyAuthError } from '@/lib/authErrors';
+import { friendlyAuthError, isRateLimited } from '@/lib/authErrors';
 import { trackLogin } from '@/lib/adminApi';
+
+/**
+ * "Quick login" auto-retry.
+ *
+ * Supabase throttles sign-in per IP ("rate limit exceeded"). Instead of
+ * making the user wait around, we store their credentials in sessionStorage
+ * and retry automatically on an interval until they get in. Credentials live
+ * only in this browser's session storage — never sent anywhere or persisted
+ * to disk.
+ */
+const RETRY_KEY = 'lovedove_quick_login';
+const RETRY_SECONDS = 15; // stays well under Supabase's 50-attempts/3h budget
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,37 +31,98 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [nextRetry, setNextRetry] = useState(0); // seconds until auto sign-in; 0 = off
+  const retryTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const stopRetry = () => {
+    if (retryTimer.current) clearInterval(retryTimer.current);
+    retryTimer.current = null;
+    setNextRetry(0);
+  };
+
+  const startRetry = () => {
+    stopRetry();
+    setNextRetry(RETRY_SECONDS);
+    retryTimer.current = setInterval(() => {
+      setNextRetry((prev) => {
+        if (prev <= 1) {
+          clearInterval(retryTimer.current as ReturnType<typeof setInterval>);
+          retryTimer.current = null;
+          void trySignIn();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const trySignIn = async (storedEmail?: string, storedPassword?: string) => {
+    const e = (storedEmail ?? email).trim();
+    const p = storedPassword ?? password;
+    if (!e || !p) return;
     setLoading(true);
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: e,
+        password: p,
       });
 
-      if (error) {
-        setError(friendlyAuthError(error.message));
+      if (authError) {
         setLoading(false);
+        if (isRateLimited(authError.message)) {
+          // Throttled: keep the credentials around and keep auto-retrying.
+          try { sessionStorage.setItem(RETRY_KEY, JSON.stringify({ email: e, password: p })); } catch { /* storage full/blocked */ }
+          startRetry();
+          setError('Too many logins from this device. Auto sign-in is running — you\'ll in soon.');
+        } else {
+          stopRetry();
+          try { sessionStorage.removeItem(RETRY_KEY); } catch { /* ignore */ }
+          setError(friendlyAuthError(authError.message));
+        }
         return;
       }
 
+      // Success — clear any saved credentials and hand off.
+      stopRetry();
+      try { sessionStorage.removeItem(RETRY_KEY); } catch { /* ignore */ }
+      setLoading(false);
       if (data.user) {
         // Track login
-        await trackLogin(data.user.id, email);
+        await trackLogin(data.user.id, e);
       }
 
       // Always send the user to the add-friends flow after sign-in so they
       // can connect with their partner. They can go elsewhere from there.
       router.push('/add-friends');
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
+    } catch {
       setLoading(false);
+      setError('Something went wrong. Please try again.');
     }
+  };
+
+  // Resume auto sign-in after a page reload if we were throttled before.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(RETRY_KEY);
+      if (raw) {
+        const { email: e, password: p } = JSON.parse(raw);
+        if (e && p) {
+          setEmail(e);
+          setPassword(p);
+          startRetry();
+        }
+      }
+    } catch { /* ignore */ }
+    return () => stopRetry();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void trySignIn();
   };
 
   return (
@@ -141,7 +214,14 @@ export default function LoginPage() {
                 </div>
               </CinematicReveal>
 
-              {error && (
+              {nextRetry > 0 && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
+                  <RefreshCw className="w-4 h-4 animate-spin flex-shrink-0" />
+                  Signing you in automatically in {nextRetry}s… (no need to tap anything)
+                </div>
+              )}
+
+              {error && nextRetry === 0 && (
                 <CinematicReveal direction="up" delay={0}>
                   <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">{error}</p>
                 </CinematicReveal>
@@ -150,13 +230,15 @@ export default function LoginPage() {
               <CinematicReveal direction="up" delay={0.2}>
                 <motion.button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || nextRetry > 0}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : nextRetry > 0 ? (
+                    <span>Auto sign-in running…</span>
                   ) : (
                     <>
                       Sign In
