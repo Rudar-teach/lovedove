@@ -37,3 +37,6 @@ tsc_output.txt
 .claude/
 .claude-tmp/
 verify_setup.js
+
+# Local Netlify folder
+.netlify
