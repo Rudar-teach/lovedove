@@ -13,6 +13,7 @@ import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
 import { supabase } from '@/lib/supabase';
+import { friendlyAuthError } from '@/lib/authErrors';
 import toast from 'react-hot-toast';
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -114,7 +115,7 @@ export default function SignupPage() {
       });
 
       if (error) {
-        toast.error(error.message || 'Signup failed');
+        toast.error(friendlyAuthError(error.message));
         setLoading(false);
         return;
       }

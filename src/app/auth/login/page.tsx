@@ -10,6 +10,7 @@ import ShinyText from '@/components/premium/ShinyText';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
 import { supabase } from '@/lib/supabase';
+import { friendlyAuthError } from '@/lib/authErrors';
 import { trackLogin } from '@/lib/adminApi';
 
 export default function LoginPage() {
@@ -32,7 +33,7 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setError(error.message || 'Invalid email or password');
+        setError(friendlyAuthError(error.message));
         setLoading(false);
         return;
       }
