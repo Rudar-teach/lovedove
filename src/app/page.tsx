@@ -17,6 +17,7 @@ import MagneticButton from '@/components/premium/MagneticButton';
 import GlassCard from '@/components/premium/GlassCard';
 import ShinyText from '@/components/premium/ShinyText';
 import ChatBot from '@/components/chat/ChatBot';
+import HomeFriendsCard from '@/components/HomeFriendsCard';
 
 const games = [
   { name: 'Tic-Tac-Toe', slug: 'tictactoe', icon: '⭕❌', desc: 'Classic strategy', gradient: 'from-pink-400 to-rose-500', category: 'Classic', players: '2 Players' },
@@ -541,6 +542,11 @@ export default function HomePage() {
                 <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
+          </div>
+
+          {/* Your People — friends live on the home page now */}
+          <div className="max-w-3xl mx-auto">
+            <HomeFriendsCard />
           </div>
         </div>
       </section>

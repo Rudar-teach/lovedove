@@ -35,45 +35,83 @@ export default function FriendPanel({
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          setFriends([
-            { id: '1', name: 'You', username: 'you', online: true, gamesPlayed: 0 },
-          ]);
+          setFriends([]);
           setLoading(false);
           return;
         }
 
-        const { data: matchData } = await supabase
+        // 1) Partner from an accepted match. Production `matches` uses a
+        //    single `status` column; legacy DBs use user1_accepted booleans.
+        const { data: matchData, error: mErr } = await supabase
           .from('matches')
-          .select('*')
-          .or(`and(user1_id.eq.${user.id},user1_accepted.eq.true),and(user2_id.eq.${user.id},user2_accepted.eq.true)`)
-          .eq('is_active', true)
+          .select('id, user1_id, user2_id, status, created_at')
+          .or(
+            `and(user1_id.eq.${user.id},status.in.(accepted,connected)),` +
+            `and(user2_id.eq.${user.id},status.in.(accepted,connected))`
+          )
+          .order('created_at', { ascending: false })
           .limit(20);
 
-        const loaded: Friend[] = [];
-        for (const m of matchData || []) {
-          const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
-          const { data: other } = await supabase
-            .from('profiles')
-            .select('id, full_name, username, avatar_url')
-            .eq('id', otherId)
-            .single();
-          if (other) {
-            const { count } = await supabase
-              .from('game_sessions')
-              .select('id', { count: 'exact', head: true })
-              .eq('friend_id', otherId);
-            loaded.push({
-              id: other.id,
-              name: other.full_name || other.username || 'Friend',
-              username: other.username || '',
-              avatar: other.avatar_url,
-              online: true,
-              gamesPlayed: count || 0,
-            });
-          }
+        let partnerIds: string[] = (matchData || [])
+          .map((m: any) => (m.user1_id === user.id ? m.user2_id : m.user1_id));
+
+        if (mErr || (matchData || []).length === 0) {
+          // Legacy schema fallback — only runs when the status query failed.
+          const { data: legacy } = await supabase
+            .from('matches')
+            .select('*')
+            .or(`and(user1_id.eq.${user.id},user1_accepted.eq.true),and(user2_id.eq.${user.id},user2_accepted.eq.true)`)
+            .limit(20);
+          partnerIds = (legacy || []).map((m: any) =>
+            m.user1_id === user.id ? m.user2_id : m.user1_id
+          );
         }
 
-        setFriends(loaded);
+        // 2) Accepted friend_requests (friend system backend).
+        const { data: reqData } = await supabase
+          .from('friend_requests')
+          .select('sender_id, receiver_id')
+          .eq('status', 'accepted')
+          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+          .limit(20);
+        const friendIds = (reqData || []).map((r: any) =>
+          r.sender_id === user.id ? r.receiver_id : r.sender_id
+        );
+
+        const ids = [...new Set([...partnerIds, ...friendIds].filter(Boolean))] as string[];
+        if (ids.length === 0) {
+          setFriends([]);
+          setLoading(false);
+          return;
+        }
+
+        // 3) Batch-load profiles WITH live presence (no N+1, real online dots).
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, is_online, last_seen')
+          .in('id', ids);
+
+        // 4) How many two-player games this user has finished.
+        const { data: sessionCounts } = await supabase
+          .from('game_sessions')
+          .select('player1_id, player2_id')
+          .eq('status', 'completed')
+          .limit(500);
+        const countFor = (id: string) =>
+          (sessionCounts || []).filter(
+            (s: any) => s.player1_id === id || s.player2_id === id
+          ).length;
+
+        setFriends(
+          (profiles || []).map((p: any) => ({
+            id: p.id,
+            name: p.full_name || p.username || 'Friend',
+            username: p.username || '',
+            avatar: p.avatar_url,
+            online: Boolean(p.is_online),
+            gamesPlayed: countFor(p.id),
+          }))
+        );
       } catch {
         setFriends([]);
       } finally {
