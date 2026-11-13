@@ -22,6 +22,7 @@ export const STATIC_GAMES: StaticGame[] = [
   { id: 's-tictactoe', slug: 'tictactoe', name: 'Tic-Tac-Toe', description: 'Classic strategy game. Play with your partner!', category: 'strategy', emoji: '❌', difficulty: 'easy', min_players: 2, max_players: 2, is_featured: true, play_count: 1240, route_path: '/games/tictactoe' },
   { id: 's-memory', slug: 'memory', name: 'Memory Match', description: 'Find the pairs. Test your memory together!', category: 'puzzle', emoji: '🎴', difficulty: 'easy', min_players: 2, max_players: 2, is_featured: true, play_count: 980, route_path: '/games/memory' },
   { id: 's-quiz', slug: 'quiz', name: 'Couple Quiz', description: 'How well do you know your partner?', category: 'quiz', emoji: '💡', difficulty: 'medium', min_players: 2, max_players: 2, is_featured: true, play_count: 1450, route_path: '/games/quiz' },
+  { id: 's-dueduo', slug: 'love_duo_quiz', name: 'Love Duo Quiz', description: 'Co-op chemistry quiz — pick the answer that feels like US. No losing, just a meter that grows.', category: 'romantic', emoji: '💞', difficulty: 'easy', min_players: 1, max_players: 2, is_featured: true, play_count: 0, route_path: '/games/love_duo_quiz' },
   { id: 's-wyr', slug: 'wouldyourather', name: 'Would You Rather', description: 'Tough choices for couples.', category: 'quiz', emoji: '🤔', difficulty: 'easy', min_players: 2, max_players: 4, is_featured: true, play_count: 870, route_path: '/games/wouldyourather' },
 
   // ── Classic ────────────────────────────────────────────────────────

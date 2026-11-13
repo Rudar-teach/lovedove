@@ -45,33 +45,58 @@ const METER_CAP_DAYS = 7;
 
 const PROFILE_COLS = 'id, full_name, username, avatar_url, is_online, last_seen';
 
-/** Resolve "your partner" = the other side of your accepted, active match. */
+/**
+ * Resolve "your partner" = the other side of your accepted match.
+ *
+ * The production `matches` table uses a `status` column
+ * ('pending' | 'accepted' | 'rejected' | 'connected') — the older
+ * `user1_accepted` / `is_active` columns don't exist there, so query both
+ * shapes and never throw: if the accepted-match query fails (column
+ * missing), retry with a permissive query.
+ */
 export async function resolvePartner(userId: string): Promise<PartnerInfo | null> {
-  const { data: matches } = await supabase
+  let matches: any[] | null = null;
+  const { data, error } = await supabase
     .from('matches')
-    .select('*')
-    .or(`and(user1_id.eq.${userId},user1_accepted.eq.true),and(user2_id.eq.${userId},user2_accepted.eq.true)`)
-    .eq('is_active', true)
+    .select('id, user1_id, user2_id, status, created_at')
+    .or(
+      `and(user1_id.eq.${userId},status.in.(accepted,connected)),` +
+      `and(user2_id.eq.${userId},status.in.(accepted,connected))`
+    )
     .order('created_at', { ascending: false })
     .limit(1);
+
+  if (error || !data) {
+    // Permissive fallback (also covers legacy schemas, and finds any match
+    // so partner resolution never hard-fails).
+    const { data: legacy } = await supabase
+      .from('matches')
+      .select('id, user1_id, user2_id, status, created_at')
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    matches = legacy;
+  } else {
+    matches = data;
+  }
 
   const m = (matches || [])[0] as any;
   if (!m) return null;
   const partnerId = m.user1_id === userId ? m.user2_id : m.user1_id;
   if (!partnerId) return null;
 
-  const { data } = await supabase
+  const { data: profile } = await supabase
     .from('profiles')
     .select(PROFILE_COLS)
     .eq('id', partnerId)
     .maybeSingle();
 
-  if (!data) return null;
+  if (!profile) return null;
   return {
-    id: data.id,
-    full_name: data.full_name || '',
-    username: data.username || '',
-    avatar_url: data.avatar_url,
+    id: profile.id,
+    full_name: profile.full_name || '',
+    username: profile.username || '',
+    avatar_url: profile.avatar_url,
   };
 }
 

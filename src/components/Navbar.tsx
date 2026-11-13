@@ -7,10 +7,11 @@ import { usePathname } from 'next/navigation';
 import {
   Heart, Menu, X, ChevronDown, Gamepad2, Trophy, Users, Mail,
   Sparkles, User, LogOut, Clock, Flame, Settings, ChevronRight,
-  Home, Gift, Camera, Search, Film, Timer
+  Home, Gift, Camera, Search, Film, Timer, BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { supabase } from '@/lib/supabase';
+import PartnerPill from '@/components/PartnerPill';
 import toast from 'react-hot-toast';
 
 const GAME_TYPE_MAP: Record<string, { name: string; emoji: string }> = {
@@ -112,11 +113,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/#games', label: 'Games', icon: Gamepad2 },
-    { href: '/#features', label: 'Features', icon: Sparkles },
     { href: '/find-partner', label: 'Find Partner', icon: Heart },
+    { href: '/our-story', label: 'Our Story', icon: BookOpen },
     { href: '/games', label: 'All Games', icon: Gamepad2 },
     { href: '/miss-meter', label: 'Miss Meter', icon: Timer },
-    { href: '/#badges', label: 'Badges', icon: Trophy },
+    { href: '/leaderboard', label: 'Couples of the Week', icon: Trophy },
     { href: '/#community', label: 'Community', icon: Users },
     { href: '/contact', label: 'Contact', icon: Mail },
   ];
@@ -179,6 +180,8 @@ export default function Navbar() {
           <div className="flex items-center gap-2 sm:gap-3">
             {isAuthenticated && user ? (
               <>
+                {/* "Partner online now" pill (only renders when a partner exists) */}
+                <PartnerPill />
                 {/* Profile Icon with Dropdown */}
                 <div ref={profileRef} className="relative">
                   <motion.button

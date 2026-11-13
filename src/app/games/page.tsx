@@ -59,9 +59,14 @@ export default function GamesCatalog() {
           .order('is_featured', { ascending: false })
           .order('play_count', { ascending: false });
 
-        if (!error && data) {
-          setGames(data);
-          setFilteredGames(data);
+        // The static catalog is the source of truth for the 150+ shipped
+        // games; the live table is a thin overlay (admin-added entries).
+        // Merge live-unique slugs onto the static list so a sparse live
+        // table can never shrink the grid.
+        if (!error && data && data.length > 0) {
+          const merged = STATIC_GAMES.filter(sg => !data.some((lg: any) => lg.slug === sg.slug));
+          setGames([...data, ...merged] as Game[]);
+          setFilteredGames([...data, ...merged] as Game[]);
         }
       } catch (err) {
         console.error('Failed to load games:', err);

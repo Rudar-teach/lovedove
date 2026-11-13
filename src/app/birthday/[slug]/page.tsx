@@ -8,6 +8,7 @@ import { Heart, Music, ChevronLeft, ChevronRight, X, Cake, Sparkles, Eye, Calend
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Guestbook from '@/components/Guestbook';
+import SurprisePool from '@/components/SurprisePool';
 
 interface SiteData {
   id: string;
@@ -47,6 +48,103 @@ const FONT_MAP: Record<string, string> = {
   cursive: '"Segoe Script", "Brush Script MT", cursive',
   mono: 'ui-monospace, "SF Mono", Menlo, monospace',
 };
+
+/**
+ * Has the birthday (or its celebration window) already arrived?
+ * The surprise pool stays sealed until the day itself.
+ */
+function birthdayRevealed(dateStr: string | null, age: number | null): boolean {
+  if (!dateStr) return true; // no date set → treat as already here
+  const today = new Date();
+  const bday = new Date(dateStr);
+  if (Number.isNaN(bday.getTime())) return true;
+  const thisYear = new Date(today);
+  thisYear.setFullYear(today.getFullYear(), bday.getMonth(), bday.getDate());
+  // Celebrate on the day itself AND the following day (grace period).
+  const grace = new Date(thisYear.getTime() + 86400000);
+  return today >= thisYear && today <= grace || today.getFullYear() > thisYear.getFullYear();
+}
+
+/** Live ticking countdown to the birthday. */
+function BirthdayCountdown({
+  dateStr,
+  name,
+  theme,
+  accentColor,
+}: {
+  dateStr: string;
+  name: string;
+  theme: { text: string; muted: string };
+  accentColor: string;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const target = new Date(dateStr);
+  target.setFullYear(new Date(now).getFullYear());
+  if (target.getTime() < now - 86400000 * 2) target.setFullYear(target.getFullYear() + 1);
+
+  const delta = Math.max(0, target.getTime() - now);
+  const days = Math.floor(delta / 86400000);
+  const hrs = Math.floor((delta % 86400000) / 3600000);
+  const mins = Math.floor((delta % 3600000) / 60000);
+  const secs = Math.floor((delta % 60000) / 1000);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-7 mb-8 text-center"
+    >
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <Calendar className="w-5 h-5" style={{ color: accentColor }} />
+        <h2 className="font-bold text-lg" style={{ color: theme.text }}>
+          {days === 0 ? `It’s ${name}’s day! 🎉` : `Counting down to ${name}’s day`}
+        </h2>
+      </div>
+      {days === 0 ? (
+        <div>
+          <motion.div
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="text-5xl mb-2"
+          >
+            🎂
+          </motion.div>
+          <p className="font-bold text-lg" style={{ color: accentColor }}>
+            The surprise is unlocked — scroll down and make some noise!
+          </p>
+        </div>
+      ) : (
+        <div className="flex justify-center gap-2 sm:gap-3">
+          {[
+            { v: days, l: 'days' },
+            { v: hrs, l: 'hrs' },
+            { v: mins, l: 'min' },
+            { v: secs, l: 'sec' },
+          ].map((b) => (
+            <div
+              key={b.l}
+              className="rounded-2xl px-3 py-3 sm:px-4 sm:py-4 min-w-[64px] sm:min-w-[76px]"
+              style={{ background: `${accentColor}18`, border: `1px solid ${accentColor}33` }}
+            >
+              <p className="text-2xl sm:text-3xl font-black tabular-nums" style={{ color: theme.text }}>
+                {String(b.v).padStart(2, '0')}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: theme.muted }}>
+                {b.l}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
 
 function Confetti({ color }: { color: string }) {
   const pieces = useMemo(
@@ -284,6 +382,16 @@ export default function BirthdaySitePage() {
           </motion.div>
         )}
 
+        {/* Birthday countdown — unlocks the surprise pool on the day */}
+        {site.birthday_date && (
+          <BirthdayCountdown
+            dateStr={site.birthday_date}
+            name={site.name}
+            theme={theme}
+            accentColor={site.accent_color}
+          />
+        )}
+
         {/* Message card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -356,6 +464,14 @@ export default function BirthdaySitePage() {
           accentColor={site.accent_color}
           textColor={theme.text}
           mutedColor={theme.muted}
+        />
+
+        {/* Surprise pool — the reveal is gated on the birthday having arrived */}
+        <SurprisePool
+          siteId={site.id}
+          accentColor={site.accent_color}
+          mutedColor={theme.muted}
+          revealNow={birthdayRevealed(site.birthday_date, site.age)}
         />
 
         {/* Footer */}

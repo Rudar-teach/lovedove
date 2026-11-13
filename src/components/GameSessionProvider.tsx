@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { celebrateWin } from '@/lib/winCelebrate';
+import { logAutoMilestone } from '@/lib/relationship';
 
 export type PlayerInfo = {
   id: string;
@@ -260,6 +262,7 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
   const completeSession = useCallback(async (winnerId?: string) => {
     if (!state.sessionId) return;
     try {
+      const { data: { session: authSession } } = await supabase.auth.getSession();
       await supabase
         .from('game_sessions')
         .update({
@@ -270,6 +273,15 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
         .eq('id', state.sessionId);
       setState((prev) => ({ ...prev, status: 'completed' }));
       clearPolling();
+
+      // Celebrate when *this device's* user won (or the game has no winner
+      // concept — e.g. co-op finishes) so both sides of a co-op game confetti.
+      const me = authSession?.user.id;
+      if (me && (!winnerId || winnerId === me)) {
+        celebrateWin();
+      }
+      // Auto-log the one-shot "first game together" milestone on the story.
+      if (me) void logAutoMilestone(me, 'first_game', 'We finished our first game together', '🎮');
     } catch (err) {
       console.error('completeSession error:', err);
     }

@@ -10,6 +10,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import PremiumBackground from '@/components/PremiumBackground';
+import PartnerActivityFeed from '@/components/PartnerActivityFeed';
 import Link from 'next/link';
 
 const GAME_INFO: Record<string, { name: string; icon: string; color: string }> = {
@@ -176,6 +177,26 @@ export default function DashboardPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Our Story shortcut + partner activity feed */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <div className="bg-white rounded-[1.5rem] border border-pink-100/60 shadow-lg p-6 mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-pink-500" fill="currentColor" />
+                    Our Story
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Day counter, &ldquo;reasons I love you&rdquo;, and your shared timeline.
+                  </p>
+                  <Link
+                    href="/our-story"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-pink-200/50 hover:scale-105 transition-transform w-full justify-center"
+                  >
+                    Open our story <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <PartnerActivityFeed />
+              </motion.div>
+
               {/* Badges */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <div className="bg-white rounded-[1.5rem] border border-pink-100/60 shadow-lg p-6">
