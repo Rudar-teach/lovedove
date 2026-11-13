@@ -11,9 +11,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
-  fetchFriendRelations, searchProfiles, sendFriendRequestByUsername,
+  fetchFriendRelations, searchProfiles, sendFriendRequest,
+  sendFriendRequestByUsername,
   respondToFriendRequest, removeFriend, getFriendInviteLink,
-  sendPlayInvite, getProfileByUsername,
+  sendPlayInvite,
   type FriendRelation, type FriendProfile
 } from '@/lib/social';
 import toast from 'react-hot-toast';
@@ -90,17 +91,21 @@ function AddFriendsContent() {
 
     // If the page was opened via ?invite=<id>, auto-send a request so the
     // inviter's friend list shows a pending request immediately.
+    // inviteCode is the inviter's USER ID (not a username) — use the id path
+    // and report the REAL result. Never claim "sent" if the insert failed.
     if (inviteCode && inviteCode !== session.user.id) {
-      const res = await sendFriendRequestByUsername(session.user.id, inviteCode).catch(() => null);
-      // inviteCode is actually a user id, not a username — handle that too
-      if (!res?.ok) {
-        await supabase.from('friend_requests').insert({
-          sender_id: session.user.id,
-          receiver_id: inviteCode,
-          status: 'pending',
-        });
+      const res = await sendFriendRequest(session.user.id, inviteCode);
+      if (res.ok) {
+        toast.success(
+          res.alreadyFriends
+            ? 'You are already friends with the person who invited you! 💕'
+            : 'Friend request sent to the person who invited you! 💕'
+        );
+      } else {
+        // Surfaces the real problem (e.g. "server still setting up") instead
+        // of a false success — the previous version always toasted success.
+        toast.error(res.error || 'Could not send the friend request');
       }
-      toast.success('Friend request sent to your inviter! 💕');
     }
 
     setLoading(false);

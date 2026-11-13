@@ -130,6 +130,17 @@ CREATE TRIGGER trg_lowercase_username
   BEFORE INSERT OR UPDATE OF username ON profiles
   FOR EACH ROW EXECUTE FUNCTION lowercase_username();
 
+-- ── 2b. Profiles READ access (username search needs it) ─────────────
+-- The live DB's read policy blocks other users' profiles, so "search a
+-- user" can never find anyone. Restore the app's design (from the base
+-- schema): profile identity fields are public-read; private data is not
+-- stored on the table, so this is safe.
+DROP POLICY IF EXISTS "Public profile read" ON profiles;
+DO $$ BEGIN
+  CREATE POLICY "Public profile read" ON profiles
+    FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ── 3. Friend requests ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS friend_requests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
