@@ -12,9 +12,15 @@
 -- ═══════════════════════════════════════════════════════════════════════
 
 -- ── 1a. AUTO-CREATE profile on every signup (was missing/broken) ─────
+-- Test accounts (example.com / selftest domains) are skipped so they
+-- never appear in username search.
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  IF NEW.email IS NOT NULL
+     AND (NEW.email ILIKE '%@example.com' OR NEW.email ILIKE '%@lovedove-selftest.local') THEN
+    RETURN NEW;
+  END IF;
   INSERT INTO public.profiles (id, full_name, username, email, avatar_url)
   VALUES (
     NEW.id,
@@ -114,7 +120,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP INDEX IF EXISTS idx_profiles_username_ci;
 DO $$ BEGIN
   CREATE UNIQUE INDEX idx_profiles_username_ci ON profiles(lower(username));
-EXCEPTION WHEN duplicate_key THEN
+EXCEPTION WHEN unique_violation THEN
   RAISE NOTICE 'Duplicate usernames found — dedupe manually (Authentication → Users), then re-run just the index line'; END $$;
 
 CREATE OR REPLACE FUNCTION lowercase_username()
