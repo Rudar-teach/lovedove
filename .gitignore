@@ -42,3 +42,10 @@ verify_setup.js
 .netlify
 
 .env*
+
+# Supabase saved-login profile (session data - NEVER commit)
+.supabase-login/
+
+# DB setup runner failure artifacts
+sql-run-failure.png
+sql-run-failure.txt
