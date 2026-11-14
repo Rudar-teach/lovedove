@@ -156,14 +156,22 @@ try {
   }
   await new Promise(r => setTimeout(r, 1500));
 
-  // ── Step 3: Run (button, then Ctrl+Enter as backup) ──────────────────
+  // ── Step 3: Run (button variants, then Ctrl+Enter focused on the editor) ──
   console.log('▶️  Running the query…');
-  const runButton = sqlPage.locator('button').filter({ hasText: /^Run$/i }).first();
-  try {
-    await runButton.waitFor({ timeout: 30000 });
-    await runButton.click();
-  } catch {
-    console.log('   No "Run" button found — sending Ctrl+Enter instead.');
+  let clickedRun = false;
+  for (const name of [/^Run$/i, /^Run\b/i, 'Run query']) {
+    try {
+      const btn = sqlPage.locator('button').filter({ hasText: name }).first();
+      await btn.waitFor({ timeout: 8000 });
+      await btn.click();
+      clickedRun = true;
+      break;
+    } catch { /* try the next pattern */ }
+  }
+  if (!clickedRun) {
+    console.log('   No "Run" button found — sending Ctrl+Enter to the editor.');
+    await editor.click({ position: { x: 10, y: 10 } }).catch(() => {});
+    await new Promise(r => setTimeout(r, 500));
     await sqlPage.keyboard.press('Control+Enter');
   }
 
@@ -171,7 +179,7 @@ try {
   console.log('⏳ Waiting for execution result…');
   let sqlFailed = false;
   let lastLog = 0;
-  for (let i = 0; i < 90; i++) { // up to ~3 min
+  for (let i = 0; i < 150; i++) { // up to ~5 min
     await new Promise(r => setTimeout(r, 2000));
     let bodyText = '';
     try { bodyText = await sqlPage.evaluate(() => document.body?.innerText || ''); } catch {}
@@ -186,13 +194,21 @@ try {
       continue;
     }
 
-    const hasSuccess = /Success\.\s|No rows returned|Query succeeded/i.test(bodyText);
+    const hasSuccess = /Success\.?|No rows returned|Query succeeded|rows? (returned|updated|inserted)/i.test(bodyText) && /Run/i.test(bodyText);
     const hasError = /\bERROR\b|Error:\s|failed to execute/i.test(bodyText);
     if (hasSuccess) { sqlFailed = false; break; }
     if (hasError && i > 4) { sqlFailed = true; break; }
     if (i % 15 === 0) {
       lastLog = i;
       console.log(`   …still running (${i * 2}s).`);
+      // Periodically re-attempt the run in case the first attempt was lost.
+      if (i % 45 === 0 && i > 0 && !clickedRun) {
+        try {
+          await editor.click({ position: { x: 10, y: 10 } }).catch(() => {});
+          await sqlPage.keyboard.press('Control+Enter');
+          console.log('   Re-sent Ctrl+Enter.');
+        } catch { /* ignore */ }
+      }
     }
   }
 
@@ -242,6 +258,31 @@ console.log(`   ${c.ok ? '✅' : '❌'} profiles.is_online column → ${c.status
 c = await probe('/profiles?select=username&limit=0');
 checks.push(c.ok);
 console.log(`   ${c.ok ? '✅' : '❌'} profiles.username column → ${c.status}`);
+
+// New social-update tables / RPCs when present in the SQL being run.
+const extraChecks = [
+  ['stories table', '/stories?limit=0'],
+  ['story_likes table', '/story_likes?limit=0'],
+  ['friend_messages table', '/friend_messages?limit=0'],
+];
+for (const [label, p] of extraChecks) {
+  const t = sql.includes(label.split(' ')[0]) || sql.includes(p.replace('?limit=0', ''));
+  if (!t) continue; // not part of this migration — skip
+  c = await probe(p);
+  checks.push(c.ok);
+  console.log(`   ${c.ok ? '✅' : '❌'} ${label} → ${c.status} ${c.ok ? 'exists' : '(' + c.text.slice(0, 70) + ')'}`);
+}
+const rpcCheck = sql.includes('mark_presence_offline');
+if (rpcCheck) {
+  const r = await fetch(`${REST}/rpc/mark_presence_offline`, {
+    method: 'POST',
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_user_id: '00000000-0000-0000-0000-000000000000' }),
+  });
+  const ok = r.status === 200 || r.status === 204;
+  checks.push(ok);
+  console.log(`   ${ok ? '✅' : '❌'} mark_presence_offline RPC → ${r.status}`);
+}
 
 if (checks.every(Boolean)) {
   console.log('\n🎉 ALL DATABASE CHECKS PASSED — the friend-system backend is live.');

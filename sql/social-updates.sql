@@ -178,6 +178,17 @@ CREATE TRIGGER trg_notify_friend_message
   AFTER INSERT ON friend_messages
   FOR EACH ROW EXECUTE FUNCTION notify_friend_message();
 
+-- Safety net: make sure the recipient can actually see + read their own
+-- notifications (no-ops if the policies already exist).
+DO $$ BEGIN
+  CREATE POLICY "Users can view own notifications" ON notifications
+    FOR SELECT USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE POLICY "Users can update own notifications" ON notifications
+    FOR UPDATE USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ── 3. Realtime: push new stories + messages + presence changes ──────
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE stories;
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
