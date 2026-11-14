@@ -15,11 +15,13 @@
 // ld_friend_pick handoff behave exactly like the per-page button.
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Clapperboard } from 'lucide-react';
 import FriendPanel, { Friend } from './FriendPanel';
 import { STATIC_GAMES } from '@/lib/staticGames';
 import { getBollywoodGame } from '@/lib/bollywoodGames';
+import { supabase } from '@/lib/supabase';
+import { sendPlayInvite, getPlayTogetherLink } from '@/lib/social';
 
 // Games that exist ONLY in the /games/[slug] catch-all page (no
 // dedicated directory, not in STATIC_GAMES or the bollywood data).
@@ -224,18 +226,43 @@ const DEDICATED_GAME_NAMES: Record<string, string> = {
   wouldyourather: 'Would You Rather',
 };
 
+/**
+ * Pages that are NOT games but still offer the friend-list button:
+ * picking a friend there sends a real play invite ("reunite & play")
+ * instead of opening a specific game.
+ */
+const TOGETHER_PAGES: Record<string, string> = {
+  '/miss-meter': 'Miss Meter',
+  '/our-story': 'Our Story',
+};
+
 export default function GlobalPlayWithFriend() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
   const [gameName, setGameName] = useState('');
   const [gameSlug, setGameSlug] = useState('');
+  const [together, setTogether] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const segs = pathname.split('/').filter(Boolean);
+
+    // "Reunite & play" pages (Miss Meter / Our Story): friend list + invite.
+    const togetherName = TOGETHER_PAGES[pathname];
+    if (togetherName) {
+      setGameSlug('tictactoe');
+      setGameName('a game together');
+      setTogether(true);
+      setActive(true);
+      const q = new URLSearchParams(window.location.search).get('friend');
+      if (q === '1' || q === 'true') setOpen(true);
+      return;
+    }
+
     // /games/<slug> exactly — two segments, first is "games"
     if (segs.length !== 2 || segs[0] !== 'games') {
       setActive(false);
+      setTogether(false);
       setOpen(false);
       return;
     }
@@ -243,6 +270,7 @@ export default function GlobalPlayWithFriend() {
     // Pages that already provide a friend flow of their own
     if (slug === 'bollywood') return;
 
+    setTogether(false); // leaving a "together" page — reset the flag
     const staticGame = STATIC_GAMES.find((g) => g.slug === slug || g.route_path === `/games/${slug}`);
     const bolly = getBollywoodGame(slug);
     const catchallName = CATCHALL_GAME_NAMES[slug];
@@ -295,7 +323,27 @@ export default function GlobalPlayWithFriend() {
         gameSlug={gameSlug}
         open={open}
         onClose={() => setOpen(false)}
-        onPlayFriend={(f: Friend) => {
+        onPlayFriend={async (f: Friend) => {
+          if (together) {
+            // Reunite & play: send a REAL play invite so the friend sees it
+            // the moment they open the site, then hop into the game.
+            setOpen(false);
+            try {
+              const { data: { user: me } } = await supabase.auth.getUser();
+              if (me) {
+                const res = await sendPlayInvite(me.id, f.id, 'tictactoe');
+                if (!res.ok) {
+                  alert(`Could not send the invite to ${f.name}: ${res.error}`);
+                  return;
+                }
+              }
+              const url = getPlayTogetherLink('tictactoe');
+              window.open(url, '_blank');
+            } catch {
+              window.open(getPlayTogetherLink('tictactoe'), '_blank');
+            }
+            return;
+          }
           alert(
             `You chose ${f.name} for ${gameName}!\n\n` +
             'Pass-and-play: Player 1 goes first, then Player 2. ' +
