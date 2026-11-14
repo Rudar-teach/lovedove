@@ -173,13 +173,18 @@ export default function OurStoryPage() {
   const handleSendReason = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !partner) return;
+    const text = newReason.trim();
+    if (text.length < 3) return;
+    // Optimistic: the input clears the instant you hit send.
+    setNewReason('');
     setSendingReason(true);
-    const res = await addLoveReason(user.id, partner.id, newReason);
+    const res = await addLoveReason(user.id, partner.id, text);
     setSendingReason(false);
     if (res.ok) {
-      setNewReason('');
       toast.success(`Sent to @${partner.username} — it'll wait there for them to unlock 💗`);
     } else {
+      // Roll back the cleared input so the draft isn't lost.
+      setNewReason(text);
       toast.error(res.error || 'Could not send');
     }
   };
@@ -217,23 +222,43 @@ export default function OurStoryPage() {
     if (!user) return;
     const title = newMilestone.title.trim();
     if (title.length < 2) return;
+
+    // Optimistic: the memory card lands on the timeline instantly.
+    const temp: Milestone = {
+      id: `local-${crypto.randomUUID()}`,
+      type: 'memory',
+      title,
+      description: newMilestone.description?.trim() || null,
+      emoji: newMilestone.emoji || '💕',
+      author_username: user.username || null,
+      created_at: new Date().toISOString(),
+    };
+    setMilestones((prev) => [temp, ...prev]);
+    setNewMilestone({ title: '', description: '', emoji: '💕' });
+    setShowMilestoneForm(false);
+
     setAddingMilestone(true);
     const res = await addMilestone(user.id, { ...newMilestone, title });
     setAddingMilestone(false);
     if (res.ok) {
-      setNewMilestone({ title: '', description: '', emoji: '💕' });
-      setShowMilestoneForm(false);
+      // Reconcile in the background: real row replaces the temp id.
       if (partner) {
-        const { data } = await supabase
-          .from('milestones')
-          .select('id, type, title, description, emoji, created_at')
-          .in('user_id', [user.id, partner.id])
-          .order('created_at', { ascending: false })
-          .limit(60);
-        if (data) setMilestones(data as unknown as Milestone[]);
+        void (async () => {
+          const { data } = await supabase
+            .from('milestones')
+            .select('id, type, title, description, emoji, created_at')
+            .in('user_id', [user.id, partner.id])
+            .order('created_at', { ascending: false })
+            .limit(60);
+          if (data) setMilestones(data as unknown as Milestone[]);
+        })();
       }
       toast.success('Added to our story ✨');
     } else {
+      // Roll back: drop the temp card and restore the form so the user can retry.
+      setMilestones((prev) => prev.filter((m) => m.id !== temp.id));
+      setNewMilestone({ title, description: newMilestone.description || '', emoji: newMilestone.emoji });
+      setShowMilestoneForm(true);
       toast.error(res.error || 'Could not save');
     }
   };

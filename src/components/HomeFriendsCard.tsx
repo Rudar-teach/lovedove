@@ -230,7 +230,7 @@ export default function HomeFriendsCard() {
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-black text-lg shadow">
                     {f.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={f.avatar_url} alt="" className="w-11 h-11 rounded-full object-cover" />
+                      <img src={f.avatar_url} alt="" loading="lazy" decoding="async" className="w-11 h-11 rounded-full object-cover" />
                     ) : (
                       f.name.charAt(0).toUpperCase()
                     )}

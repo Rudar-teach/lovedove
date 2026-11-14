@@ -17,6 +17,7 @@ import {
   sendPlayInvite,
   type FriendRelation, type FriendProfile
 } from '@/lib/social';
+import { invalidateRosterIds } from '@/lib/friendRoster';
 import toast from 'react-hot-toast';
 
 type Tab = 'add' | 'friends' | 'requests';
@@ -208,20 +209,52 @@ function AddFriendsContent() {
   };
 
   const handleAccept = async (id: string) => {
-    await respondToFriendRequest(id, true);
-    toast.success('Friend added! 💕');
-    void load();
+    const rel = incoming.find((r) => r.id === id);
+    // Optimistic: flip it from incoming to friends immediately.
+    if (rel) {
+      setIncoming((prev) => prev.filter((r) => r.id !== id));
+      setFriends((prev) => [...prev, { ...rel, status: 'accepted' as const, accepted_at: new Date().toISOString() }]);
+    }
+    const res = await respondToFriendRequest(id, true);
+    if (res.ok) {
+      if (userId) invalidateRosterIds(userId); // dashboard friend list shows them at once
+      toast.success('Friend added! 💕');
+      void load(); // background reconcile
+    } else {
+      // Roll back.
+      if (rel) {
+        setFriends((prev) => prev.filter((r) => r.id !== id));
+        setIncoming((prev) => [...prev, rel]);
+      }
+      toast.error(res.error || 'Could not accept the request');
+    }
   };
 
   const handleReject = async (id: string) => {
-    await respondToFriendRequest(id, false);
-    void load();
+    const rel = incoming.find((r) => r.id === id);
+    setIncoming((prev) => prev.filter((r) => r.id !== id));
+    const res = await respondToFriendRequest(id, false);
+    if (res.ok) {
+      if (userId) invalidateRosterIds(userId);
+      void load();
+    } else if (rel) {
+      setIncoming((prev) => [rel, ...prev]);
+      toast.error(res.error || 'Could not decline the request');
+    }
   };
 
   const handleRemove = async (rel: FriendRelation) => {
-    const res = await removeFriend(rel.id);
-    if (res.ok) { toast.success(`Removed @${rel.friend.username}`); void load(); }
-    else toast.error(res.error || 'Could not remove friend');
+    const target = rel;
+    setFriends((prev) => prev.filter((r) => r.id !== target.id));
+    const res = await removeFriend(target.id);
+    if (res.ok) {
+      if (userId) invalidateRosterIds(userId);
+      toast.success(`Removed @${target.friend.username}`);
+      void load();
+    } else {
+      setFriends((prev) => [target, ...prev]);
+      toast.error(res.error || 'Could not remove friend');
+    }
   };
 
   const handleInviteToPlay = async (rel: FriendRelation, gameSlug: string) => {

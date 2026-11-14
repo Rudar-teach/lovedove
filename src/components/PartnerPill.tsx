@@ -33,7 +33,7 @@ export default function PartnerPill() {
       <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow">
         {partner.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={partner.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+          <img src={partner.avatar_url} alt="" decoding="async" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
         ) : (
           <span className="text-sm font-black">{(partner.full_name || partner.username).charAt(0).toUpperCase()}</span>
         )}

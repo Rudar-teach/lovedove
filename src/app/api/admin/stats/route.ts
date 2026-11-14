@@ -23,6 +23,15 @@ async function resolveToken(request: Request): Promise<string | null> {
   return cookieStore.get('admin_token')?.value || null;
 }
 
+/**
+ * The admin dashboard polls this route every 30s; the heavy query block
+ * below recomputes ~15 aggregates each time. Cache the computed body per
+ * server instance for 30s — polls within a window are free, and a new
+ * window picks up fresh data. (Vercel serverless: per-instance memory.)
+ */
+let statsCache: { t: number; body: Record<string, unknown> } | null = null;
+const STATS_TTL_MS = 30_000;
+
 export async function GET(request: Request) {
   try {
     const token = await resolveToken(request);
@@ -45,6 +54,10 @@ export async function GET(request: Request) {
 
     if (!profile?.is_admin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (statsCache && Date.now() - statsCache.t < STATS_TTL_MS) {
+      return NextResponse.json(statsCache.body);
     }
 
     const supabase = getClient(token);
@@ -124,7 +137,7 @@ export async function GET(request: Request) {
       if (hourlyCount[h] > peakCount) { peakCount = hourlyCount[h]; peakHour = h; }
     }
 
-    return NextResponse.json({
+    const body = {
       overview: {
         totalUsers: totalUsersResult.count || 0,
         newUsersThisWeek: newUsersWeekResult.count || 0,
@@ -142,7 +155,9 @@ export async function GET(request: Request) {
       signupChart: signupChartData,
       topGames: topGamesResult.data || [],
       recentUsers: recentUsersResult.data || [],
-    });
+    };
+    statsCache = { t: Date.now(), body };
+    return NextResponse.json(body);
   } catch (error) {
     console.error('Admin stats error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

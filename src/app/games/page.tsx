@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { Heart, Gamepad2, Users, Search, Filter, Flame, Sparkles, Zap, Crown, Film, Clapperboard } from 'lucide-react';
 import { ALL_BOLLYWOOD_GAMES } from '@/lib/bollywoodGames';
 import GameArt from '@/components/games/GameArt';
 import GameArtPro, { PRO_ART_SLUGS } from '@/components/games/GameArtPro';
 import FriendPanel from '@/components/games/FriendPanel';
 import { STATIC_GAMES } from '@/lib/staticGames';
+import { getGameCatalog } from '@/lib/gameCatalog';
 
 // Showcase Bollywood games on the main catalog page
 const BOLLYWOOD_GAMES_SHOWCASE = ALL_BOLLYWOOD_GAMES.slice(0, 24);
@@ -51,30 +51,31 @@ export default function GamesCatalog() {
   const [friendPanelOpen, setFriendPanelOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchGames = async () => {
       try {
-        const { data, error } = await supabase
-          .from('games_catalog')
-          .select('*')
-          .order('is_featured', { ascending: false })
-          .order('play_count', { ascending: false });
-
+        // Cached (5min TTL) so navigating back to /games doesn't re-query
+        // the whole table + re-run the 150-row merge on every mount.
+        const data = await getGameCatalog();
+        if (cancelled) return;
         // The static catalog is the source of truth for the 150+ shipped
         // games; the live table is a thin overlay (admin-added entries).
         // Merge live-unique slugs onto the static list so a sparse live
         // table can never shrink the grid.
-        if (!error && data && data.length > 0) {
-          const merged = STATIC_GAMES.filter(sg => !data.some((lg: any) => lg.slug === sg.slug));
-          setGames([...data, ...merged] as Game[]);
-          setFilteredGames([...data, ...merged] as Game[]);
+        if (data && data.length > 0) {
+          const merged = STATIC_GAMES.filter((sg) => !data.some((lg: any) => lg.slug === sg.slug));
+          const all = [...data, ...merged] as Game[];
+          setGames(all);
+          setFilteredGames(all);
         }
       } catch (err) {
         console.error('Failed to load games:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchGames();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

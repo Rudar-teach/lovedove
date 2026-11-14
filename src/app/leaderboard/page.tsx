@@ -16,6 +16,11 @@ interface CoupleRow {
   wins: number;
 }
 
+/** The leaderboard aggregates once per week (Monday reset); a 5-min TTL
+ *  keeps repeat visits off the server-side aggregation. */
+let lbCache: { t: number; rows: CoupleRow[] | null; error: boolean } | null = null;
+const LB_TTL_MS = 5 * 60 * 1000;
+
 export default function LeaderboardPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -25,12 +30,17 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.rpc('weekly_couple_leaderboard');
-      if (data && (data as CoupleRow[]).length > 0) {
-        setRows(data as CoupleRow[]);
-      } else {
-        setError(true);
+      if (lbCache && Date.now() - lbCache.t < LB_TTL_MS) {
+        setRows(lbCache.rows || []);
+        setError(lbCache.error);
+        setLoaded(true);
+        return;
       }
+      const { data } = await supabase.rpc('weekly_couple_leaderboard');
+      const ok = !!(data && (data as CoupleRow[]).length > 0);
+      lbCache = { t: Date.now(), rows: ok ? (data as CoupleRow[]) : [], error: !ok };
+      if (ok) setRows(data as CoupleRow[]);
+      else setError(true);
       setLoaded(true);
     })();
   }, []);

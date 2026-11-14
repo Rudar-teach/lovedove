@@ -68,13 +68,20 @@ export default function MissMeterPage() {
 
   const sendNote = async () => {
     if (!me || !state?.partner || !message.trim()) return;
+    const text = message.trim();
+    // Optimistic: the note appears in "your past notes" the instant you send.
+    const temp = { id: `local-${crypto.randomUUID()}`, message: text, photo_url: null, created_at: new Date().toISOString() };
+    setHistory((prev) => [temp as unknown as UnreadEntry, ...prev].slice(0, 10));
+    setMessage('');
     setSending(true);
-    const res = await addMissedYouEntry(me.id, state.partner.id, message.trim());
+    const res = await addMissedYouEntry(me.id, state.partner.id, text);
     setSending(false);
     if (res.ok) {
-      setMessage('');
-      await load();
+      // Reconcile in the background; the temp row gets replaced by the real one.
+      void load();
     } else {
+      setHistory((prev) => prev.filter((e) => e.id !== temp.id));
+      setMessage(text); // restore the draft so nothing is lost
       alert(res.error || 'Could not send your note');
     }
   };
@@ -223,7 +230,7 @@ export default function MissMeterPage() {
                         <div key={e.id} className="bg-white rounded-xl p-3 shadow-sm">
                           {e.photo_url && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={e.photo_url} alt="shared memory" className="max-h-40 rounded-lg object-cover mb-2" />
+                            <img src={e.photo_url} alt="shared memory" loading="lazy" decoding="async" className="max-h-40 max-w-full w-full rounded-lg object-cover mb-2" />
                           )}
                           <p className="text-sm text-gray-700">{e.message}</p>
                           <p className="text-[10px] text-gray-400 mt-1">{new Date(e.created_at).toLocaleString()}</p>

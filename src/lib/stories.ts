@@ -100,13 +100,14 @@ export async function addStory(authorId: string, input: StoryInput): Promise<{ o
   return { ok: true };
 }
 
-/** Toggle a like (optimistic-safe: reads current state first). */
-export async function toggleStoryLike(storyId: string, userId: string, currentlyLiked: boolean): Promise<void> {
+/** Toggle a like. Reports the real write result so the UI can roll back on failure. */
+export async function toggleStoryLike(storyId: string, userId: string, currentlyLiked: boolean): Promise<{ ok: boolean }> {
   if (currentlyLiked) {
-    await supabase.from('story_likes').delete().eq('story_id', storyId).eq('user_id', userId);
-  } else {
-    await supabase.from('story_likes').insert({ story_id: storyId, user_id: userId });
+    const { error } = await supabase.from('story_likes').delete().eq('story_id', storyId).eq('user_id', userId);
+    return { ok: !error };
   }
+  const { error } = await supabase.from('story_likes').insert({ story_id: storyId, user_id: userId });
+  return { ok: !error };
 }
 
 /** Which of these stories has the current viewer already liked? */

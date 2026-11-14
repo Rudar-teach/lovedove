@@ -68,7 +68,14 @@ export default function StoriesPage() {
 
   const load = useCallback(async () => {
     const list = await fetchCommunityStories(60);
-    setStories(list);
+    setStories((prev) => {
+      // Keep optimistic rows whose server copy isn't in yet.
+      const merged = [...list];
+      for (const p of prev) {
+        if (p.id.startsWith('local-') && !merged.some((s) => s.id === p.id)) merged.push(p);
+      }
+      return merged;
+    });
     const likes = user ? await fetchStoryLikes(list.map((s) => s.id), user.id) : new Set<string>();
     setLiked(likes);
     setLoaded(true);
@@ -80,6 +87,25 @@ export default function StoriesPage() {
     e.preventDefault();
     if (!user || !body.trim()) return;
     setPosting(true);
+
+    // Optimistic: prepend a local story card instantly.
+    const temp: Story = {
+      id: `local-${crypto.randomUUID()}`,
+      author_id: user.id,
+      author_username: user.username,
+      is_anonymous: anonymous,
+      title: title || null,
+      body: body.trim(),
+      emoji: emoji || null,
+      audience,
+      partner_id: audience === 'partner' ? partnerId : null,
+      likes_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    setStories((prev) => [temp, ...prev]);
+    setTitle(''); setBody(''); setAnonymous(false);
+    setShowComposer(false);
+
     const res = await addStory(user.id, {
       title, body, emoji, audience,
       partnerId: audience === 'partner' ? partnerId : null,
@@ -88,10 +114,9 @@ export default function StoriesPage() {
     setPosting(false);
     if (res.ok) {
       toast.success(anonymous ? 'Posted anonymously 🎭' : 'Story shared 💕');
-      setTitle(''); setBody(''); setAnonymous(false);
-      setShowComposer(false);
-      await load();
+      void load(); // background reconcile replaces the temp id with the real one
     } else {
+      setStories((prev) => prev.filter((s) => s.id !== temp.id));
       toast.error(res.error || 'Could not post');
     }
   };
@@ -99,12 +124,25 @@ export default function StoriesPage() {
   const like = async (s: Story) => {
     if (!user) { toast('Sign in to like stories 💕'); return; }
     const current = liked.has(s.id);
+    const nextCount = s.likes_count + (current ? -1 : 1);
+    // Optimistic: flip the heart and the count immediately.
     setLiked((prev) => {
       const next = new Set(prev);
       if (current) next.delete(s.id); else next.add(s.id);
       return next;
     });
-    await toggleStoryLike(s.id, user.id, current);
+    setStories((prev) => prev.map((st) => (st.id === s.id ? { ...st, likes_count: nextCount } : st)));
+    const { ok } = await toggleStoryLike(s.id, user.id, current);
+    if (!ok) {
+      // Roll back both.
+      setLiked((prev) => {
+        const next = new Set(prev);
+        if (current) next.add(s.id); else next.delete(s.id);
+        return next;
+      });
+      setStories((prev) => prev.map((st) => (st.id === s.id ? { ...st, likes_count: s.likes_count } : st)));
+      toast.error('Could not update the like');
+    }
   };
 
   const authorLabel = (s: Story) => {

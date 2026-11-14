@@ -7,6 +7,7 @@ import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { PlayInviteProvider } from '@/components/PlayInviteProvider';
 import FriendInviteBanner from '@/components/FriendInviteBanner';
+import CallCenter from '@/components/CallCenter';
 import CookieBanner from '@/components/CookieBanner';
 import MissYouBanner from '@/components/MissYouBanner';
 import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
@@ -65,6 +66,8 @@ export default function RootLayout({
               <GlobalPlayWithFriend />
               {/* Fires hearts confetti + chime on every game win */}
               <WinCelebration />
+              {/* P2P voice/video calls — WhatsApp/Insta-style call bar */}
+              <CallCenter />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>

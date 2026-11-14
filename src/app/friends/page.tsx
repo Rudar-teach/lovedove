@@ -387,7 +387,7 @@ export default function FriendsPage() {
                   <Link href={`/profile/${friend.other_user.id}`} className="relative flex-shrink-0">
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-lg hover:scale-105 transition-transform">
                       {friend.other_user.avatar_url ? (
-                        <img src={friend.other_user.avatar_url} alt={friend.other_user.username || 'avatar'} className="w-14 h-14 rounded-full object-cover" />
+                        <img src={friend.other_user.avatar_url} alt={friend.other_user.username || 'avatar'} loading="lazy" decoding="async" width={56} height={56} className="w-14 h-14 rounded-full object-cover" />
                       ) : (
                         (friend.other_user.full_name || friend.other_user.username || '?').charAt(0).toUpperCase()
                       )}

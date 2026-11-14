@@ -3,6 +3,22 @@ import { supabase } from '@/lib/supabase';
 
 const ACTIVE_INTERVAL = 30000; // 30 seconds heartbeat
 
+/** Badge definitions barely change — cache the time-based ones for 5 min so
+ *  the 30s heartbeat never re-queries the `badges` table on every tick. */
+let timeBadgeCache: { t: number; rows: any[] } | null = null;
+const TIME_BADGE_TTL = 5 * 60 * 1000;
+
+async function getTimeBasedBadges(): Promise<any[]> {
+  if (timeBadgeCache && Date.now() - timeBadgeCache.t < TIME_BADGE_TTL) {
+    return timeBadgeCache.rows;
+  }
+  const { data } = await supabase.from('badges').select('*').or(
+    `requirement_type.eq.playtime_hours,requirement_type.eq.playtime_minutes`
+  );
+  timeBadgeCache = { t: Date.now(), rows: data || [] };
+  return timeBadgeCache.rows;
+}
+
 export function usePlaytime(gameType: string) {
   const [isActive, setIsActive] = useState(false);
   const [secondsPlayed, setSecondsPlayed] = useState(0);
@@ -54,29 +70,28 @@ export function usePlaytime(gameType: string) {
       const minutes = Math.floor((totalSeconds % 3600) / 60);
 
       if (hours > 0 || minutes > 0) {
-        // Check for time-based badges
-        const { data: badges } = await supabase.from('badges').select('*').or(
-          `requirement_type.eq.playtime_hours,requirement_type.eq.playtime_minutes`
+        // Batched: one read of cached badge defs + one read of what's already
+        // earned + one batched insert — no per-badge round-trips (was an N+1).
+        const badges = await getTimeBasedBadges();
+        const qualifying = badges.filter((b) =>
+          (hours >= b.requirement_value && b.requirement_type === 'playtime_hours') ||
+          (minutes >= b.requirement_value && b.requirement_type === 'playtime_minutes')
         );
 
-        for (const badge of badges || []) {
-          const earned = hours >= badge.requirement_value && badge.requirement_type === 'playtime_hours'
-            || minutes >= badge.requirement_value && badge.requirement_type === 'playtime_minutes';
+        if (qualifying.length > 0) {
+          const { data: owned } = await supabase
+            .from('user_badges')
+            .select('badge_id')
+            .eq('user_id', userId)
+            .in('badge_id', qualifying.map((b) => b.id));
 
-          if (earned) {
-            const { data: alreadyEarned } = await supabase
-              .from('user_badges')
-              .select('id')
-              .eq('user_id', userId)
-              .eq('badge_id', badge.id)
-              .single();
+          const ownedSet = new Set((owned || []).map((o: any) => o.badge_id));
+          const toInsert = qualifying
+            .filter((b) => !ownedSet.has(b.id))
+            .map((b) => ({ user_id: userId, badge_id: b.id }));
 
-            if (!alreadyEarned) {
-              await supabase.from('user_badges').insert({
-                user_id: userId,
-                badge_id: badge.id,
-              });
-            }
+          if (toInsert.length > 0) {
+            await supabase.from('user_badges').insert(toInsert);
           }
         }
       }

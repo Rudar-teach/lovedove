@@ -40,7 +40,8 @@ export default function StoryComposer({
     partnerId ? defaultAudience : 'community'
   );
   const [anonymous, setAnonymous] = useState(false);
-  const [posting, setPosting] = useState(false);
+  // Composer is optimistic: it closes instantly on submit, so no "posting"
+  // state is shown — the write reconciles in the background.
 
   if (!user) {
     return (
@@ -55,25 +56,33 @@ export default function StoryComposer({
 
   const post = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPosting(true);
+    const draft = { title, body, emoji, audience, anonymous };
+    // Optimistic: close the composer + notify the parent immediately so the
+    // new card appears without waiting for the server write.
+    setTitle('');
+    setBody('');
+    setAnonymous(false);
+    setOpen(false);
+    onPosted?.();
+
     const res = await addStory(user.id, {
-      title,
-      body,
-      emoji,
-      audience,
-      partnerId: audience === 'partner' ? partnerId ?? null : null,
-      isAnonymous: anonymous,
+      title: draft.title,
+      body: draft.body,
+      emoji: draft.emoji,
+      audience: draft.audience,
+      partnerId: draft.audience === 'partner' ? partnerId ?? null : null,
+      isAnonymous: draft.anonymous,
     });
-    setPosting(false);
-    if (res.ok) {
-      toast.success(anonymous ? 'Posted anonymously 🎭' : 'Story shared with your loved ones 💕');
-      setTitle('');
-      setBody('');
-      setAnonymous(false);
-      setOpen(false);
-      onPosted?.();
+    if (!res.ok) {
+      // Roll back: restore the draft and re-open so nothing is lost.
+      setTitle(draft.title);
+      setBody(draft.body);
+      setEmoji(draft.emoji);
+      setAnonymous(draft.anonymous);
+      setOpen(true);
+      toast.error(res.error || 'Could not post your story — draft restored');
     } else {
-      toast.error(res.error || 'Could not post your story');
+      toast.success(draft.anonymous ? 'Posted anonymously 🎭' : 'Story shared with your loved ones 💕');
     }
   };
 
@@ -169,10 +178,10 @@ export default function StoryComposer({
             </button>
             <button
               type="submit"
-              disabled={posting || body.trim().length < 3 || (audience === 'partner' && !partnerId)}
+              disabled={body.trim().length < 3 || (audience === 'partner' && !partnerId)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-bold rounded-xl shadow disabled:opacity-40"
             >
-              {posting ? <Sparkles className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <Send className="w-4 h-4" />
               Share story
             </button>
           </div>

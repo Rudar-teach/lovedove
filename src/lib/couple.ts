@@ -53,8 +53,17 @@ const PROFILE_COLS = 'id, full_name, username, avatar_url, is_online, last_seen'
  * `user1_accepted` / `is_active` columns don't exist there, so query both
  * shapes and never throw: if the accepted-match query fails (column
  * missing), retry with a permissive query.
+ *
+ * Results are cached for 60s: the partner rarely changes, but this is
+ * called on mount AND on 30s presence polls from several pages at once.
  */
+const partnerTtlCache = new Map<string, { t: number; v: PartnerInfo | null }>();
+const PARTNER_TTL_MS = 60_000;
+
 export async function resolvePartner(userId: string): Promise<PartnerInfo | null> {
+  const hit = partnerTtlCache.get(userId);
+  if (hit && Date.now() - hit.t < PARTNER_TTL_MS) return hit.v;
+
   let matches: any[] | null = null;
   const { data, error } = await supabase
     .from('matches')
@@ -91,13 +100,24 @@ export async function resolvePartner(userId: string): Promise<PartnerInfo | null
     .eq('id', partnerId)
     .maybeSingle();
 
-  if (!profile) return null;
-  return {
+  if (!profile) {
+    partnerTtlCache.set(userId, { t: Date.now(), v: null });
+    return null;
+  }
+  const partner: PartnerInfo = {
     id: profile.id,
     full_name: profile.full_name || '',
     username: profile.username || '',
     avatar_url: profile.avatar_url,
   };
+  partnerTtlCache.set(userId, { t: Date.now(), v: partner });
+  return partner;
+}
+
+/** Drop the cached partner for a user (call when the partner relationship
+ *  may have just changed — e.g. after a new match is accepted). */
+export function invalidatePartnerCache(userId: string): void {
+  partnerTtlCache.delete(userId);
 }
 
 /**

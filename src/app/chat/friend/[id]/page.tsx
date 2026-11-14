@@ -16,14 +16,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Trophy, Wifi, WifiOff, Heart, MessageCircleHeart } from 'lucide-react';
+import { ArrowLeft, Send, Trophy, Wifi, WifiOff, Heart, MessageCircleHeart, Phone, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
-  fetchConversation, sendFriendMessage, markConversationRead,
+  fetchConversation, sendFriendMessage, markConversationRead, type FriendMessage,
 } from '@/lib/friendMessages';
 import { fetchFriendRanking } from '@/lib/friendMessages';
+import { useCallStore } from '@/stores/useCallStore';
 import toast from 'react-hot-toast';
+
+/** Temp ids for optimistically-inserted local rows. */
+const localRowId = () => `local-${crypto.randomUUID()}`;
 
 interface Friend {
   id: string;
@@ -39,6 +43,7 @@ export default function FriendChatPage() {
   const router = useRouter();
   const friendId = String(params.id ?? '');
   const user = useAuthStore((s) => s.user);
+  const startCall = useCallStore((s) => s.startCall);
 
   const [friend, setFriend] = useState<Friend | null>(null);
   const [thread, setThread] = useState<Awaited<ReturnType<typeof fetchConversation>>>([]);
@@ -67,7 +72,15 @@ export default function FriendChatPage() {
       setFriend(data as unknown as Friend);
       const msgs = await fetchConversation(meId, friendId);
       if (cancelled) return;
-      setThread(msgs);
+      setThread((prev) => {
+        // Keep any not-yet-confirmed optimistic rows while the server copy
+        // lands.
+        const merged = [...msgs];
+        for (const p of prev) {
+          if (p.id.startsWith('local-') && !merged.some((m) => m.id === p.id)) merged.push(p);
+        }
+        return merged.sort((a, b) => a.created_at.localeCompare(b.created_at));
+      });
       // Read anything they sent me.
       await markConversationRead(meId, friendId);
       // Where do I sit on the love ladder?
@@ -88,18 +101,44 @@ export default function FriendChatPage() {
 
   const handleSend = async () => {
     if (!draft.trim() || !meId || !friendId) return;
+    const text = draft.trim();
     setSending(true);
-    const res = await sendFriendMessage(meId, friendId, draft);
+
+    // Optimistic: the bubble lands in the thread instantly.
+    const temp: FriendMessage = {
+      id: localRowId(),
+      sender_id: meId,
+      recipient_id: friendId,
+      body: text,
+      read_at: null,
+      created_at: new Date().toISOString(),
+    };
+    setThread((prev) => [...prev, temp]);
+    setDraft('');
+    setExchanged((n) => n + 1);
+
+    const res = await sendFriendMessage(meId, friendId, text);
     setSending(false);
     if (res.ok) {
-      const msgs = await fetchConversation(meId, friendId);
-      setThread(msgs);
-      setExchanged((n) => n + 1);
-      toast.success('Sent 💌 They\'ll see it the moment they open the site');
+      // Reconcile in the background — the real row (with server id) replaces
+      // the temp one; the 15s poll will pick it up naturally too.
+      void (async () => {
+        const msgs = await fetchConversation(meId, friendId);
+        setThread((prev) => {
+          const next = [...msgs];
+          for (const p of prev) {
+            if (p.id.startsWith('local-') && !next.some((m) => m.id === p.id)) next.push(p);
+          }
+          return next.sort((a, b) => a.created_at.localeCompare(b.created_at));
+        });
+      })();
     } else {
+      // Roll back the optimistic bubble and restore the draft.
+      setThread((prev) => prev.filter((m) => m.id !== temp.id));
+      setExchanged((n) => Math.max(0, n - 1));
+      setDraft(text);
       toast.error(res.error || 'Could not send');
     }
-    setDraft('');
   };
 
   const lastTime = useMemo(() => {
@@ -135,7 +174,7 @@ export default function FriendChatPage() {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden">
                   {friend.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={friend.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={friend.avatar_url} alt="" decoding="async" width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                   ) : friend.name.charAt(0).toUpperCase()}
                 </div>
                 <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${friend.is_online ? 'bg-green-400' : 'bg-gray-300'}`} />
@@ -154,6 +193,31 @@ export default function FriendChatPage() {
                 <p className="text-sm font-black text-amber-700 flex items-center gap-1 justify-center">
                   <Trophy className="w-3.5 h-3.5" /> #{rank} · {exchanged} msgs
                 </p>
+              </div>
+              {/* WhatsApp/Insta-style inline call options */}
+              <div className="shrink-0 flex items-center gap-1">
+                <button
+                  onClick={() => startCall({
+                    id: friend.id, name: friend.name, username: friend.username,
+                    avatar_url: friend.avatar_url, is_online: friend.is_online,
+                  }, 'voice')}
+                  title={`Voice call ${friend.name}`}
+                  aria-label={`Voice call ${friend.name}`}
+                  className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-md shadow-green-500/20 active:scale-95 transition"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => startCall({
+                    id: friend.id, name: friend.name, username: friend.username,
+                    avatar_url: friend.avatar_url, is_online: friend.is_online,
+                  }, 'video')}
+                  title={`Video call ${friend.name}`}
+                  aria-label={`Video call ${friend.name}`}
+                  className="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 active:scale-95 transition"
+                >
+                  <Video className="w-4 h-4" />
+                </button>
               </div>
             </>
           ) : (

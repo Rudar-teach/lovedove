@@ -91,8 +91,25 @@ export async function buildRoster(
   return rows;
 }
 
+/**
+ * TTL cache for the id sets: the 30s dashboard poll keeps calling
+ * resolveRosterIds, but the accepted-friends/partner sets rarely change —
+ * the presence + message counts are what change every minute, and those
+ * come from the profiles/ranking queries, not from here. 5min TTL means
+ * a newly accepted friend shows up within 5 minutes at worst.
+ */
+const rosterIdsCache = new Map<string, { t: number; v: { partnerIds: string[]; friendIds: string[] } }>();
+const ROSTER_IDS_TTL_MS = 5 * 60 * 1000;
+
+/** Drop the cached id sets (call after adding/removing a friend). */
+export function invalidateRosterIds(userId: string): void {
+  rosterIdsCache.delete(userId);
+}
+
 /** Resolve partner + friend ids (the raw sets buildRoster consumes). */
 export async function resolveRosterIds(userId: string): Promise<{ partnerIds: string[]; friendIds: string[] }> {
+  const hit = rosterIdsCache.get(userId);
+  if (hit && Date.now() - hit.t < ROSTER_IDS_TTL_MS) return hit.v;
   // Partner from accepted/connected matches (production `status` column).
   let partnerIds: string[] = [];
   const { data: matchData, error: mErr } = await supabase
@@ -119,7 +136,9 @@ export async function resolveRosterIds(userId: string): Promise<{ partnerIds: st
     .limit(50);
   const friendIds = (reqData || []).map((r: any) => (r.sender_id === userId ? r.receiver_id : r.sender_id));
 
-  return { partnerIds, friendIds };
+  const value = { partnerIds, friendIds };
+  rosterIdsCache.set(userId, { t: Date.now(), v: value });
+  return value;
 }
 
 /** Full convenience: ids + roster in one go. */

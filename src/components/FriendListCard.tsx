@@ -22,6 +22,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import {
   fetchFriendRoster, type RosterFriend,
 } from '@/lib/friendRoster';
+import CallOptionsBar from '@/components/CallOptionsBar';
 
 function lastSeenLabel(iso: string | null): string {
   if (!iso) return 'never';
@@ -107,8 +108,8 @@ export default function FriendListCard() {
       ) : (
         <div className="space-y-2.5">
           {roster.slice(0, 8).map((f, i) => (
+            <div key={f.id} className="space-y-1">
             <motion.div
-              key={f.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 6) * 0.04 }}
@@ -119,7 +120,7 @@ export default function FriendListCard() {
                 <div className="w-11 h-11 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-black text-lg shadow overflow-hidden">
                   {f.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={f.avatar_url} alt="" className="w-11 h-11 object-cover" />
+                    <img src={f.avatar_url} alt="" loading="lazy" decoding="async" width={44} height={44} className="w-11 h-11 object-cover" />
                   ) : (
                     f.name.charAt(0).toUpperCase()
                   )}
@@ -179,6 +180,20 @@ export default function FriendListCard() {
                 )}
               </div>
             </motion.div>
+
+            {/* WhatsApp/Insta-style call options: 📞 voice · 🎥 video */}
+            <div className="flex justify-end -mt-0.5 pr-3">
+              <CallOptionsBar
+                peer={{
+                  id: f.id,
+                  name: f.name,
+                  username: f.username,
+                  avatar_url: f.avatar_url,
+                  is_online: f.is_online,
+                }}
+              />
+            </div>
+            </div>
           ))}
           {roster.length > 8 && (
             <p className="text-xs text-gray-400 text-center">+{roster.length - 8} more friends</p>
