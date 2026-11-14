@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import PremiumBackground from '@/components/PremiumBackground';
 import PartnerActivityFeed from '@/components/PartnerActivityFeed';
+import FriendListCard from '@/components/FriendListCard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import Link from 'next/link';
 
 const GAME_INFO: Record<string, { name: string; icon: string; color: string }> = {
@@ -42,12 +44,25 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     if (!user) return;
-    const { data: stats } = await supabase.from('game_stats').select('*').eq('user_id', user.id).order('last_played', { ascending: false });
-    if (stats) { setGameStats(stats); setTotalTime(stats.reduce((sum, s) => sum + s.total_time_played, 0)); }
-    const { data: userBadges } = await supabase.from('user_badges').select('*, badges(*)').eq('user_id', user.id).order('earned_at', { ascending: false });
-    if (userBadges) setBadges(userBadges);
-    const { data: sessions } = await supabase.from('game_sessions').select('*').or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`).order('started_at', { ascending: false }).limit(5);
-    if (sessions) setRecentGames(sessions);
+    // Each query is independent and error-checked: a missing table or a
+    // schema drift must never take the whole dashboard down.
+    try {
+      const { data: stats, error: statsErr } = await supabase.from('game_stats').select('*').eq('user_id', user.id).order('last_played', { ascending: false });
+      if (stats && !statsErr) {
+        setGameStats(stats);
+        setTotalTime(stats.reduce((sum, s) => sum + (s.total_time_played || 0), 0));
+      }
+    } catch { /* degrade: no stats */ }
+
+    try {
+      const { data: userBadges, error: badgesErr } = await supabase.from('user_badges').select('*, badges(*)').eq('user_id', user.id).order('earned_at', { ascending: false });
+      if (userBadges && !badgesErr) setBadges(userBadges);
+    } catch { /* degrade: no badges */ }
+
+    try {
+      const { data: sessions, error: sessErr } = await supabase.from('game_sessions').select('*').or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`).order('started_at', { ascending: false }).limit(5);
+      if (sessions && !sessErr) setRecentGames(sessions);
+    } catch { /* degrade: no recent games */ }
   };
 
   const handleLogout = async () => {
@@ -72,10 +87,11 @@ export default function DashboardPage() {
     { label: 'Games', value: gameStats.length, icon: Gamepad2, gradient: 'from-primary-500 to-rose-500', bg: 'bg-primary-50' },
     { label: 'Time Played', value: `${hours}h ${minutes}m`, icon: Clock, gradient: 'from-blue-500 to-cyan-500', bg: 'bg-blue-50' },
     { label: 'Badges', value: badges.length, icon: Trophy, gradient: 'from-yellow-500 to-orange-500', bg: 'bg-yellow-50' },
-    { label: 'Wins', value: gameStats.reduce((a, b) => a + b.wins, 0), icon: Flame, gradient: 'from-rose-500 to-red-500', bg: 'bg-rose-50' },
+    { label: 'Wins', value: gameStats.reduce((a, b) => a + (b.wins || 0), 0), icon: Flame, gradient: 'from-rose-500 to-red-500', bg: 'bg-rose-50' },
   ];
 
   return (
+    <ErrorBoundary>
     <PremiumBackground>
       <div className="min-h-screen pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -119,6 +135,15 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main */}
             <div className="lg:col-span-2 space-y-8">
+              {/* Your People — friends + live presence + message/miss-meter ranking */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <FriendListCard />
+              </motion.div>
+
               {/* Games */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <h2 className="text-2xl font-display font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -242,5 +267,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </PremiumBackground>
+    </ErrorBoundary>
   );
 }

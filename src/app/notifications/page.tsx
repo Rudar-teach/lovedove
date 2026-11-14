@@ -10,14 +10,21 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  is_read: boolean;
+  /** Production schema: `read` (boolean). Older local schemas may use `is_read`. */
+  read: boolean;
+  is_read?: boolean;
   data: any;
   created_at: string;
 }
 
+/** Read flag is stored as `read` in production but some local DBs use `is_read`. */
+const isRead = (n: Notification) => (n.is_read ?? n.read) === true;
+
 const typeIcons: Record<string, any> = {
   match_found: Heart,
   message: MessageCircle,
+  friend_request: Users,
+  friend_message: MessageCircle,
   badge_earned: Trophy,
   game_invite: Sparkles,
   system: Gift,
@@ -66,22 +73,42 @@ export default function NotificationsPage() {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+      setNotifications(data as Notification[]);
+      setUnreadCount((data as Notification[]).filter(n => !isRead(n)).length);
     }
     setLoading(false);
   };
 
+  /**
+   * Write the read flag. Production schema uses the column `read`; older
+   * local schemas named it `is_read`. Try production first, fall back on
+   * "column does not exist".
+   */
+  const markRead = async (scope: { id?: string; userId?: string }) => {
+    const build = (col: 'read' | 'is_read') => {
+      let q = supabase
+        .from('notifications')
+        .update({ [col]: true } as Record<string, unknown>);
+      if (scope.id) q = q.eq('id', scope.id);
+      if (scope.userId) q = q.eq('user_id', scope.userId);
+      return q;
+    };
+    const { error } = await build('read');
+    if (error && (error.code === '42703' || /does not exist/i.test(error.message))) {
+      await build('is_read');
+    }
+  };
+
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    await markRead({ id });
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true, is_read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = async () => {
     if (!userId) return;
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    await markRead({ userId });
+    setNotifications(prev => prev.map(n => ({ ...n, read: true, is_read: true })));
     setUnreadCount(0);
   };
 
@@ -174,7 +201,7 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 className={`bg-white rounded-2xl p-5 border transition-all ${
-                  notification.is_read ? 'border-gray-100' : 'border-pink-300 bg-pink-50/50 shadow-md'
+                  isRead(notification) ? 'border-gray-100' : 'border-pink-300 bg-pink-50/50 shadow-md'
                 }`}
               >
                 <div className="flex items-start gap-4">

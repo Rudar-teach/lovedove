@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { startPresence, stopPresence } from '@/lib/presence';
 
 interface AuthContextType {
   user: Profile | null;
@@ -57,9 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             updated_at: new Date().toISOString(),
           };
           syncUser(profile);
+          startPresence(profile.id);
           setIsLoading(false);
         }
       } else if (mounted) {
+        stopPresence();
         setIsLoading(false);
       }
     };

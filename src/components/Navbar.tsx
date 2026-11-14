@@ -118,6 +118,7 @@ export default function Navbar() {
     { href: '/games', label: 'All Games', icon: Gamepad2 },
     { href: '/miss-meter', label: 'Miss Meter', icon: Timer },
     { href: '/leaderboard', label: 'Couples of the Week', icon: Trophy },
+    { href: '/stories', label: 'Stories', icon: BookOpen },
     { href: '/#community', label: 'Community', icon: Users },
     { href: '/contact', label: 'Contact', icon: Mail },
   ];

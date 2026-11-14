@@ -6,6 +6,7 @@ import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { PlayInviteProvider } from '@/components/PlayInviteProvider';
+import FriendInviteBanner from '@/components/FriendInviteBanner';
 import CookieBanner from '@/components/CookieBanner';
 import MissYouBanner from '@/components/MissYouBanner';
 import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
@@ -58,6 +59,8 @@ export default function RootLayout({
               </main>
               <Chatbot />
               <CookieBanner />
+              {/* Big, clear invitation card — friend requests & new messages */}
+              <FriendInviteBanner />
               <MissYouBanner />
               <GlobalPlayWithFriend />
               {/* Fires hearts confetti + chime on every game win */}

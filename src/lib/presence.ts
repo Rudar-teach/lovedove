@@ -12,8 +12,8 @@
 
 import { supabase } from './supabase';
 
-const HEARTBEAT_MS = 25000;      // ping every 25s
-const EXPIRE_MS = 120000;        // sweep stale users every 2min
+const HEARTBEAT_MS = 10000;      // ping every 10s while the tab is visible
+const EXPIRE_MS = 60000;         // sweep stale users every 1min
 
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 let expireTimer: ReturnType<typeof setInterval> | null = null;
@@ -89,18 +89,27 @@ export function startPresence(userId: string | null) {
   };
   document.addEventListener('visibilitychange', onVisibility);
 
-  // Best-effort "leave" ping when the tab actually closes
+  // Mark offline the moment the tab closes so the other side's dots flip
+  // fast (instead of waiting for the 3-minute stale sweep). This is
+  // fire-and-forget; if it can't finish before the tab dies, the sweep in
+  // the DB covers it.
   const onUnload = () => {
-    if (!currentUserId) return;
+    const id = currentUserId;
+    if (!id) return;
     try {
-      void supabase.rpc('heartbeat_presence', { p_user_id: currentUserId });
+      void supabase.rpc('mark_presence_offline', { p_user_id: id });
     } catch { /* ignore */ }
   };
   window.addEventListener('pagehide', onUnload);
 }
 
 export function stopPresence() {
+  const leavingId = currentUserId;
   if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
   if (expireTimer) { clearInterval(expireTimer); expireTimer = null; }
   currentUserId = null;
+  if (leavingId) {
+    // Sign-out / user swap → go offline now, not after the 3-minute sweep.
+    try { void supabase.rpc('mark_presence_offline', { p_user_id: leavingId }); } catch { /* ignore */ }
+  }
 }

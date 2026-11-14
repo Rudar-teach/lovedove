@@ -16,6 +16,8 @@ import {
   getMilestones, addMilestone, logAutoMilestone,
   type LoveReason, type Milestone,
 } from '@/lib/relationship';
+import { fetchPartnerStories, type Story } from '@/lib/stories';
+import StoryComposer from '@/components/StoryComposer';
 import PremiumBackground from '@/components/PremiumBackground';
 import toast from 'react-hot-toast';
 
@@ -59,6 +61,8 @@ export default function OurStoryPage() {
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [showMilestoneForm, setShowMilestoneForm] = useState(false);
 
+  const [partnerStories, setPartnerStories] = useState<Story[]>([]);
+
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
@@ -97,17 +101,25 @@ export default function OurStoryPage() {
     }
 
     if (p) {
-      const [u, rc, ms] = await Promise.all([
+      const [u, rc, ms, ps] = await Promise.all([
         getUnrevealedReasons(user.id),
         getRevealedCount(user.id),
         getMilestones(user.id, p.id),
+        fetchPartnerStories(user.id, p.id),
       ]);
       setUnrevealed(u);
       setRevealedCount(rc);
       setMilestones(ms);
+      setPartnerStories(ps);
     }
     setLoaded(true);
   }, [user]);
+
+  /** Re-pull just the partner stories after posting a new one. */
+  const refreshPartnerStories = useCallback(async () => {
+    if (!user || !partner) return;
+    setPartnerStories(await fetchPartnerStories(user.id, partner.id));
+  }, [user, partner]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -270,20 +282,42 @@ export default function OurStoryPage() {
           </div>
 
           {!partner ? (
-            /* No partner yet */
-            <div className="bg-white rounded-3xl shadow-xl shadow-pink-100/30 border border-pink-100 p-12 text-center">
-              <div className="text-6xl mb-4">💞</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Your story is waiting to begin</h2>
-              <p className="text-gray-500 mb-6">
-                Find your partner first — then this page becomes your shared memory wall,
-                live day counter, and &ldquo;reasons I love you&rdquo; vault.
-              </p>
-              <Link
-                href="/find-partner"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-transform"
-              >
-                <Heart className="w-4 h-4" /> Find your partner
-              </Link>
+            /* No partner yet — but you can still write stories (community or anonymous) */
+            <div className="space-y-6">
+              <div className="bg-white rounded-3xl shadow-xl shadow-pink-100/30 border border-pink-100 p-10 sm:p-12 text-center">
+                <div className="text-6xl mb-4">💞</div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Your story is waiting to begin</h2>
+                <p className="text-gray-500 mb-6">
+                  Find your partner first — then this page becomes your shared memory wall,
+                  live day counter, and &ldquo;reasons I love you&rdquo; vault.
+                </p>
+                <Link
+                  href="/find-partner"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-transform"
+                >
+                  <Heart className="w-4 h-4" /> Find your partner
+                </Link>
+              </div>
+
+              {/* You can still share stories with the community — or anonymously */}
+              <div className="bg-white rounded-3xl shadow-lg shadow-pink-100/30 border border-pink-100 p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-pink-500" /> Add a story with your loved ones
+                  </h3>
+                  <Link
+                    href="/stories"
+                    className="text-xs font-bold text-purple-500 hover:text-purple-700 flex items-center gap-1"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" /> See everyone&apos;s stories
+                  </Link>
+                </div>
+                <p className="text-xs text-gray-500 mb-4">
+                  Share a moment with the whole community — or hide your name and post as
+                  &ldquo;Anonymous&rdquo;.
+                </p>
+                <StoryComposer defaultAudience="community" onPosted={() => void load()} />
+              </div>
             </div>
           ) : (
             <>
@@ -556,6 +590,68 @@ export default function OurStoryPage() {
                         </motion.div>
                       ))}
                     </div>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* ── Stories with my person ──────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-white rounded-3xl shadow-lg shadow-pink-100/30 border border-pink-100 p-6"
+              >
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-pink-500" /> Stories with {partner.username}
+                  </h3>
+                  <Link
+                    href="/stories"
+                    className="text-xs font-bold text-purple-500 hover:text-purple-700 flex items-center gap-1"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" /> Community stories
+                  </Link>
+                </div>
+
+                <StoryComposer
+                  partnerId={partner.id}
+                  partnerLabel={partner.username}
+                  defaultAudience="partner"
+                  compact
+                  onPosted={refreshPartnerStories}
+                />
+
+                {partnerStories.length > 0 && (
+                  <div className="mt-4 space-y-2.5">
+                    {partnerStories.slice(0, 12).map((s) => {
+                      const byPartner = s.author_id !== user.id;
+                      const anon = s.is_anonymous;
+                      return (
+                        <div
+                          key={s.id}
+                          className={`rounded-2xl p-4 border ${
+                            byPartner
+                              ? 'bg-gradient-to-br from-pink-50 to-rose-50 border-pink-100'
+                              : 'bg-gray-50/70 border-gray-100'
+                          }`}
+                        >
+                          <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                            {s.emoji && <span className="mr-1">{s.emoji}</span>}
+                            {s.title && <b className="block text-gray-900 mb-1">{s.title}</b>}
+                            {s.body}
+                          </p>
+                          <p className="text-[11px] mt-2 font-bold flex items-center gap-1 text-gray-400">
+                            {anon ? (
+                              <><span>🎭 Anonymous</span> {byPartner && <span className="text-pink-500">· from {partner.username}</span>}</>
+                            ) : byPartner ? (
+                              <><span className="text-pink-500">@{partner.username}</span> · for you</>
+                            ) : (
+                              <><span>@{user.username}</span> · {new Date(s.created_at).toLocaleDateString()}</>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </motion.div>
