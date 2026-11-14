@@ -1,23 +1,36 @@
 /**
- * Global win celebration trigger.
+ * Global win/loss celebration trigger.
  *
- * Call `celebrateWin()` from any game (or from GameSessionProvider
- * completeSession) and the <WinCelebration/> component mounted in the
- * root layout will fire confetti + a soft chime. The event is debounced
- * so rapid-fire wins don't stack animations.
+ * Call `celebrateWin()` / `celebrateLoss()` from any game (or from
+ * GameSessionProvider completeSession) and the <WinCelebration/> +
+ * <CompanionWidget/> components mounted in the root layout will react
+ * (confetti + chime on wins; the companions also pout on losses).
+ * Events are debounced so rapid-fire results don't stack animations.
  */
 
 export const WIN_EVENT = 'lovedove:win';
+export const LOSE_EVENT = 'lovedove:lose';
 
-let lastFired = 0;
+let lastWinFired = 0;
+let lastLoseFired = 0;
 
 export function celebrateWin(message?: string) {
   if (typeof window === 'undefined') return;
   const now = Date.now();
-  if (now - lastFired < 2500) return; // debounce: one celebration at a time
-  lastFired = now;
+  if (now - lastWinFired < 2500) return; // debounce: one celebration at a time
+  lastWinFired = now;
   window.dispatchEvent(
     new CustomEvent(WIN_EVENT, { detail: { message } })
+  );
+}
+
+export function celebrateLoss(message?: string) {
+  if (typeof window === 'undefined') return;
+  const now = Date.now();
+  if (now - lastLoseFired < 2500) return;
+  lastLoseFired = now;
+  window.dispatchEvent(
+    new CustomEvent(LOSE_EVENT, { detail: { message } })
   );
 }
 
