@@ -123,6 +123,14 @@ export default function Navbar() {
     { href: '/contact', label: 'Contact', icon: Mail },
   ];
 
+  // Desktop shows a trimmed set: 'Games' duplicates 'All Games', and the
+  // 'Community' anchor only means anything on the home page. Dropping
+  // these two keeps the bar on a single line even with Sign In + Get
+  // Started visible. The mobile menu still lists everything.
+  const desktopLinks = navLinks.filter(
+    (l) => l.href !== '/#games' && l.href !== '/#community'
+  );
+
   const hours = Math.floor(totalTime / 3600);
   const minutes = Math.floor((totalTime % 3600) / 60);
 
@@ -158,22 +166,35 @@ export default function Navbar() {
 
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-0.5">
-            {navLinks.map((link) => {
+            {desktopLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && link.href.startsWith('/') && pathname?.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`nav-link-hover px-3 py-2 text-sm font-medium flex items-center gap-1.5 transition-colors rounded-lg ${
-                    isActive
-                      ? 'text-pink-600 bg-pink-50'
-                      : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50/50'
-                  }`}
-                >
-                  <link.icon className="w-3.5 h-3.5" />
-                  {link.label}
-                </Link>
-              );
+              return (() => {
+                // At lg (1024–1279) show the core five; the wider set
+                // (Contact, Leaderboard) joins at xl where there's room.
+                const isExtra = link.href === '/contact' || link.href === '/leaderboard';
+                const extraHidden = isExtra ? 'hidden xl:flex' : '';
+                return (
+                  <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`nav-link-hover whitespace-nowrap px-3 py-2 text-sm font-medium items-center gap-1.5 transition-colors rounded-lg ${extraHidden} flex ${
+                        isActive
+                          ? 'text-pink-600 bg-pink-50'
+                          : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50/50'
+                      }`}
+                    >
+                      <link.icon className="w-3.5 h-3.5" />
+                      {link.href === '/leaderboard' ? (
+                        <>
+                          <span className="xl:hidden">Leaderboard</span>
+                          <span className="hidden xl:inline">Couples of the Week</span>
+                        </>
+                      ) : (
+                        link.label
+                      )}
+                    </Link>
+                  );
+                })();
             })}
           </div>
 
@@ -308,7 +329,7 @@ export default function Navbar() {
               <div className="hidden lg:flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="text-sm font-semibold text-gray-600 hover:text-pink-600 transition-colors px-3 py-2"
+                  className="hidden xl:block text-sm font-semibold text-gray-600 hover:text-pink-600 transition-colors px-3 py-2 whitespace-nowrap"
                 >
                   Sign In
                 </Link>
