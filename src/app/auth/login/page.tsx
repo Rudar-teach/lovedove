@@ -214,6 +214,15 @@ export default function LoginPage() {
                 </div>
               </CinematicReveal>
 
+              <div className="text-center">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs font-semibold text-pink-600 hover:text-pink-800 hover:underline transition-colors"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+
               {nextRetry > 0 && (
                 <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
                   <RefreshCw className="w-4 h-4 animate-spin flex-shrink-0" />

@@ -21,7 +21,11 @@ import FriendPanel, { Friend } from './FriendPanel';
 import { STATIC_GAMES } from '@/lib/staticGames';
 import { getBollywoodGame } from '@/lib/bollywoodGames';
 import { supabase } from '@/lib/supabase';
-import { sendPlayInvite, getPlayTogetherLink } from '@/lib/social';
+import { sendPlayInvite } from '@/lib/social';
+
+function pairId(a: string, b: string) {
+  return [a, b].sort().join(':');
+}
 
 // Games that exist ONLY in the /games/[slug] catch-all page (no
 // dedicated directory, not in STATIC_GAMES or the bollywood data).
@@ -238,6 +242,7 @@ const TOGETHER_PAGES: Record<string, string> = {
 
 export default function GlobalPlayWithFriend() {
   const pathname = usePathname();
+  const router = useRouter();
   const [active, setActive] = useState(false);
   const [gameName, setGameName] = useState('');
   const [gameSlug, setGameSlug] = useState('');
@@ -326,23 +331,32 @@ export default function GlobalPlayWithFriend() {
         onPlayFriend={async (f: Friend) => {
           if (together) {
             // Reunite & play: send a REAL play invite so the friend sees it
-            // the moment they open the site, then hop into the game.
+            // the moment they open the site, then hop into the shared game.
             setOpen(false);
             try {
               const { data: { user: me } } = await supabase.auth.getUser();
               if (me) {
-                const res = await sendPlayInvite(me.id, f.id, 'tictactoe');
-                if (!res.ok) {
-                  alert(`Could not send the invite to ${f.name}: ${res.error}`);
-                  return;
-                }
+                await sendPlayInvite(me.id, f.id, 'tictactoe');
+                const matchId = pairId(me.id, f.id);
+                router.push(`/play-together/${matchId}`);
+                return;
               }
-              const url = getPlayTogetherLink('tictactoe');
-              window.open(url, '_blank');
             } catch {
-              window.open(getPlayTogetherLink('tictactoe'), '_blank');
+              // ignore and fall back below
             }
+            router.push('/');
             return;
+          }
+          try {
+            const { data: { user: me } } = await supabase.auth.getUser();
+            if (me) {
+              await sendPlayInvite(me.id, f.id, gameSlug || 'tictactoe');
+              const matchId = pairId(me.id, f.id);
+              router.push(`/play-together/${matchId}`);
+              return;
+            }
+          } catch {
+            // ignore
           }
           alert(
             `You chose ${f.name} for ${gameName}!\n\n` +

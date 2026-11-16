@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@supabase/supabase-js": "^2.118.0",
     "@types/matter-js": "^0.20.2",
     "framer-motion": "^11.11.17",
@@ -20,12 +22,14 @@
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.4.1",
     "resend": "^6.32.0",
+    "three": "^0.187.0",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@types/node": "^22.7.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.187.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.39.0",
     "eslint-config-next": "16.4.3",

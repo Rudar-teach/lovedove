@@ -10,7 +10,6 @@ import {
   Globe, Shield, Clock, Users2, HeartPulse, Smile, Timer, Send
 } from 'lucide-react';
 import Link from 'next/link';
-import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import CanvasBackground from '@/components/premium/CanvasBackground';
 import CinematicReveal from '@/components/premium/CinematicReveal';
 import MagneticButton from '@/components/premium/MagneticButton';

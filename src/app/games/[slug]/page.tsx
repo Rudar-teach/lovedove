@@ -10,7 +10,6 @@ import {
   UserPlus, Check, X, Clock, Loader2, Bell, BellRing
 } from 'lucide-react';
 import CanvasBackground from '@/components/premium/CanvasBackground';
-import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import GlassCard from '@/components/premium/GlassCard';
 import CinematicReveal from '@/components/premium/CinematicReveal';
 import { supabase } from '@/lib/supabase';
@@ -290,7 +289,6 @@ export default function GamePage() {
       {mounted && (
         <>
           <CanvasBackground />
-          <LuxuryCursor />
         </>
       )}
 

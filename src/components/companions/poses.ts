@@ -58,7 +58,8 @@ export const POSES: Record<Mood, Pose> = {
     eyelids: 0, eyeShift: 0, blush: 1,
     pawL: { x: 0, y: -18, rotate: -38 }, pawR: { x: 0, y: -18, rotate: 38 },
     mouth: 'happyOpen',
-    bounce: { y: [0, -14, 0], dur: 0.55 },
+    // Win: alternating jumps — short hop, then a bigger one, looping for the 4s.
+    bounce: { y: [0, -10, 0, -18, 0], dur: 1.1 },
   },
   pouting: {
     pose: { x: 0, y: 2, rotate: -6 },

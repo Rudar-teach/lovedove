@@ -132,6 +132,25 @@ export default function GamesCatalog() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Spicy Games Banner */}
+        <Link href="/games/spicy"
+          className="block mb-6 group bg-gradient-to-r from-pink-600 via-rose-600 to-red-700 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-2 right-6 text-8xl">🔥</div>
+            <div className="absolute bottom-2 left-6 text-6xl">💋</div>
+          </div>
+          <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-white/70 mb-1">18+</div>
+              <h2 className="text-2xl sm:text-3xl font-black mb-1">Spicy Games</h2>
+              <p className="text-white/80 text-sm">25 adult-themed couple games — truths, dares, quizzes & challenges.</p>
+            </div>
+            <span className="inline-flex items-center gap-2 px-5 py-3 bg-white text-gray-900 font-bold rounded-2xl group-hover:scale-105 transition-all flex-shrink-0">
+              Play now 🔥
+            </span>
+          </div>
+        </Link>
+
         {/* Bollywood Hub Banner */}
         <Link href="/games/bollywood"
           className="block mb-10 group bg-gradient-to-r from-amber-500 via-orange-600 to-red-700 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">

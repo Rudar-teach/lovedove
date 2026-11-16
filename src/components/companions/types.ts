@@ -10,6 +10,23 @@ export type Mood =
   | 'celebrating'
   | 'pouting';
 
+/** One-shot actions the pair can perform (random-rolled, never twice in a row). */
+export type OneShotAction = 'jump' | 'dance' | 'wave' | 'headbutt' | 'peekup';
+
+/** The one-shot action currently playing (tick re-triggers on repeats). */
+export interface ActionState {
+  kind: OneShotAction;
+  tick: number;
+}
+
+/** Gait info while the pair walks along the bottom of the page. */
+export interface GaitState {
+  /** Travel direction: 1 = right, -1 = left. */
+  dir: 1 | -1;
+  /** Whether this character leads the gait (front runner, starts each step). */
+  leading: boolean;
+}
+
 export interface CharacterProps {
   /** The mood this character is currently in. */
   mood: Mood;
@@ -41,6 +58,12 @@ export interface CharacterProps {
   reduced: boolean;
   /** Tailwind size class for the svg (e.g. "w-10 sm:w-14"). */
   sizeClass: string;
+  /** One-shot action playing right now (jump/dance/wave/headbutt/peekup). */
+  action?: ActionState | null;
+  /** The pair is walking right now (gait: lean, alternating feet, bob). */
+  walking?: GaitState | null;
+  /** Loss reaction: one paw over the face + a single small tear drop. */
+  crying?: boolean;
 }
 
 /** Mouth shapes — swapped instantly per mood, no path morphing. */
@@ -51,4 +74,6 @@ export const MOUTHS: Record<string, string> = {
   pout: 'M-3.5,-1 Q0,-4 3.5,-1',
   happyOpen: 'M-5,-1 Q0,5.5 5,-1 Q0,2.5 -5,-1 Z',
   o: 'M0,-2.4 A2.4,2.4 0 1 0 0.01,-2.4 Z',
+  /** Big open "laughing" mouth with a little tongue — plushy kawaii cheer. */
+  laugh: 'M-4.5,-0.5 Q0,6 4.5,-0.5 Q0,2.5 -4.5,-0.5 Z',
 };

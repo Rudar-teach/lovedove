@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Bear from './Bear';
@@ -12,7 +13,12 @@ import { useCompanionBrain } from './useCompanionBrain';
  * what you type, hide their eyes on password fields, blush when hovered,
  * cheer while you're on a game page, and celebrate wins / pout on losses.
  *
- * Hidden on /admin*. Bottom-left corner; scales down on phones.
+ * Every 60–120s they also WANDER: the pair walks to a random x-position
+ * along the bottom of the viewport (lean, alternating feet, bob). The
+ * container position is driven by a framer-motion animated "left" value
+ * (px) — no fixed corner classes, no state ticks.
+ *
+ * Hidden on /admin*. Scales down on phones.
  */
 export default function CompanionWidget() {
   const brain = useCompanionBrain();
@@ -21,13 +27,16 @@ export default function CompanionWidget() {
   // Admin pages: no companions (and their password field never reacts).
   if (pathname.startsWith('/admin')) return null;
 
-  const { mood, blink, nod, tilt, hop, pawShift, snuggle, gaze, earTwitch, heartDropTick, bubble, wigglingId, clickTicks, reduced, isGame } = brain;
+  const {
+    mood, blink, nod, tilt, hop, pawShift, snuggle, gaze, earTwitch,
+    heartDropTick, bubble, wigglingId, clickTicks, reduced, isGame,
+    widgetRef, leftPx, leftDur, walkingDir, action, crying,
+  } = brain;
 
-  // Base position is bottom-left; on game pages the "Play with friend"
-  // button owns bottom-left, so the pair parks higher there on mobile.
-  const containerClass = `fixed z-[90] pointer-events-none flex items-end gap-1 sm:gap-2 select-none left-3 sm:left-5 ${
-    isGame ? 'bottom-40 sm:bottom-6' : 'bottom-24 sm:bottom-6'
-  }`;
+  // On game pages the "Play with friend" button owns the bottom strip, so
+  // the pair parks higher there on mobile. Horizontal position is animated
+  // (leftPx / leftDur) — they sit at their last x when idle.
+  const bottomClass = isGame ? 'bottom-40 sm:bottom-6' : 'bottom-24 sm:bottom-6';
 
   const charClass = 'w-10 sm:w-14 block';
 
@@ -35,26 +44,50 @@ export default function CompanionWidget() {
   // in lockstep (which is what makes a pair look "looped").
   const pandaTilt = -tilt * 0.6;
 
-  const shared = {
-    mood,
-    blink,
-    nod,
-    hop,
-    pawShift,
-    snuggle,
-    gaze,
-    earTwitch,
-    heartDropTick,
-    bubble,
-    reduced,
-    sizeClass: charClass,
-  };
+  // Memoize the two character subtrees so the (cheap) container re-render
+  // doesn't force full SVG re-renders on every unrelated brain tick.
+  // Gait: the front runner leads. Walking right → bear (left) leads;
+  // walking left → panda (right) leads.
+  const bearProps = useMemo(
+    () => ({
+      mood, blink, nod, tilt, hop, pawShift, snuggle, gaze,
+      earTwitch, heartDropTick, bubble, reduced, isWiggling: wigglingId === 'bear',
+      clickTick: clickTicks.bear, sizeClass: charClass,
+      action,
+      walking: walkingDir === null ? null : { dir: walkingDir, leading: walkingDir === 1 },
+      crying,
+    }),
+    [mood, blink, nod, tilt, hop, pawShift, snuggle, gaze, earTwitch,
+      heartDropTick, bubble, reduced, wigglingId, clickTicks.bear, charClass,
+      action, walkingDir, crying]
+  );
+  const pandaProps = useMemo(
+    () => ({
+      mood, blink, nod, hop, pawShift, snuggle, gaze,
+      earTwitch, heartDropTick, reduced,
+      isWiggling: wigglingId === 'panda',
+      tilt: pandaTilt,
+      clickTick: clickTicks.panda,
+      sizeClass: charClass,
+      bubble: null, // only the bear "speaks" — otherwise both say the same line
+      action,
+      walking: walkingDir === null ? null : { dir: walkingDir, leading: walkingDir === -1 },
+      crying,
+    }),
+    [mood, blink, nod, hop, pawShift, snuggle, gaze, earTwitch, heartDropTick,
+      reduced, wigglingId, pandaTilt, clickTicks.panda, charClass,
+      action, walkingDir, crying]
+  );
 
   const heartVisible = snuggle && !reduced;
 
   return (
-    <div
-      className={containerClass}
+    <motion.div
+      ref={widgetRef}
+      className={`fixed z-[90] pointer-events-none flex items-end gap-1 sm:gap-2 select-none ${bottomClass}`}
+      style={{ left: 0 }}
+      animate={{ left: leftPx }}
+      transition={{ duration: leftDur, ease: 'linear' }}
       aria-hidden="true"
       title={isGame ? 'They’re playing along!' : undefined}
     >
@@ -82,12 +115,7 @@ export default function CompanionWidget() {
         onMouseEnter={() => brain.pushHover('bear')}
         onClick={() => brain.click('bear')}
       >
-        <Bear
-          {...shared}
-          tilt={tilt}
-          isWiggling={wigglingId === 'bear'}
-          clickTick={clickTicks.bear}
-        />
+        <Bear {...bearProps} />
       </button>
       <button
         type="button"
@@ -97,14 +125,8 @@ export default function CompanionWidget() {
         onMouseEnter={() => brain.pushHover('panda')}
         onClick={() => brain.click('panda')}
       >
-        <Panda
-          {...shared}
-          bubble={null} // only the bear "speaks" — otherwise both say the same line
-          tilt={pandaTilt}
-          isWiggling={wigglingId === 'panda'}
-          clickTick={clickTicks.panda}
-        />
+        <Panda {...pandaProps} />
       </button>
-    </div>
+    </motion.div>
   );
 }

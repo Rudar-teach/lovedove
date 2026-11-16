@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
 import { useReducedMotion } from 'framer-motion';
 import { WIN_EVENT, LOSE_EVENT } from '@/lib/winCelebrate';
-import type { Mood } from './types';
+import type { ActionState, Mood, OneShotAction } from './types';
 
 interface Override {
   mood: Mood;
@@ -46,6 +46,18 @@ export interface Brain {
   bubble: string | null;
   reduced: boolean;
   isGame: boolean;
+  /** Ref for the widget container — the brain measures it to clamp wandering. */
+  widgetRef: RefObject<HTMLDivElement | null>;
+  /** Where the pair sits along the bottom (px from the left edge). */
+  leftPx: number;
+  /** Framer transition duration for the left value (s); 0 = snap. */
+  leftDur: number;
+  /** The pair is walking right now (1 = right, -1 = left, null = sitting). */
+  walkingDir: 1 | -1 | null;
+  /** One-shot action playing (jump/dance/wave/headbutt/peekup), or null. */
+  action: ActionState | null;
+  /** Loss reaction: a paw over the face + one small tear. */
+  crying: boolean;
   pushHover: (id: 'bear' | 'panda') => void;
   click: (id: 'bear' | 'panda') => void;
 }
@@ -71,6 +83,20 @@ export function useCompanionBrain(): Brain {
   const [bubble, setBubble] = useState<string | null>(null);
   const [stale, setStale] = useState(false); // no user activity for 45s → dozy
 
+  // ---- wander / one-shot / loss state ------------------------------------
+  const widgetRef = useRef<HTMLDivElement | null>(null);
+  const [leftPx, setLeftPx] = useState(8);
+  const [leftDur, setLeftDur] = useState(0);
+  const [walkingDir, setWalkingDir] = useState<1 | -1 | null>(null);
+  const [action, setAction] = useState<ActionState | null>(null);
+  const [crying, setCrying] = useState(false);
+
+  // Refs so timer callbacks can read fresh values without re-arming chains.
+  const moodRef = useRef<Mood>('idle');
+  const leftRef = useRef(leftPx);
+  const walkingRef = useRef(walkingDir);
+  const actionRef = useRef<ActionState | null>(null);
+
   // ---- mood resolution -----------------------------------------------------
   // Drowsy (no activity for 45s) is the base mood everywhere except game pages.
   const base: Mood = isGame ? 'cheering' : stale ? 'drowsy' : 'idle';
@@ -81,6 +107,12 @@ export function useCompanionBrain(): Brain {
     },
     base
   );
+
+  // Refs mirror fresh values so timer callbacks never need re-arming.
+  useEffect(() => { moodRef.current = mood; }, [mood]);
+  useEffect(() => { leftRef.current = leftPx; }, [leftPx]);
+  useEffect(() => { walkingRef.current = walkingDir; }, [walkingDir]);
+  useEffect(() => { actionRef.current = action; }, [action]);
 
   const push = useCallback((mood: Mood, ttl: number | null) => {
     setOverrides((prev) => {
@@ -101,18 +133,28 @@ export function useCompanionBrain(): Brain {
   }, []);
 
   // ---- win / lose -----------------------------------------------------------
+  const tearTO = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const winBubbleTO = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const onWin = () => {
       push('celebrating', 4000);
+      setBubble('🎉');
+      if (winBubbleTO.current) clearTimeout(winBubbleTO.current);
+      winBubbleTO.current = setTimeout(() => setBubble(null), 3500);
     };
     const onLose = () => {
       push('pouting', 3000);
+      setCrying(true);
+      if (tearTO.current) clearTimeout(tearTO.current);
+      tearTO.current = setTimeout(() => setCrying(false), 3000);
     };
     window.addEventListener(WIN_EVENT, onWin);
     window.addEventListener(LOSE_EVENT, onLose);
     return () => {
       window.removeEventListener(WIN_EVENT, onWin);
       window.removeEventListener(LOSE_EVENT, onLose);
+      if (tearTO.current) clearTimeout(tearTO.current);
+      if (winBubbleTO.current) clearTimeout(winBubbleTO.current);
     };
   }, [push]);
 
@@ -159,6 +201,8 @@ export function useCompanionBrain(): Brain {
     const scheduleDrift = () => {
       driftChain.current = setTimeout(() => {
         if (document.hidden) return scheduleDrift();
+        // They're busy (walking or mid one-shot) — let it finish first.
+        if (walkingRef.current || actionRef.current) return scheduleDrift();
         const r = Math.random();
         if (r < 0.35) {
           const deg = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3);
@@ -208,6 +252,124 @@ export function useCompanionBrain(): Brain {
     };
   }, [reduced]);
 
+  // ---- wander: every 60–120s the pair walks to a random x along the bottom -
+  // Position source: `leftPx` + `leftDur` — the widget animates the container's
+  // "left" value with framer-motion (linear, distance-based), never a tick.
+  const wanderChain = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const walkTO = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (reduced) return;
+
+    /** Travel range in px, clamped to the real viewport (tighter on mobile). */
+    const range = () => {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 92 : 124);
+      const pad = vw < 640 ? 16 : 8;
+      const min = pad;
+      const max = Math.max(min, vw - widgetW - pad);
+      return { min, max };
+    };
+
+    /**
+     * ms = time to the next roll. Normal rolls are 60–120s out; a blocked
+     * roll (hidden tab / walking / high-priority mood) re-checks in 8–12s.
+     */
+    const scheduleWander = (ms?: number) => {
+      if (wanderChain.current) clearTimeout(wanderChain.current);
+      const wait = ms ?? 60000 + Math.random() * 60000;
+      wanderChain.current = setTimeout(() => {
+        if (document.hidden || walkingRef.current) {
+          return scheduleWander(8000 + Math.random() * 4000);
+        }
+        const m = moodRef.current;
+        if (m === 'shy' || m === 'celebrating' || m === 'pouting') {
+          return scheduleWander(8000 + Math.random() * 4000); // high-priority override
+        }
+        const { min, max } = range();
+        const target = min + Math.random() * (max - min);
+        const dist = Math.abs(target - leftRef.current);
+        if (dist < 40) return scheduleWander(); // close enough — just sit here
+        const dir: 1 | -1 = target > leftRef.current ? 1 : -1;
+        const dur = Math.max(1.2, dist / 70); // ~70 px/s walk
+        setWalkingDir(dir);
+        setLeftDur(dur);
+        setLeftPx(target);
+        if (walkTO.current) clearTimeout(walkTO.current);
+        walkTO.current = setTimeout(() => setWalkingDir(null), dur * 1000 + 200);
+        scheduleWander();
+      }, wait);
+    };
+
+    scheduleWander();
+    const onVis = () => {
+      if (walkTO.current) clearTimeout(walkTO.current);
+      if (!document.hidden) setTimeout(scheduleWander, 3000);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      if (wanderChain.current) clearTimeout(wanderChain.current);
+      if (walkTO.current) clearTimeout(walkTO.current);
+    };
+  }, [reduced]);
+
+  useEffect(() => {
+    const onResize = () => {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 92 : 124);
+      const pad = vw < 640 ? 16 : 8;
+      setLeftPx((x) => Math.min(Math.max(x, pad), Math.max(pad, vw - widgetW - pad)));
+    };
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // ---- one-shot actions: jump / dance / wave / headbutt / peek-up ----------
+  // Never the same twice in a row (lastAction tracks it).
+  const actChain = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const actTO = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAction = useRef<OneShotAction | null>(null);
+
+  useEffect(() => {
+    if (reduced) return;
+    const DURS: Record<OneShotAction, number> = {
+      jump: 900,
+      dance: 2300,
+      wave: 2300,
+      headbutt: 1300,
+      peekup: 2100,
+    };
+    const KINDS: OneShotAction[] = ['jump', 'dance', 'wave', 'headbutt', 'peekup'];
+
+    const schedule = () => {
+      actChain.current = setTimeout(() => {
+        if (!document.hidden && !walkingRef.current) {
+          let pick = KINDS[Math.floor(Math.random() * KINDS.length)] ?? 'jump';
+          if (pick === lastAction.current) pick = KINDS[(KINDS.indexOf(pick) + 1) % KINDS.length] ?? 'jump';
+          lastAction.current = pick;
+          setAction({ kind: pick, tick: Date.now() });
+          if (actTO.current) clearTimeout(actTO.current);
+          actTO.current = setTimeout(() => setAction(null), DURS[pick]);
+        }
+        schedule();
+      }, 14000 + Math.random() * 16000);
+    };
+
+    schedule();
+    const onVis = () => {
+      if (actChain.current) clearTimeout(actChain.current);
+      actChain.current = null;
+      if (!document.hidden) setTimeout(schedule, 4000);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      if (actChain.current) clearTimeout(actChain.current);
+      if (actTO.current) clearTimeout(actTO.current);
+    };
+  }, [reduced]);
+
   // ---- cursor-follow gaze (throttled so it costs nothing on slow scrolls) ----
   const lastGazeAt = useRef(0);
   useEffect(() => {
@@ -231,7 +393,7 @@ export function useCompanionBrain(): Brain {
     if (reduced) return;
     const schedule = () => {
       snuggleChain.current = setTimeout(() => {
-        if (document.hidden) return schedule();
+        if (document.hidden || walkingRef.current) return schedule();
         setSnuggle(true);
         setTimeout(() => setSnuggle(false), 3200);
         schedule();
@@ -301,7 +463,7 @@ export function useCompanionBrain(): Brain {
     const BUBBLES = ['💗', '✨', '🥰', '😴', '🎮', '☕️', '💫'];
     const schedule = () => {
       twChain.current = setTimeout(() => {
-        if (!document.hidden) {
+        if (!document.hidden && !walkingRef.current) {
           const r = Math.random();
           if (r < 0.55) {
             setEarTwitch({ side: Math.random() < 0.5 ? 'L' : 'R', tick: Date.now() });
@@ -383,6 +545,12 @@ export function useCompanionBrain(): Brain {
     clickTicks,
     reduced,
     isGame,
+    widgetRef,
+    leftPx,
+    leftDur,
+    walkingDir,
+    action,
+    crying,
     pushHover,
     click,
   };

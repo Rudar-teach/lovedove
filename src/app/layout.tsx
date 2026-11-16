@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import ClientProvider from '@/components/ClientProvider';
 import Navbar from '@/components/Navbar';
-import LuxuryCursor from '@/components/premium/LuxuryCursor';
 import Chatbot from '@/components/Chatbot';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { PlayInviteProvider } from '@/components/PlayInviteProvider';
@@ -12,6 +11,7 @@ import CookieBanner from '@/components/CookieBanner';
 import MissYouBanner from '@/components/MissYouBanner';
 import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
 import WinCelebration from '@/components/WinCelebration';
+import Companion3DWidget from '@/components/companions3d/Companion3DWidget';
 import CompanionWidget from '@/components/companions/CompanionWidget';
 import "./globals.css";
 
@@ -54,7 +54,6 @@ export default function RootLayout({
         <ClientProvider>
           <AuthProvider>
             <PlayInviteProvider>
-              <LuxuryCursor />
               <Navbar />
               <main className="relative z-10 pt-16 sm:pt-20">
                 {children}
@@ -69,9 +68,10 @@ export default function RootLayout({
               <WinCelebration />
               {/* P2P voice/video calls — WhatsApp/Insta-style call bar */}
               <CallCenter />
-              {/* Bear + panda companions — float on every page, react to
-                  typing, password fields, hover, and game wins/losses */}
-              <CompanionWidget />
+              {/* Bear + panda companions — 3D R3F animated models */}
+              {/* Old 2D SVG widget is phased out in favor of the 3D version below */}
+              {/* <CompanionWidget /> */}
+              <Companion3DWidget />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
