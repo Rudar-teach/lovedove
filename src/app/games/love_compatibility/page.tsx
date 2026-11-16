@@ -6,17 +6,25 @@ import { Heart, ArrowLeft, Trophy, Play, RotateCcw, Timer } from 'lucide-react';
 import Link from 'next/link';
 
 
-const COMPAT_QUESTIONS = [
-  "Do you prefer nights in or going out?",
-  "Coffee or tea?",
-  "Early bird or night owl?",
-  "Dogs or cats?",
-  "Beach or mountains?",
-  "Movies at home or theater?",
-  "Sweet or savory?",
-  "Plan ahead or spontaneous?",
-  "Talk on phone or text?",
-  "Cooking or ordering takeout?",
+interface CompatQ {
+  prompt: string;
+  a: string; // left option (true)
+  b: string; // right option (false)
+}
+
+// Pick-one-of-two preference questions — each shows its REAL two options,
+// not Yes/No (which made no sense for "Coffee or tea?").
+const COMPAT_QUESTIONS: CompatQ[] = [
+  { prompt: 'How do you like to spend your evenings?', a: 'Nights in 🏠', b: 'Going out 🎉' },
+  { prompt: 'Your drink of choice?', a: 'Coffee ☕', b: 'Tea 🍵' },
+  { prompt: 'Are you an…', a: 'Early bird 🌅', b: 'Night owl 🦉' },
+  { prompt: 'Which pet is more your vibe?', a: 'Dogs 🐶', b: 'Cats 🐱' },
+  { prompt: 'Your dream getaway?', a: 'Beach 🏖️', b: 'Mountains 🏔️' },
+  { prompt: 'Movie night where?', a: 'At home 🛋️', b: 'At the theater 🎬' },
+  { prompt: 'Sweet tooth or savory fan?', a: 'Sweet 🍫', b: 'Savory 🍟' },
+  { prompt: 'How do you plan things?', a: 'Plan ahead 📋', b: 'Spontaneous 🎲' },
+  { prompt: 'How do you prefer to talk?', a: 'Phone call 📞', b: 'Texting 💬' },
+  { prompt: 'Date night dinner?', a: 'Cooking at home 👩‍🍳', b: 'Ordering in 🍔' },
 ];
 
 export default function LoveCompatibility() {
@@ -71,11 +79,18 @@ export default function LoveCompatibility() {
           {gameState === 'playing' && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="text-center mb-4"><span className="px-3 py-1 rounded-full bg-white/70 text-sm font-semibold">{phase === 'p1' ? '💕 Partner 1' : '💖 Partner 2'} answering</span></div>
             <div className="w-full h-2 bg-white/50 rounded-full mb-8 overflow-hidden"><motion.div className="h-full bg-gradient-to-r from-pink-500 to-red-500 rounded-full" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} /></div>
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6"><h2 className="text-xl font-bold text-gray-900 text-center">{questions[currentIndex]}</h2></div>
-            <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => handleAnswer(true)} className={`p-6 rounded-2xl font-bold text-lg transition-all ${currentAnswer === true ? 'bg-green-500 text-white scale-95' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>Yes 👍</button>
-              <button onClick={() => handleAnswer(false)} className={`p-6 rounded-2xl font-bold text-lg transition-all ${currentAnswer === false ? 'bg-red-500 text-white scale-95' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}>No 👎</button>
-            </div>
+            {(() => {
+              const q = questions[currentIndex];
+              return q ? (
+                <>
+                  <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl border border-pink-100/60 p-8 mb-6"><h2 className="text-xl font-bold text-gray-900 text-center">{q.prompt}</h2></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => handleAnswer(true)} className={`p-6 rounded-2xl font-bold text-lg transition-all ${currentAnswer === true ? 'bg-pink-500 text-white scale-95' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>{q.a}</button>
+                    <button onClick={() => handleAnswer(false)} className={`p-6 rounded-2xl font-bold text-lg transition-all ${currentAnswer === false ? 'bg-rose-500 text-white scale-95' : 'bg-rose-100 text-rose-700 hover:bg-rose-200'}`}>{q.b}</button>
+                  </div>
+                </>
+              ) : null;
+            })()}
           </motion.div>)}
           {gameState === 'finished' && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <div className="text-6xl mb-6">💕</div><h2 className="text-3xl font-display font-black text-gray-900 mb-4">Compatibility Score</h2>
