@@ -20,6 +20,21 @@ const QUESTIONS = [
   { q: '"A Thousand Years" is by?', options: ['Taylor Swift', 'Christina Perri', 'Adele', 'Selena Gomez'], answer: 1, artist: 'Christina Perri' },
   { q: 'Who performed "Marry You"?', options: ['Bruno Mars', 'Ed Sheeran', 'Justin Timberlake', 'Pharrell'], answer: 0, artist: 'Bruno Mars' },
   { q: '"XO" is a song by?', options: ['Beyonce', 'Ed Sheeran', 'The Weeknd', 'Drake'], answer: 2, artist: 'The Weeknd' },
+  { q: 'Who sang "Someone Like You"?', options: ['Sam Smith', 'Adele', 'Ellie Goulding', 'Miley Cyrus'], answer: 1, artist: 'Adele' },
+  { q: '"I Will Always Love You" was a #1 hit for?', options: ['Mariah Carey', 'Whitney Houston', 'Beyonce', 'Celine Dion'], answer: 1, artist: 'Whitney Houston' },
+  { q: '"Unchained Melody" was made famous by?', options: ['The Beatles', 'The Righteous Brothers', 'Simon & Garfunkel', 'The Temptations'], answer: 1, artist: 'Righteous Brothers' },
+  { q: 'Which rock band sang "I Don\'t Want to Miss a Thing"?', options: ['Bon Jovi', 'Aerosmith', 'Def Leppard', 'AC/DC'], answer: 1, artist: 'Aerosmith' },
+  { q: 'The duet "When You Believe" features?', options: ['Mariah Carey & Whitney Houston', 'Celine Dion & Barbra Streisand', 'Adele & Taylor Swift', 'Beyonce & Alicia Keys'], answer: 0, artist: 'Whitney & Mariah' },
+  { q: '"Endless Love" is a duet by?', options: ['Mariah & Boyz II Men', 'Diana Ross & Lionel Richie', 'Stevie Wonder & Mary J. Blige', 'Ray Charles & Aretha Franklin'], answer: 1, artist: 'Lionel & Diana' },
+  { q: 'Who sang "You Belong With Me"?', options: ['Taylor Swift', 'Katy Perry', 'Demi Lovato', 'Beyonce'], answer: 0, artist: 'Taylor Swift' },
+  { q: '"I\'m Yours" is a love song by?', options: ['Jason Mraz', 'Ed Sheeran', 'John Mayer', 'James Blunt'], answer: 0, artist: 'Jason Mraz' },
+  { q: 'Which pop icon sang "True Colors"?', options: ['Madonna', 'Cyndi Lauper', 'Joan Jett', 'Pat Benatar'], answer: 1, artist: 'Cyndi Lauper' },
+  { q: '"Mystery of Love" was a hit for?', options: ['H.E.R.', 'SZA', 'Billie Eilish', 'Lorde'], answer: 1, artist: 'SZA' },
+  { q: '"Senorita" stars Shawn Mendes & who?', options: ['Camila Cabello', 'Katy Perry', 'Dua Lipa', 'Demi Lovato'], answer: 0, artist: 'Shawn & Camila' },
+  { q: 'Who sang "Better Together"?', options: ['Post Malone', 'Ed Sheeran', 'Charlie Puth', 'Shawn Mendes'], answer: 0, artist: 'Post Malone' },
+  { q: 'Who performed the duet "Halo"?', options: ['Rihanna', 'Beyonce', 'Alicia Keys', 'Ciara'], answer: 1, artist: 'Beyonce' },
+  { q: '"This Love" is by which band?', options: ['Maroon 5', 'Coldplay', 'Imagine Dragons', 'OneRepublic'], answer: 0, artist: 'Maroon 5' },
+  { q: 'Which legend sang "Can You Feel the Love Tonight"?', options: ['Elton John', 'George Michael', 'Freddie Mercury', 'Billy Joel'], answer: 0, artist: 'Elton John' },
 ];
 
 export default function CoupleMusicQuizPage() {

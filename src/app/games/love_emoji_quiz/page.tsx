@@ -17,6 +17,15 @@ const EMOJI_QUIZ = [
   { emojis: "💃❤️", answer: "Dance together", options: ["Wedding", "Dance together", "Concert", "Party"] },
   { emojis: "☕💕", answer: "Coffee date", options: ["Work", "Coffee date", "Breakfast", "Friends"] },
   { emojis: "✈️🗺️", answer: "Travel together", options: ["Work trip", "Travel together", "Backpacking", "Moving"] },
+  { emojis: "📞❤️", answer: "Long distance calls", options: ["Video game", "Long distance calls", "Interview", "Voicemail"] },
+  { emojis: "🎶💑", answer: "Your song", options: ["Concert", "Your song", "Karaoke", "Playlist"] },
+  { emojis: "🌸🤝", answer: "Pinky promise", options: ["Wedding", "Pinky promise", "Handshake", "Proposal"] },
+  { emojis: "🏡💐", answer: "Welcome home", options: ["New apartment", "Welcome home", "Housewarming", "Moving day"] },
+  { emojis: "🍫😴", answer: "Couch cuddles", options: ["Movie night", "Couch cuddles", "Sleepover", "Picnic"] },
+  { emojis: "🐾💞", answer: "Pet together", options: ["Adopting", "Pet together", "Dog walking", "Vet visit"] },
+  { emojis: "💬🔥", answer: "All night chat", options: ["Text war", "All night chat", "Debate", "Group call"] },
+  { emojis: "📸💑", answer: "Cute selfie", options: ["Group photo", "Cute selfie", "Polaroid", "Screenshot"] },
+  { emojis: "🌊👫", answer: "Holding hands by the sea", options: ["Beach day", "Holding hands by the sea", "Surfing", "Swimming"] },
 ];
 
 export default function LoveEmojiQuiz() {

@@ -39,6 +39,21 @@ const QUESTIONS: Question[] = [
   { q: "Who sang 'Can't Help Falling in Love'?", options: ['Elvis Presley', 'Frank Sinatra', 'Nat King Cole', 'Dean Martin'], answer: 0, category: "Music", difficulty: "easy", emoji: "🎤", points: 50 },
   { q: "The 7-year itch is based on what?", options: ['A real study', 'A movie title', 'A novel', 'Myth only'], answer: 2, category: "Culture", difficulty: "hard", emoji: "🎥", points: 200 },
   { q: "What flower symbolizes true love?", options: ['Daisy', 'Rose', 'Orchid', 'Lily'], answer: 1, category: "Flowers", difficulty: "easy", emoji: "🌺", points: 50 },
+  { q: "The term 'love languages' was popularized by which author?", options: ['Gary Chapman', 'John Gray', 'John Gottman', 'Harlow'], answer: 0, category: "Love Languages", difficulty: "medium", emoji: "💬", points: 100 },
+  { q: "How many love languages are there?", options: ['3', '5', '7', '9'], answer: 1, category: "Love Languages", difficulty: "easy", emoji: "💗", points: 50 },
+  { q: "In a long-distance relationship, the #1 habit of happy couples is...", options: ['Honesty & regular touch', 'Expensive gifts', 'Daily gaming', 'Silent periods'], answer: 0, category: "Communication", difficulty: "easy", emoji: "📞", points: 50 },
+  { q: "The traditional gift for a 10th anniversary is...", options: ['Tin', 'Silver', 'Gold', 'Platinum'], answer: 0, category: "Traditions", difficulty: "medium", emoji: "🥈", points: 100 },
+  { q: "Which food most often tops 'date night' dinner menus?", options: ['Pasta', 'Ramen', 'Granola', 'Plain cereal'], answer: 0, category: "Food", difficulty: "easy", emoji: "🍝", points: 50 },
+  { q: "Hershey's Kisses have been sold since roughly what decade?", options: ['1900s', '1950s', '1970s', '1990s'], answer: 0, category: "Food", difficulty: "medium", emoji: "🍫", points: 100 },
+  { q: "Which bridge is nicknamed the world's most romantic?", options: ['Pont Alexandre III', 'Golden Gate', 'Brooklyn', 'Millennium Bridge'], answer: 0, category: "Travel", difficulty: "medium", emoji: "🌉", points: 100 },
+  { q: "What is a 'double date'?", options: ['Two couples out together', 'One person twice', 'A date with a twin', 'Two solo dates'], answer: 0, category: "Culture", difficulty: "easy", emoji: "👫", points: 50 },
+  { q: "Which Friends TV couple is famous for their 'will they, won't they' saga?", options: ['Ross & Rachel', 'Joey & Phoebe', 'Joey & Rachel', 'Monica & Ross'], answer: 0, category: "Movies", difficulty: "medium", emoji: "📺", points: 100 },
+  { q: "On which day do men traditionally return a gift to the girl who gave chocolate in Japan?", options: ["White Day", "April Fool's Day", "Songkran", "St. Patrick's Day"], answer: 0, category: "Traditions", difficulty: "medium", emoji: "🎁", points: 100 },
+  { q: "Which Ed Sheeran song did he write about his wife?", options: ['Thinking Out Loud', 'Shape of You', 'Castle on the Hill', 'Perfect'], answer: 0, category: "Music", difficulty: "easy", emoji: "🎸", points: 50 },
+  { q: "In flower language, which bloom means 'eternal love'?", options: ['Tulip', 'Cactus', 'Moss', 'Fern'], answer: 0, category: "Flowers", difficulty: "medium", emoji: "🌷", points: 100 },
+  { q: "The word 'romance' comes from which language?", options: ['French', 'Latin', 'Greek', 'Japanese'], answer: 0, category: "History", difficulty: "medium", emoji: "📜", points: 100 },
+  { q: "What do couples worldwide traditionally exchange to symbolize a promise?", options: ['Rings', 'Souvenirs', 'Keys', 'Medals'], answer: 0, category: "Traditions", difficulty: "easy", emoji: "💍", points: 50 },
+  { q: "Which country receives the most roses on Valentine's Day?", options: ['United States', 'Japan', 'Australia', 'Brazil'], answer: 0, category: "Statistics", difficulty: "medium", emoji: "🌹", points: 100 },
 ];
 
 export default function TriviaBattlePage() {

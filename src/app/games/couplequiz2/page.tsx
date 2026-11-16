@@ -16,6 +16,22 @@ const QUESTIONS = [
   { q: "Biggest turn-off in a relationship?", options: ['Dishonesty', 'Lack of effort', 'Bad hygiene', 'Being controlling'] },
   { q: "Best way to resolve a fight?", options: ['Talk it out immediately', 'Cool off first', 'Write a letter', 'Make up with humor'] },
   { q: "What makes you feel most loved?", options: ['Grand gestures', 'Small daily acts', 'Verbal compliments', 'Undivided attention'] },
+  { q: "How should a surprise date night look?", options: ['Casual at home', 'Out on a whim', 'Plan it secretly', 'Let them decide'] },
+  { q: "What song do you both secretly sing together?", options: ['One pop hit', 'A duet classic', 'One we made up', 'No shared songs yet'] },
+  { q: "Cooking at home, who does what?", options: ['They cook all', 'I cook all', 'Split the dishes', 'Order in most nights'] },
+  { q: "What's your favorite food date?", options: ['Breakfast out', 'Lunch together', 'Dinner at a place', 'Late-night snacks'] },
+  { q: "How do you split household chores?", options: ['They do more', 'I do more', 'Evenly divided', 'We rotate tasks'] },
+  { q: "Saving for a shared dream vs living for now?", options: ['Dream comes first', 'Life is now', 'Half and half', 'Discuss as we go'] },
+  { q: "How do you feel about big group hangouts?", options: ['Loves the energy', 'Prefers smaller', 'Depends on mood', 'Either works'] },
+  { q: "What helps you two heal after an argument?", options: ['A calm apology', 'Holding hands', 'Some quiet alone time', 'Laughing it off'] },
+  { q: "How do you feel about surprise gifts?", options: ['Adores surprises', 'Prefers to pick', 'Small ones only', 'Quality matters most'] },
+  { q: "What role do your families play in your couple life?", options: ['Daily support', 'Weekend visits', 'Holidays only', 'Low contact by choice'] },
+  { q: "How do you usually say goodnight?", options: ['A quick text', 'A long goodnight call', 'A hug before bed', 'A kiss on the forehead'] },
+  { q: "What's your favorite weekly ritual together?", options: ['Sunday breakfast', 'Friday movie', 'Midweek walk', 'No set ritual yet'] },
+  { q: "When you two are on the same page, what does that look like?", options: ['Finishing each sentence', 'Sharing one playlist', 'Teaming up on plans', 'The same random jokes'] },
+  { q: "Where do you picture yourselves in five years?", options: ['Same city, bigger home', 'Moving abroad', 'Kids in the picture', 'Still figuring it out'] },
+  { q: "What tiny habit do you love about your partner?", options: ['They laugh loud', 'They hug first', 'They remember details', 'They say good morning'] },
+  { q: "What's the first place you'd visit on a new trip together?", options: ['The beach', 'A museum', 'The food market', 'A local viewpoint'] },
 ];
 
 type Phase = 'start' | 'player1' | 'player2' | 'result';

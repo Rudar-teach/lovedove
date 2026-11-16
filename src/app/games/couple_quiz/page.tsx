@@ -24,6 +24,21 @@ const QUESTIONS: Question[] = [
   { q: "What's their dream vacation style?", options: ['Beach resort', 'Mountain hiking', 'City exploration', 'Camping adventure'] },
   { q: "What's their love language?", options: ['Words of affirmation', 'Physical touch', 'Acts of service', 'Quality time', 'Gifts'] },
   { q: "What's their biggest life goal right now?", options: ['Career growth', 'Starting a family', 'Traveling more', 'Buying a home', 'Learning new skills'] },
+  { q: "What's your ideal date night?", options: ['Cooking at home', 'Fancy restaurant', 'Movie night in', 'Outdoor adventure', 'Game night'] },
+  { q: "What kind of music do you two love listening to together?", options: ['Pop', 'Jazz', 'Rock', 'Classical', 'Hip-hop'] },
+  { q: "How do you prefer to handle disagreements?", options: ['Talk it out right away', 'Take a pause first', 'Write it down', 'Text about it', 'Let it cool overnight'] },
+  { q: "What's your go-to snack for movie nights?", options: ['Popcorn', 'Nachos', 'Pretzels', 'Trail mix', 'Chocolate'] },
+  { q: "What would be the best surprise for your partner?", options: ['A heartfelt letter', 'An experience together', 'Their favorite treat', 'Something handmade', 'A weekend getaway'] },
+  { q: "How should you say the most important things?", options: ['In person', 'Over the phone', 'In a letter', 'Over video call', 'With a thoughtful card'] },
+  { q: "What's your idea of a perfect rainy day?", options: ['Cozy blanket & movie', 'A walk in the rain', 'Hot cocoa & books', 'Baking cookies', 'Napping together'] },
+  { q: "Which city would you visit first on a dream trip?", options: ['Paris', 'Tokyo', 'Rome', 'New York', 'Istanbul'] },
+  { q: "How do you show you care on an ordinary day?", options: ['A sweet text', 'Making their favorite meal', 'A surprise hug', 'Taking over a chore', 'A small thoughtful gift'] },
+  { q: "What's your favorite season to spend time together?", options: ['Spring', 'Summer', 'Autumn', 'Winter'] },
+  { q: "Which chore is your partner secretly the best at?", options: ['Cooking', 'Cleaning', 'DIY repairs', 'Planning things', 'Grocery shopping'] },
+  { q: "What's your ideal way to celebrate a birthday?", options: ['Big party with friends', 'Quiet dinner for two', 'A surprise outing', 'Pajamas & cake at home', 'A bonfire'] },
+  { q: "Which shows could you two happily binge for days?", options: ['Rom-coms', 'Documentaries', 'Fantasy & sci-fi', 'Reality TV', 'Anime'] },
+  { q: "What small daily habit do the two of you share?", options: ['Morning coffee & chat', 'Evening walks', 'A drive-time playlist', 'Bedtime catch-up', 'A weekly game night'] },
+  { q: "Which one makes you feel the most loved?", options: ['Being listened to', 'Being held', 'Acts of service', 'Making time', 'Little surprises'] },
 ];
 
 type Phase = 'start' | 'p1' | 'p2' | 'compare' | 'result';

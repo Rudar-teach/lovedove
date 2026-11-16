@@ -33,6 +33,18 @@ const QUESTIONS: Question[] = [
   { q: "Who wrote 'Romeo and Juliet'?", options: ['Charles Dickens', 'William Shakespeare', 'Jane Austen', 'Emily Brontë'], correct: 1 },
   { q: "In which movie does Jack build a snowman with Rose?", options: ['Ghost', 'Titanic', 'The Notebook', 'Pearl Harbor'], correct: 1 },
   { q: "How many times a day should couples say 'I love you' on average?", options: ['Once', 'Multiple times', 'Never', 'Only on birthdays'], correct: 1 },
+  { q: "In Japan, which day is the traditional day when wives can receive chocolates in return?", options: ['White Day (March 14)', "Valentine's Day (Feb 14)", 'Christmas Eve', "New Year's Day"], correct: 0 },
+  { q: "Which of these is NOT one of the five love languages?", options: ['Quality time', 'Acts of service', 'Silent treatment', 'Gifts'], correct: 2 },
+  { q: "Which planet is named after the goddess of love?", options: ['Mars', 'Venus', 'Jupiter', 'Neptune'], correct: 1 },
+  { q: "In 'Notting Hill', which actress plays the leading role?", options: ['Julia Roberts', 'Renée Zellweger', 'Kate Winslet', 'Drew Barrymore'], correct: 0 },
+  { q: "Which famous opera tells the story of a star-crossed couple?", options: ['La Traviata', 'The Magic Flute', 'Carmen', 'The Marriage of Figaro'], correct: 0 },
+  { q: "Which animal is famous for 'pairing for life'?", options: ['Swans', 'House cats', 'Mice', 'Pigeons'], correct: 0 },
+  { q: "On average, about how many times per day do happy couples kiss?", options: ['0', '1', '4', '12'], correct: 2 },
+  { q: "The first 'kiss in space' happened in 1965 on which country's mission?", options: ["America's", "The USSR's", "France's", "A joint crew"], correct: 1 },
+  { q: "How fast does a healthy human heart beat at rest, roughly?", options: ['20-40 bpm', '60-100 bpm', '120-150 bpm', '200+ bpm'], correct: 1 },
+  { q: "The song 'Unchained Melody' became a hit for The Righteous Brothers in which film?", options: ['Ghost', 'Right Beyond the River', 'Sleepless in Seattle', 'Titanic'], correct: 1 },
+  { q: "What is the traditional 'golden' wedding anniversary?", options: ['25th', '50th', '75th', '100th'], correct: 1 },
+  { q: "According to popular wisdom, where do 'butterflies' flutter when you're in love?", options: ['Your stomach', 'Your ears', 'Your knees', 'Your nose'], correct: 0 },
 ];
 
 export default function CoupleTrivia2Page() {

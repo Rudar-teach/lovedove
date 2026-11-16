@@ -33,6 +33,21 @@ const QUESTIONS: Question[] = [
   { q: "Couples who hold hands experience what?", options: ["Reduced pain", "Increased stress", "Lower immunity", "Faster heart rate"], answer: 0, category: "Science", difficulty: "medium", emoji: "🤝" },
   { q: "What's the traditional 1st anniversary gift?", options: ["Silver", "Paper", "Cotton", "Wood"], answer: 1, category: "Traditions", difficulty: "medium", emoji: "📝" },
   { q: "Which Greek goddess is love and beauty?", options: ["Hera", "Athena", "Aphrodite", "Artemis"], answer: 2, category: "History", difficulty: "easy", emoji: "🏺" },
+  { q: "In the '5 Love Languages' framework, which is NOT one of the five?", options: ["Words of affirmation", "Running a 10K together", "Acts of service", "Physical touch"], answer: 1, category: "Relationships", difficulty: "easy", emoji: "💬" },
+  { q: "What helps long-term relationships survive conflict best, according to researchers like John Gottman?", options: ["Never disagreeing", "Repairing after arguments", "Winning every fight", "Avoiding all topics"], answer: 1, category: "Psychology", difficulty: "medium", emoji: "🔁" },
+  { q: "Which 1970 Elton John classic is one of the most covered love songs in history?", options: ["Your Song", "Tiny Dancer", "Rocket Man", "Bennie and the Jets"], answer: 0, category: "Music", difficulty: "easy", emoji: "🎵" },
+  { q: "Which romantic wedding standard has the lyrics 'I need no one, I love the moon and you, up above the moon'?", options: ["Fly Me to the Moon", "Moon River", "Misty", "Blue Moon"], answer: 0, category: "Music", difficulty: "medium", emoji: "🎷" },
+  { q: "What are couples who live together without marrying commonly called?", options: ["Fiancés", "Cohabitating partners", "Legal roommates", "Siblings"], answer: 1, category: "Culture", difficulty: "easy", emoji: "🏠" },
+  { q: "Which Irish St. Patrick's Day tradition involves single people tying a ribbon on their wrist?", options: ["Wrist ribbons", "Clover hunts", "Bog diving", "Horse racing"], answer: 0, category: "Traditions", difficulty: "medium", emoji: "🍀" },
+  { q: "In attachment theory, which style is most associated with secure, healthy relationships?", options: ["Avoidant", "Anxious", "Secure", "Chaotic"], answer: 2, category: "Psychology", difficulty: "medium", emoji: "🧠" },
+  { q: "In ancient mythology, who was the god of marriage?", options: ["Zeus", "Hymenaeus", "Apollo", "Poseidon"], answer: 1, category: "History", difficulty: "hard", emoji: "💍" },
+  { q: "Which 1981 royal wedding was famously billed as 'The Wedding of the Century'?", options: ["Prince Charles & Princess Diana", "Prince William & Kate Middleton", "Charles & Camilla Parker Bowles", "Prince Edward & Sophie Rhys-Jones"], answer: 0, category: "Traditions", difficulty: "medium", emoji: "🤍" },
+  { q: "In Japan, what do sweethearts traditionally exchange on Valentine's Day?", options: ["Chocolates", "Sushi", "Roses only", "Sake"], answer: 0, category: "Traditions", difficulty: "easy", emoji: "🍫" },
+  { q: "Whose 1842 wedding helped make the white wedding dress the modern standard?", options: ["Queen Victoria", "Catherine the Great", "Eleanor of Aquitaine", "Isabella of Castile"], answer: 0, category: "Traditions", difficulty: "medium", emoji: "👰" },
+  { q: "Which gemstone is the traditional gift for a 50th wedding anniversary?", options: ["Gold", "Platinum", "Silver", "Diamond"], answer: 1, category: "Traditions", difficulty: "hard", emoji: "💎" },
+  { q: "The phrase 'the seven-year itch' refers to what?", options: ["A common skin rash", "Doubt and restlessness in a long relationship", "A 7-day fever", "A type of dance"], answer: 1, category: "Culture", difficulty: "easy", emoji: "🐛" },
+  { q: "In which 1942 classic does Rick say 'Here's looking at you, kid'?", options: ["Roman Holiday", "Casablanca", "The Philadelphia Story", "Gone with the Wind"], answer: 1, category: "Movies", difficulty: "medium", emoji: "🎞️" },
+  { q: "In ancient Egypt, which flower symbolized love, rebirth, and the rising sun?", options: ["The Lotus", "The Tulip", "The Carnation", "The Sunflower"], answer: 0, category: "History", difficulty: "medium", emoji: "🪷" },
 ];
 
 export default function LoveTriviaPage() {

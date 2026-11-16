@@ -20,6 +20,20 @@ const QUESTIONS = [
   { q: 'My favorite season?', options: ['Spring', 'Summer', 'Autumn', 'Winter'], answer: 2 },
   { q: 'What makes me cry?', options: ['Sad movies', 'Onions', 'Karaoke', 'All of the above'], answer: 3 },
   { q: 'My hidden talent?', options: ['Singing', 'Cooking', 'Drawing', 'Dancing'], answer: 0 },
+  { q: 'My love language?', options: ['Words of affirmation', 'Quality time', 'Acts of service', 'Gifts'], answer: 1 },
+  { q: 'How do I text you?', options: ['Long paragraphs', 'Short & sweet', 'Memes only', 'Endless emojis'], answer: 3 },
+  { q: 'Our go-to date night at home?', options: ['Movie & snacks', 'Cook together', 'Game night', 'Dance party'], answer: 0 },
+  { q: 'Song that is basically our anthem?', options: ['A slow ballad', 'A road-trip jam', 'A duet', 'A sing-along'], answer: 2 },
+  { q: 'My guilty-pleasure show?', options: ['Reality TV', 'Crime dramas', 'Sitcoms', 'K-dramas'], answer: 3 },
+  { q: 'My ideal Saturday?', options: ['Sleep in', 'Hike', 'Brunch', 'Errands with you'], answer: 1 },
+  { q: 'How do I like to resolve disagreements?', options: ['Talk it out', 'Take a break', 'Laugh it off', 'Compromise'], answer: 0 },
+  { q: 'My lucky number?', options: ['7', '3', '13', '100'], answer: 0 },
+  { q: 'The best compliment you have ever given me?', options: ["You're amazing", "You're funny", "You're home", "You're my favorite"], answer: 3 },
+  { q: 'What can I not live without?', options: ['Phone', 'Coffee', 'Music', 'You'], answer: 3 },
+  { q: 'My dream travel buddy trait?', options: ['Spontaneous', 'The planner', 'The foodie', 'The photographer'], answer: 0 },
+  { q: 'My best friend would say I am…', options: ['Loud', 'Thoughtful', 'Chaotic', 'All of the above'], answer: 3 },
+  { q: 'My go-to move when I am upset?', options: ['Quiet time', 'Talk it out', 'A big hug', 'Distract me'], answer: 2 },
+  { q: 'Our group chat inside joke is about?', options: ['Too embarrassing', 'A meme series', 'A song', 'A nickname'], answer: 1 },
 ];
 
 export default function CoupleQuizPage() {

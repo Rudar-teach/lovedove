@@ -27,6 +27,21 @@ const QUESTIONS: Question[] = [
   { q: 'My favorite flower?', options: ['Rose 🌹', 'Tulip', 'Sunflower', 'Lily'], answer: 0, feedback: ['Roses are red! 🌹', 'No tulip here!', 'Sunny but no!', 'Wrong!'] },
   { q: 'My idea of romance?', options: ['Candlelit dinner', 'Stargazing', 'Long walks', 'All of the above 💕'], answer: 3, feedback: ['Romance is everything! 💖', 'Just one?', 'A favorite yes!', 'ALL the romance!'] },
   { q: 'My pet peeve?', options: ['Lateness', 'Loud chewing', 'Messiness', 'Bad texts'], answer: 0, feedback: ['Always on time! ⏰', 'Nope!', 'Wrong!', 'No!'] },
+  { q: 'My favorite music genre?', options: ['Pop 💖', 'Rock 🎸', 'K-Pop 🎧', 'Jazz 🎷'], answer: 0, feedback: ['Melody lover! 🎶', 'Riffs? Not really!', 'K-Pop is a close second!', 'Too smooth!'] },
+  { q: 'Our first movie together?', options: ['A rom-com 😍', 'An action blockbuster', 'A horror film', "Can't remember!"], answer: 0, feedback: ["It was a rom-com! 🍿", "Not that explosive!", "Scary? Never!", "It happened somewhere!"] },
+  { q: 'How do I fall asleep?', options: ['With a podcast 🎙️', 'You talking to me', 'Reading 📖', 'Never 😅'], answer: 1, feedback: ['Your voice is my lullaby! 💤', 'Podcasts? Wrong!', 'Books are for mornings!', "That's not true!"] },
+  { q: 'My ideal date plan?', options: ['Surprise me 🎁', 'You plan it 💖', "We'll debate it 🤔", 'Whatever works'], answer: 1, feedback: ['You do it best! 💕', 'Surprises are rare!', 'Debate dates? Nope!', 'I have a plan!'] },
+  { q: 'My laugh is...?', options: ['Silent 😳', 'Loud and proud 😂', 'Secretive 🤭', 'A full giggle fit'], answer: 1, feedback: ['You know my laugh! 🔊', 'Never silent!', 'I never hide it!', 'Giggle fits? Wrong!'] },
+  { q: 'First thing I do when I wake up?', options: ['Check my phone 📱', 'Stretch 🦌', 'Cuddle 💤', 'Hit snooze'], answer: 0, feedback: ["Phone's the first! 📲", 'I do stretch later!', 'Cuddle, no snooze!', 'One snooze max!'] },
+  { q: 'How good is my dancing?', options: ['Pro 😄', 'Wobbly 🕺', 'Better than it looks', 'Covers only 🫣'], answer: 3, feedback: ["Covers only! 🕶️", 'I do wobble!', 'Worse, actually!', 'Better luck!'] },
+  { q: 'My go-to comfort movie?', options: ['The Notebook 📖', 'A rom-com 😂', 'Sci-fi 🚀', 'Cartoons 🐱'], answer: 0, feedback: ['The Notebook! 📖', 'Rom-coms, not exactly!', 'Zero rockets!', 'Too cute!'] },
+  { q: 'How do I say sorry?', options: ['Text first 💬', 'Snacks 🍫', 'A hug 🤗', 'A card ✉️'], answer: 2, feedback: ['Hugs heal! 🤗', 'Snacks are the follow-up!', 'No texts first!', 'Cards are later!'] },
+  { q: 'My favorite hug?', options: ['Short peck 🐦', 'The long one 🤗', 'A back hug', "It depends 😅"], answer: 1, feedback: ['Long hugs, always! 🫂', 'Pecks? No!', 'Back hugs are rare!', 'The long one wins!'] },
+  { q: 'Best thing to make at home?', options: ['Pizza 🍕', 'Sushi 🍣', 'Pasta 🍝', 'Salad? 🥗'], answer: 0, feedback: ['Pizza night! 🍕', 'Sushi? Too pro!', 'Pasta is close!', "Let's pretend no!"] },
+  { q: 'My perfect weekend?', options: ['Adventure 🏔️', 'Sleepy at home 🛏️', 'Brunch + plans ☕', 'With friends'], answer: 1, feedback: ['Cozy and slow! 🛌', 'Mountains? No way!', 'Brunch? Sometimes!', 'Friends come later!'] },
+  { q: 'How do I share big news?', options: ['All at once 💬', 'In pieces 🧩', 'I talk in circles 😅', 'You notice first 🕵️'], answer: 0, feedback: ['Straight up! 💬', "Pieces? I'm honest!", 'Circles? No!', 'I tell you first!'] },
+  { q: 'How fast do I fall asleep?', options: ['About 10 minutes', 'An hour 😴', 'Two naps, then sleep', 'Depends on mood'], answer: 0, feedback: ['Light sleeper! 💤', 'Way longer than that!', 'No naps!', 'Mood? I sleep fast!'] },
+  { q: 'My gift style?', options: ['Thoughtful 💝', 'Practical 🧴', 'Big surprise 🎈', "You pick! 😅"], answer: 0, feedback: ['I notice the small things! 💝', 'Not practical!', 'Surprises are rare!', 'I do pick!'] },
 ];
 
 type Mode = 'solo' | 'together';
