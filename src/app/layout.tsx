@@ -11,7 +11,6 @@ import CookieBanner from '@/components/CookieBanner';
 import MissYouBanner from '@/components/MissYouBanner';
 import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
 import WinCelebration from '@/components/WinCelebration';
-import CompanionWidget from '@/components/companions/CompanionWidget';
 import "./globals.css";
 
 // Self-hosted variable fonts (one woff2 file per family, all weights 100-900).
@@ -67,9 +66,6 @@ export default function RootLayout({
               <WinCelebration />
               {/* P2P voice/video calls — WhatsApp/Insta-style call bar */}
               <CallCenter />
-              {/* Bear + panda companions — kawaii SVG pair that roams the page,
-                  peeks at typing, blushes on hover, and cheers on games */}
-              <CompanionWidget />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
