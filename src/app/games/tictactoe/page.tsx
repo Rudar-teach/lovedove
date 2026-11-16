@@ -90,15 +90,15 @@ export default function TicTacToePage() {
         {state === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mt-20">
             <div className="grid grid-cols-3 gap-2 max-w-[180px] mx-auto mb-6">
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
-              <div className="aspect-square bg-pink-500/50 rounded-xl flex items-center justify-center text-3xl">💖</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">O</div>
-              <div className="aspect-square bg-white/30 rounded-xl flex items-center justify-center text-3xl">X</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">X</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">O</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">X</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">O</div>
+              <div className="aspect-square bg-pink-100 border border-pink-300 rounded-xl flex items-center justify-center text-3xl shadow-sm">💖</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">O</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">X</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">O</div>
+              <div className="aspect-square bg-white border border-pink-200 rounded-xl flex items-center justify-center text-3xl shadow-sm">X</div>
             </div>
             <h1 className="text-5xl font-bold text-pink-700 mb-4">Love Tic Tac Toe</h1>
             <p className="text-pink-700/80 mb-8 text-lg">Play with X and O, but make it romantic. Race to three in a row.</p>
@@ -114,39 +114,40 @@ export default function TicTacToePage() {
 
         {state === 'playing' && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-lg mx-auto text-center">
-            <div className="flex justify-between items-center mb-4 text-white">
-              <span className="bg-pink-100 px-4 py-2 rounded-full">Round {round}</span>
-              <span className={`px-4 py-2 rounded-full font-semibold ${turn === 'X' ? 'bg-pink-500/50' : 'bg-rose-500/50'}`}>
+            <div className="flex justify-between items-center mb-4">
+              <span className="bg-pink-100 border border-pink-200 text-pink-700 px-4 py-2 rounded-full">Round {round}</span>
+              <span className={`px-4 py-2 rounded-full font-semibold text-white shadow-md ${turn === 'X' ? 'bg-pink-500' : 'bg-rose-500'}`}>
                 {turn === 'X' ? p1 : p2}'s turn ({turn})
               </span>
             </div>
             <div className="flex justify-center gap-4 mb-4">
-              <div className="bg-pink-500/30 px-4 py-2 rounded-full text-white">
+              <div className="bg-pink-500 px-4 py-2 rounded-full text-white shadow-md">
                 <span className="font-bold">{p1}:</span> {score.p1}
               </div>
-              <div className="bg-pink-100 px-4 py-2 rounded-full text-white">
+              <div className="bg-pink-100 border border-pink-200 px-4 py-2 rounded-full text-pink-700">
                 Ties: {score.ties}
               </div>
-              <div className="bg-rose-500/30 px-4 py-2 rounded-full text-white">
+              <div className="bg-rose-500 px-4 py-2 rounded-full text-white shadow-md">
                 <span className="font-bold">{p2}:</span> {score.p2}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto mb-4">
+            <div className="grid grid-cols-3 gap-2.5 max-w-xs mx-auto mb-4">
               {board.map((cell, idx) => (
                 <motion.button
                   key={idx}
                   onClick={() => select(idx)}
-                  whileTap={{ scale: 0.9 }}
-                  animate={{
-                    scale: winLine.includes(idx) ? 1.15 : 1,
-                    backgroundColor: cell ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
-                  }}
-                  className={`aspect-square rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold transition-all border-2 ${
-                    winLine.includes(idx) ? 'border-yellow-300' : 'border-white/20'
+                  whileTap={{ scale: 0.92 }}
+                  animate={{ scale: winLine.includes(idx) ? 1.06 : 1 }}
+                  className={`aspect-square rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold transition-all border-2 bg-white shadow-sm ${
+                    winLine.includes(idx)
+                      ? 'border-amber-400 bg-amber-100 shadow-md'
+                      : cell
+                        ? 'border-pink-300'
+                        : 'border-pink-200 hover:border-pink-300 hover:bg-pink-50'
                   }`}
                 >
                   {cell === 'X' && <span className="text-pink-600">{cell}</span>}
-                  {cell === 'O' && <span className="text-rose-300">{cell}</span>}
+                  {cell === 'O' && <span className="text-rose-500">{cell}</span>}
                 </motion.button>
               ))}
             </div>
