@@ -204,19 +204,19 @@ export function useCompanionBrain(): Brain {
         // They're busy (walking or mid one-shot) — let it finish first.
         if (walkingRef.current || actionRef.current) return scheduleDrift();
         const r = Math.random();
-        if (r < 0.35) {
-          const deg = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3);
+        if (r < 0.4) {
+          const deg = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3.5);
           setTilt(deg);
-          setTimeout(() => setTilt(0), 2200 + Math.random() * 1500);
-        } else if (r < 0.6) {
+          setTimeout(() => setTilt(0), 1800 + Math.random() * 1500);
+        } else if (r < 0.7) {
           setHop(true);
           setTimeout(() => setHop(false), 400);
-        } else if (r < 0.8) {
+        } else {
           setPawShift((Math.random() < 0.5 ? -1 : 1) as -1 | 1);
-          setTimeout(() => setPawShift(0), 1500 + Math.random() * 2000);
+          setTimeout(() => setPawShift(0), 1200 + Math.random() * 1500);
         }
         scheduleDrift();
-      }, 3000 + Math.random() * 3000);
+      }, 2200 + Math.random() * 2200);
     };
 
     const scheduleBlink = () => {
@@ -264,7 +264,7 @@ export function useCompanionBrain(): Brain {
     /** Travel range in px, clamped to the real viewport (tighter on mobile). */
     const range = () => {
       const vw = document.documentElement.clientWidth || window.innerWidth;
-      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 92 : 124);
+      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 104 : 172);
       const pad = vw < 640 ? 16 : 8;
       const min = pad;
       const max = Math.max(min, vw - widgetW - pad);
@@ -277,21 +277,22 @@ export function useCompanionBrain(): Brain {
      */
     const scheduleWander = (ms?: number) => {
       if (wanderChain.current) clearTimeout(wanderChain.current);
-      const wait = ms ?? 60000 + Math.random() * 60000;
+      // Frequent enough that you actually see them roam the page: 18–35s.
+      const wait = ms ?? 18000 + Math.random() * 17000;
       wanderChain.current = setTimeout(() => {
         if (document.hidden || walkingRef.current) {
-          return scheduleWander(8000 + Math.random() * 4000);
+          return scheduleWander(4000 + Math.random() * 3000);
         }
         const m = moodRef.current;
         if (m === 'shy' || m === 'celebrating' || m === 'pouting') {
-          return scheduleWander(8000 + Math.random() * 4000); // high-priority override
+          return scheduleWander(4000 + Math.random() * 3000); // high-priority override
         }
         const { min, max } = range();
         const target = min + Math.random() * (max - min);
         const dist = Math.abs(target - leftRef.current);
         if (dist < 40) return scheduleWander(); // close enough — just sit here
         const dir: 1 | -1 = target > leftRef.current ? 1 : -1;
-        const dur = Math.max(1.2, dist / 70); // ~70 px/s walk
+        const dur = Math.max(1.0, dist / 110); // brisker ~110 px/s walk
         setWalkingDir(dir);
         setLeftDur(dur);
         setLeftPx(target);
@@ -301,7 +302,8 @@ export function useCompanionBrain(): Brain {
       }, wait);
     };
 
-    scheduleWander();
+    // First walk happens fast (3–5s) so you immediately see them roam.
+    scheduleWander(3000 + Math.random() * 2000);
     const onVis = () => {
       if (walkTO.current) clearTimeout(walkTO.current);
       if (!document.hidden) setTimeout(scheduleWander, 3000);
@@ -317,7 +319,7 @@ export function useCompanionBrain(): Brain {
   useEffect(() => {
     const onResize = () => {
       const vw = document.documentElement.clientWidth || window.innerWidth;
-      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 92 : 124);
+      const widgetW = widgetRef.current?.offsetWidth ?? (vw < 640 ? 104 : 172);
       const pad = vw < 640 ? 16 : 8;
       setLeftPx((x) => Math.min(Math.max(x, pad), Math.max(pad, vw - widgetW - pad)));
     };
@@ -353,7 +355,7 @@ export function useCompanionBrain(): Brain {
           actTO.current = setTimeout(() => setAction(null), DURS[pick]);
         }
         schedule();
-      }, 14000 + Math.random() * 16000);
+      }, 6000 + Math.random() * 6000);
     };
 
     schedule();

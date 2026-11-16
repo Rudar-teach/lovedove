@@ -38,7 +38,7 @@ export default function CompanionWidget() {
   // (leftPx / leftDur) — they sit at their last x when idle.
   const bottomClass = isGame ? 'bottom-40 sm:bottom-6' : 'bottom-24 sm:bottom-6';
 
-  const charClass = 'w-10 sm:w-14 block';
+  const charClass = 'w-12 sm:w-20 block';
 
   // The panda runs a soft lag + opposite micro-drift so the two never move
   // in lockstep (which is what makes a pair look "looped").

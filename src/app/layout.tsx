@@ -11,7 +11,6 @@ import CookieBanner from '@/components/CookieBanner';
 import MissYouBanner from '@/components/MissYouBanner';
 import GlobalPlayWithFriend from '@/components/games/GlobalPlayWithFriend';
 import WinCelebration from '@/components/WinCelebration';
-import Companion3DWidget from '@/components/companions3d/Companion3DWidget';
 import CompanionWidget from '@/components/companions/CompanionWidget';
 import "./globals.css";
 
@@ -68,10 +67,9 @@ export default function RootLayout({
               <WinCelebration />
               {/* P2P voice/video calls — WhatsApp/Insta-style call bar */}
               <CallCenter />
-              {/* Bear + panda companions — 3D R3F animated models */}
-              {/* Old 2D SVG widget is phased out in favor of the 3D version below */}
-              {/* <CompanionWidget /> */}
-              <Companion3DWidget />
+              {/* Bear + panda companions — kawaii SVG pair that roams the page,
+                  peeks at typing, blushes on hover, and cheers on games */}
+              <CompanionWidget />
             </PlayInviteProvider>
           </AuthProvider>
         </ClientProvider>
